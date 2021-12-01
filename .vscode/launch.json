@@ -14,14 +14,6 @@
             "cwd": "${workspaceRoot}",
             "environment": [],
             "externalConsole": true
-        },
-        {
-            "name": "(OSX) Launch",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceRoot}/rust/target/debug/aoc2021",
-            "args": [],
-            "cwd": "${workspaceRoot}",
         }
     ]
 }

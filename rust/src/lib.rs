@@ -71,18 +71,22 @@ pub mod day01 {
     }
 
     fn parse_data(data: &str) -> Vec<i32> {
-        data.lines().map(|line| line.parse::<i32>().unwrap()).collect()
+        data.lines()
+            .map(|line| line.parse::<i32>().unwrap())
+            .collect()
     }
 
     fn part1(input: &[i32]) -> usize {
-        input.iter().tuple_windows().filter(|(a,b)| b > a).count()
+        input.iter().tuple_windows().filter(|(a, b)| b > a).count()
     }
 
     fn part2(input: &[i32]) -> usize {
-        input.iter().tuple_windows()
-            .map(|(a,b,c)| a+b+c)
+        input
+            .iter()
             .tuple_windows()
-            .filter(|(a,b)| b > a)
+            .map(|(a, b, c)| a + b + c)
+            .tuple_windows()
+            .filter(|(a, b)| b > a)
             .count()
     }
 
@@ -93,8 +97,8 @@ pub mod day01 {
         #[test]
         fn examples() {
             let test_data = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
-            assert_eq!(part1(&test_data), 7); 
-            assert_eq!(part2(&test_data), 5); 
+            assert_eq!(part1(&test_data), 7);
+            assert_eq!(part2(&test_data), 5);
         }
 
         #[test]
