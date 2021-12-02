@@ -6,7 +6,8 @@ pub fn main() anyerror!void {
     var alloc = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(!alloc.deinit());
 
-    try day01(&alloc.allocator);
+    //try day01(&alloc.allocator);
+    try day02(&alloc.allocator);
 }
 
 pub fn day01(alloc: *std.mem.Allocator) anyerror!void
@@ -55,5 +56,87 @@ pub fn day01(alloc: *std.mem.Allocator) anyerror!void
 
         std.log.info("Day 1, Problem 2 - [{}]", .{part2});
         try expect(part2 == 1737);
+    }
+}
+
+pub fn day02(alloc: *std.mem.Allocator) anyerror!void
+{   
+    // Data types
+    const Dir = enum {
+        Forward,
+        Up,
+        Down
+    };
+
+    const Entry = struct {
+        dir: Dir,
+        amount: i32
+    };
+
+    // Read file
+    var cwd = std.fs.cwd();
+    const file_string : []u8 = try cwd.readFileAlloc(alloc, "../data/day02.txt", std.math.maxInt(usize) );
+    defer alloc.free(file_string);
+
+    // Parse file
+    var commands = std.ArrayList(Entry).init(alloc);
+    defer commands.deinit();
+
+    var lines = std.mem.tokenize(file_string, "\r\n");
+    while (lines.next()) |line| {
+        var parts = std.mem.tokenize(line, " ");
+        const dir_str = parts.next().?;
+        const amount_str = parts.next().?;
+
+        const amount = try std.fmt.parseInt(i32, amount_str, 10);
+        if (std.mem.eql(u8, dir_str, "forward")) {
+            try commands.append( Entry{ .dir = Dir.Forward, .amount = amount});
+        } else if (std.mem.eql(u8, dir_str, "up")) {
+            try commands.append( Entry{ .dir = Dir.Up, .amount = amount});
+        } else if (std.mem.eql(u8, dir_str, "down")) {
+            try commands.append( Entry{ .dir = Dir.Down, .amount = amount});
+        } else {
+            unreachable;
+        }
+    }
+
+    // Part 1
+    {
+        var x: i32 = 0;
+        var y: i32 = 0;
+
+        for (commands.items) |command| {
+            if (command.dir == Dir.Forward) {
+                x += command.amount;
+            } else if (command.dir == Dir.Up) {
+                y -= command.amount;
+            } else if (command.dir == Dir.Down) {
+                y += command.amount;
+            }
+        }
+
+        const result = x*y;
+        std.log.info("Day 2, Problem 1 - [{}]", .{result});
+    }
+
+    // Part 2 
+    {
+        var x: i32 = 0;
+        var y: i32 = 0;
+        var aim: i32 = 0;
+
+        for (commands.items) |command| {
+            if (command.dir == Dir.Forward) {
+                x += command.amount;
+                y += command.amount * aim;
+            } else if (command.dir == Dir.Up) {
+                aim -= command.amount;
+            } else if (command.dir == Dir.Down) {
+                aim += command.amount;
+            }
+        }
+
+        const result = x*y;
+        std.log.info("Day 2, Problem 2 - [{}]", .{result});
     }
 }
