@@ -113,26 +113,55 @@ pub mod day01 {
 
 pub mod day02 {
     use std::fmt::Write;
+    use fts_vecmath::vector2::*;
+
+    type Vector = fts_vecmath::vector2::Vector2<i32>;
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-/*
-        let answer_part1 = part1(crate::data::DAY02);
+        let data = parse_input(crate::data::DAY02);
+
+        let answer_part1 = part1(&data);
         writeln!(&mut result, "Day 02, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part2 = part2(crate::data::DAY02);
+        let answer_part2 = part2(&data);
         writeln!(&mut result, "Day 02, Problem 2 - [{}]", answer_part2).unwrap();
-*/
         result
     }
 
-    fn part1(_input: &str) -> usize {
-        0
+    fn parse_input(input: &str) -> Vec<Vector> {
+        input
+            .lines()
+            .map(|line| {
+                let parts = line.split(" ").collect::<Vec<_>>();
+                let dir = parts[0];
+                let amount = parts[1].parse::<i32>().unwrap();
+
+                match dir {
+                    "forward" => Vector::new(amount, 0),
+                    "up" => Vector::new(0, -amount),
+                    "down" => Vector::new(0, amount),
+                    _ => panic!("Failed to parse {}", line),
+                }
+            })
+            .collect()
     }
 
-    fn part2(_input: &str) -> usize {
-        0
+    fn part1(data: &[Vector]) -> i32 {
+        let sum : Vector = data.iter().fold(Vector::zero(), |acc, next| acc + *next);
+        sum.x * sum.y
+    }
+
+    fn part2(data: &[Vector]) -> i32 {
+        let mut pos = Vector::zero();
+        let mut aim : i32 = 0;
+        for point in data {
+            pos.x += point.x;
+            aim += point.y;
+            pos.y += aim * point.x;
+        }
+        pos.x * pos.y
     }
 
     #[cfg(test)]
@@ -141,10 +170,23 @@ pub mod day02 {
 
         #[test]
         fn examples() {
+            let input = "forward 5
+down 5
+forward 8
+up 3
+down 8
+forward 2";
+
+            let data = super::parse_input(&input);
+            assert_eq!(part1(&data), 150);
+            assert_eq!(part2(&data), 900);
         }
 
         #[test]
         fn verify() {
+            let data = parse_input(crate::data::DAY02);
+            assert_eq!(part1(&data), 1840243);
+            assert_eq!(part2(&data), 1727785422);
         }
     }
 }
