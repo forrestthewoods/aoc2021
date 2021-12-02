@@ -6,13 +6,13 @@ pub mod day00 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-
+        /*
         let answer_part1 = part1(crate::data::DAY00);
         writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
 
         let answer_part2 = part2(crate::data::DAY00);
         writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
-
+        */
         result
     }
 
@@ -107,6 +107,44 @@ pub mod day01 {
             let nums = parse_data(data);
             assert_eq!(part1(&nums), 1696);
             assert_eq!(part2(&nums), 1737);
+        }
+    }
+}
+
+pub mod day02 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+/*
+        let answer_part1 = part1(crate::data::DAY02);
+        writeln!(&mut result, "Day 02, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(crate::data::DAY02);
+        writeln!(&mut result, "Day 02, Problem 2 - [{}]", answer_part2).unwrap();
+*/
+        result
+    }
+
+    fn part1(_input: &str) -> usize {
+        0
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+        }
+
+        #[test]
+        fn verify() {
         }
     }
 }
