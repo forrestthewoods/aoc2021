@@ -190,3 +190,87 @@ forward 2";
         }
     }
 }
+
+pub mod day03 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let answer_part1 = part1(crate::data::DAY03);
+        writeln!(&mut result, "Day 03, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY03);
+        writeln!(&mut result, "Day 03, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn part1(input: &str) -> u32 {
+        let len = input.lines().next().unwrap().len();
+
+        let mut bit_counts : Vec<u32> = Default::default();
+        bit_counts.resize(len, 0);
+
+        let mut num_rows = 0;
+        for line in input.lines() {
+            num_rows += 1;
+            for (idx, char) in line.chars().enumerate() {
+                bit_counts[idx] += (char as u8 - '0' as u8) as u32;
+            }
+        }
+
+        let mut gamma : u32 = 0;
+        let mut epsilon : u32 = 0;
+        let half_rows = (num_rows / 2) as u32; 
+        for bit_count in bit_counts {
+            if bit_count > half_rows {
+                gamma += 1;
+            } else {
+                epsilon += 1;
+            }
+            gamma <<= 1;
+            epsilon <<= 1;
+        }
+
+        // Undo last shift
+        gamma >>= 1;
+        epsilon >>= 1;
+
+        gamma * epsilon
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let input = "00100
+11110
+10110
+10111
+10101
+01111
+00111
+11100
+10000
+11001
+00010
+01010";
+
+            assert_eq!(part1(input), 198);
+        }
+
+        #[test]
+        fn verify() {
+            assert_eq!(part1(crate::data::DAY03), 3885894);
+            
+        }
+    }
+}
