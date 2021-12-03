@@ -7,7 +7,8 @@ pub fn main() anyerror!void {
     defer std.debug.assert(!alloc.deinit());
 
     //try day01(&alloc.allocator);
-    try day02(&alloc.allocator);
+    //try day02(&alloc.allocator);
+    try day03(&alloc.allocator);
 }
 
 pub fn day01(alloc: *std.mem.Allocator) anyerror!void
@@ -139,4 +140,7 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void
         const result = x*y;
         std.log.info("Day 2, Problem 2 - [{}]", .{result});
     }
+}
+
+pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
 }
