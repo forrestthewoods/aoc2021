@@ -217,46 +217,33 @@ pub mod day03 {
         let half_len = nums.len() / 2;
 
         let mut gamma = 0;
-        let mut epsilon = 0;
         for bit in 0..num_bits {
             let mask = 1 << bit;
             let count = nums.iter().filter(|&&num| (num & mask) > 0).count();
-
-            if count > half_len {
-                gamma |= mask;
-            } else {
-                epsilon |= mask;
-            }
+            gamma |= mask * (count > half_len) as u16;
         }
 
-        gamma as usize * epsilon as usize
+        let mask = (0..num_bits-1).fold(1, |acc, _| (acc << 1) + 1);
+
+        gamma as usize * ((!gamma) & mask) as usize
     }
 
     fn part2(nums: &[u16], num_bits: usize) -> usize {
-        let calc = |needs_bit_fn: &dyn Fn(usize, usize) -> bool| -> usize {
+        let calc = |invert: bool| -> usize {
             let mut nums = nums.to_vec();
-
             let mut mask = 1 << (num_bits - 1);
             while nums.len() > 1 {
                 let count = nums.iter().filter(|&num| (num & mask) > 0).count();
-                let needs_bit = needs_bit_fn(count, nums.len());
-                nums = nums
-                    .iter()
-                    .filter(|&&num| ((num & mask) > 0) == needs_bit)
-                    .cloned()
-                    .collect();
+                let needs_bit = (count >= (nums.len() - count)) ^ invert;
+                nums.retain(|num| ((num & mask) > 0) == needs_bit);
                 mask >>= 1;
             }
             assert_eq!(nums.len(), 1);
             nums[0] as usize
         };
 
-        let oxygen_fn = |count: usize, len: usize| -> bool { count >= (len - count) };
-
-        let co2_fn = |count: usize, len: usize| -> bool { count < (len - count) };
-
-        let oxygen = calc(&oxygen_fn);
-        let co2 = calc(&co2_fn);
+        let oxygen = calc(false);
+        let co2 = calc(true);
 
         oxygen * co2
     }
