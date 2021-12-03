@@ -223,7 +223,7 @@ pub mod day03 {
             gamma |= mask * (count > half_len) as u16;
         }
 
-        let mask = (0..num_bits-1).fold(1, |acc, _| (acc << 1) + 1);
+        let mask = (0..num_bits - 1).fold(1, |acc, _| (acc << 1) + 1);
 
         gamma as usize * ((!gamma) & mask) as usize
     }
