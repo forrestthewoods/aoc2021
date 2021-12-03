@@ -143,4 +143,71 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void
 }
 
 pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
+
+    // Read file
+    var cwd = std.fs.cwd();
+    const file_string : []u8 = try cwd.readFileAlloc(alloc, "../data/day03.txt", std.math.maxInt(usize) );
+    defer alloc.free(file_string);
+
+    // Parse file
+    var nums = std.ArrayList(u16).init(alloc);
+    defer nums.deinit();
+
+    var lines = std.mem.tokenize(file_string, "\r\n");
+    var num_bits : usize = 0;
+    while (lines.next()) |line| {
+        const num = try std.fmt.parseInt(u16, line, 2);
+        num_bits = line.len;
+        try nums.append(num);
+    }
+
+
+    // Part 1
+    {
+        var gamma : usize = 0;
+        var epsilon : usize = 0;
+        var i : usize = 0;
+        while (i<num_bits) : (i+=1) {
+            const mask : u16 = @truncate(u16, @as(usize, 1) << @truncate(u6, i));
+            
+            // Count bits
+            var count : usize = 0;
+            for (nums.items) |num| {
+                //std.log.info("num {}  mask {}", .{num, mask});
+                if ((num & mask) > 0) {
+                    count += 1;
+                }
+            }
+
+            // Accumulate gamma
+            if (count > nums.items.len/2) {
+                gamma |= mask;
+            } else {
+                epsilon |= mask;
+            }
+        }
+
+        const solution1 = gamma * epsilon;
+        std.log.info("Day 3, Problem 1 - [{}]", .{solution1});
+    }
+
+    // Part 2 
+    {
+        const filter = struct {
+            fn count_bits(invert: bool) usize {
+                return 0;
+            }
+        }.count_bits;
+    }
 }
+
+// pub fn main() void {
+//     const j = 1;
+//     var b = struct{
+//         fn function(x: i32) i32 {
+//             return x+j;
+//         }
+//     }.function;
+
+//     var c = b(1);
+// }
