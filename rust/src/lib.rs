@@ -112,8 +112,8 @@ pub mod day01 {
 }
 
 pub mod day02 {
-    use std::fmt::Write;
     use fts_vecmath::vector2::*;
+    use std::fmt::Write;
 
     type Vector = fts_vecmath::vector2::Vector2<i32>;
 
@@ -149,13 +149,13 @@ pub mod day02 {
     }
 
     fn part1(data: &[Vector]) -> i32 {
-        let sum : Vector = data.iter().fold(Vector::zero(), |acc, next| acc + *next);
+        let sum: Vector = data.iter().fold(Vector::zero(), |acc, next| acc + *next);
         sum.x * sum.y
     }
 
     fn part2(data: &[Vector]) -> i32 {
         let mut pos = Vector::zero();
-        let mut aim : i32 = 0;
+        let mut aim: i32 = 0;
         for point in data {
             pos.x += point.x;
             aim += point.y;
@@ -197,20 +197,26 @@ pub mod day03 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let answer_part1 = part1(crate::data::DAY03);
+        let (answer_part1, answer_part2) = solve(crate::data::DAY03);
         writeln!(&mut result, "Day 03, Problem 1 - [{}]", answer_part1).unwrap();
-
-        /*
-        let answer_part2 = part2(crate::data::DAY03);
         writeln!(&mut result, "Day 03, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
-    fn part1(input: &str) -> u32 {
+    fn solve(input: &str) -> (u32, u32) {
         let len = input.lines().next().unwrap().len();
+        let num_bits = len;
 
-        let mut bit_counts : Vec<u32> = Default::default();
+        // Parse
+        let nums: Vec<u32> = input
+            .lines()
+            .map(|line| u32::from_str_radix(line, 2).unwrap())
+            .collect();
+
+
+        // Part 1
+        let mut bit_counts: Vec<u32> = Default::default();
         bit_counts.resize(len, 0);
 
         let mut num_rows = 0;
@@ -221,24 +227,86 @@ pub mod day03 {
             }
         }
 
-        let mut gamma : u32 = 0;
-        let mut epsilon : u32 = 0;
-        let half_rows = (num_rows / 2) as u32; 
+        let mut gamma: u32 = 0;
+        let mut epsilon: u32 = 0;
+        let half_rows = (num_rows / 2) as u32;
         for bit_count in bit_counts {
+            gamma <<= 1;
+            epsilon <<= 1;
+
             if bit_count > half_rows {
                 gamma += 1;
             } else {
                 epsilon += 1;
             }
-            gamma <<= 1;
-            epsilon <<= 1;
         }
 
-        // Undo last shift
-        gamma >>= 1;
-        epsilon >>= 1;
+        // Part 2
+        let count_bits = |n: &[u32], mask: u32| -> usize {
+            n.iter().filter(|&num| (num & mask) > 0).count()
+        };
 
-        gamma * epsilon
+        let mut mask = 1 << (num_bits - 1);
+
+        let mut oxygen_nums = nums.clone();
+        while oxygen_nums.len() > 1 {
+            let num_bits_set = count_bits(&oxygen_nums, mask);
+            let len = oxygen_nums.len();
+            let need_bit = num_bits_set >= (len - num_bits_set);
+            println!("Len: [{}], NumSet: [{}]  Need bit: {}", oxygen_nums.len(), num_bits_set, need_bit);
+            oxygen_nums = oxygen_nums.iter().filter(|&&num| {
+                if need_bit {
+                    (num & mask) > 0
+                } else {
+                    (num & mask) == 0
+                }
+            }).cloned().collect();
+            mask >>= 1;
+        }
+        assert_eq!(oxygen_nums.len(), 1);
+        let oxygen_num = oxygen_nums[0];
+        println!("Oxygen num: {}", oxygen_num);
+
+
+
+        mask = 1 << (num_bits - 1);
+
+        let mut co2_nums = nums.clone();
+        while co2_nums.len() > 1 {
+            let num_bits_set = count_bits(&co2_nums, mask);
+            let len = co2_nums.len();
+            let need_bit = num_bits_set < (len - num_bits_set);
+            println!("Len: [{}], NumSet: [{}]  Need bit: {}", co2_nums.len(), num_bits_set, need_bit);
+            co2_nums = co2_nums.iter().filter(|&&num| {
+                if need_bit {
+                    (num & mask) > 0
+                } else {
+                    (num & mask) == 0
+                }
+            }).cloned().collect();
+            mask >>= 1;
+        }
+        assert_eq!(co2_nums.len(), 1);
+        let co2_num = co2_nums[0];
+        println!("co2 num: {}", co2_num);
+
+        /*
+00100 = 4
+11110 = 30
+10110 = 22
+10111 = 23
+10101 = 21
+01111 = 15
+00111 = 7
+11100 = 28
+10000 = 16
+11001 = 25
+00010 = 2
+01010 = 10
+        */
+
+
+        (gamma * epsilon, oxygen_num * co2_num)
     }
 
     fn part2(_input: &str) -> usize {
@@ -264,13 +332,17 @@ pub mod day03 {
 00010
 01010";
 
-            assert_eq!(part1(input), 198);
+            let (answer_part1, answer_part2) = solve(input);
+
+            assert_eq!(answer_part1, 198);
+            assert_eq!(answer_part2, 230);
         }
 
         #[test]
         fn verify() {
-            assert_eq!(part1(crate::data::DAY03), 3885894);
-            
+            let (answer_part1, answer_part2) = solve(crate::data::DAY03);
+            assert_eq!(answer_part1, 3885894);
+            assert_eq!(answer_part2, 4375225);
         }
     }
 }
