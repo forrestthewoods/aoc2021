@@ -170,12 +170,7 @@ pub mod day02 {
 
         #[test]
         fn examples() {
-            let input = "forward 5
-down 5
-forward 8
-up 3
-down 8
-forward 2";
+            let input = "forward 5\ndown 5\nforward 8\nup 3\ndown 8\nforward 2";
 
             let data = super::parse_input(&input);
             assert_eq!(part1(&data), 150);
@@ -197,120 +192,73 @@ pub mod day03 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let (answer_part1, answer_part2) = solve(crate::data::DAY03);
+        let (nums, num_bits) = parse_input(crate::data::DAY03);
+
+        let answer_part1 = part1(&nums, num_bits);
         writeln!(&mut result, "Day 03, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(&nums, num_bits);
         writeln!(&mut result, "Day 03, Problem 2 - [{}]", answer_part2).unwrap();
 
         result
     }
 
-    fn solve(input: &str) -> (u32, u32) {
-        let len = input.lines().next().unwrap().len();
-        let num_bits = len;
-
-        // Parse
-        let nums: Vec<u32> = input
+    fn parse_input(input: &str) -> (Vec<u16>, usize) {
+        let nums = input
             .lines()
-            .map(|line| u32::from_str_radix(line, 2).unwrap())
+            .map(|line| u16::from_str_radix(line, 2).unwrap())
             .collect();
+        let num_bits = input.lines().next().unwrap().len();
 
-
-        // Part 1
-        let mut bit_counts: Vec<u32> = Default::default();
-        bit_counts.resize(len, 0);
-
-        let mut num_rows = 0;
-        for line in input.lines() {
-            num_rows += 1;
-            for (idx, char) in line.chars().enumerate() {
-                bit_counts[idx] += (char as u8 - '0' as u8) as u32;
-            }
-        }
-
-        let mut gamma: u32 = 0;
-        let mut epsilon: u32 = 0;
-        let half_rows = (num_rows / 2) as u32;
-        for bit_count in bit_counts {
-            gamma <<= 1;
-            epsilon <<= 1;
-
-            if bit_count > half_rows {
-                gamma += 1;
-            } else {
-                epsilon += 1;
-            }
-        }
-
-        // Part 2
-        let count_bits = |n: &[u32], mask: u32| -> usize {
-            n.iter().filter(|&num| (num & mask) > 0).count()
-        };
-
-        let mut mask = 1 << (num_bits - 1);
-
-        let mut oxygen_nums = nums.clone();
-        while oxygen_nums.len() > 1 {
-            let num_bits_set = count_bits(&oxygen_nums, mask);
-            let len = oxygen_nums.len();
-            let need_bit = num_bits_set >= (len - num_bits_set);
-            println!("Len: [{}], NumSet: [{}]  Need bit: {}", oxygen_nums.len(), num_bits_set, need_bit);
-            oxygen_nums = oxygen_nums.iter().filter(|&&num| {
-                if need_bit {
-                    (num & mask) > 0
-                } else {
-                    (num & mask) == 0
-                }
-            }).cloned().collect();
-            mask >>= 1;
-        }
-        assert_eq!(oxygen_nums.len(), 1);
-        let oxygen_num = oxygen_nums[0];
-        println!("Oxygen num: {}", oxygen_num);
-
-
-
-        mask = 1 << (num_bits - 1);
-
-        let mut co2_nums = nums.clone();
-        while co2_nums.len() > 1 {
-            let num_bits_set = count_bits(&co2_nums, mask);
-            let len = co2_nums.len();
-            let need_bit = num_bits_set < (len - num_bits_set);
-            println!("Len: [{}], NumSet: [{}]  Need bit: {}", co2_nums.len(), num_bits_set, need_bit);
-            co2_nums = co2_nums.iter().filter(|&&num| {
-                if need_bit {
-                    (num & mask) > 0
-                } else {
-                    (num & mask) == 0
-                }
-            }).cloned().collect();
-            mask >>= 1;
-        }
-        assert_eq!(co2_nums.len(), 1);
-        let co2_num = co2_nums[0];
-        println!("co2 num: {}", co2_num);
-
-        /*
-00100 = 4
-11110 = 30
-10110 = 22
-10111 = 23
-10101 = 21
-01111 = 15
-00111 = 7
-11100 = 28
-10000 = 16
-11001 = 25
-00010 = 2
-01010 = 10
-        */
-
-
-        (gamma * epsilon, oxygen_num * co2_num)
+        (nums, num_bits)
     }
 
-    fn part2(_input: &str) -> usize {
-        0
+    fn part1(nums: &[u16], num_bits: usize) -> usize {
+        let half_len = nums.len() / 2;
+
+        let mut gamma = 0;
+        let mut epsilon = 0;
+        for bit in 0..num_bits {
+            let mask = 1 << bit;
+            let count = nums.iter().filter(|&&num| (num & mask) > 0).count();
+
+            if count > half_len {
+                gamma |= mask;
+            } else {
+                epsilon |= mask;
+            }
+        }
+
+        gamma as usize * epsilon as usize
+    }
+
+    fn part2(nums: &[u16], num_bits: usize) -> usize {
+        let calc = |needs_bit_fn: &dyn Fn(usize, usize) -> bool| -> usize {
+            let mut nums = nums.to_vec();
+
+            let mut mask = 1 << (num_bits - 1);
+            while nums.len() > 1 {
+                let count = nums.iter().filter(|&num| (num & mask) > 0).count();
+                let needs_bit = needs_bit_fn(count, nums.len());
+                nums = nums
+                    .iter()
+                    .filter(|&&num| ((num & mask) > 0) == needs_bit)
+                    .cloned()
+                    .collect();
+                mask >>= 1;
+            }
+            assert_eq!(nums.len(), 1);
+            nums[0] as usize
+        };
+
+        let oxygen_fn = |count: usize, len: usize| -> bool { count >= (len - count) };
+
+        let co2_fn = |count: usize, len: usize| -> bool { count < (len - count) };
+
+        let oxygen = calc(&oxygen_fn);
+        let co2 = calc(&co2_fn);
+
+        oxygen * co2
     }
 
     #[cfg(test)]
@@ -319,30 +267,18 @@ pub mod day03 {
 
         #[test]
         fn examples() {
-            let input = "00100
-11110
-10110
-10111
-10101
-01111
-00111
-11100
-10000
-11001
-00010
-01010";
+            let input = "00100\n11110\n10110\n10111\n10101\n01111\n00111\n11100\n10000\n11001\n00010\n01010";
 
-            let (answer_part1, answer_part2) = solve(input);
-
-            assert_eq!(answer_part1, 198);
-            assert_eq!(answer_part2, 230);
+            let (nums, num_bits) = parse_input(input);
+            assert_eq!(part1(&nums, num_bits), 198);
+            assert_eq!(part2(&nums, num_bits), 230);
         }
 
         #[test]
         fn verify() {
-            let (answer_part1, answer_part2) = solve(crate::data::DAY03);
-            assert_eq!(answer_part1, 3885894);
-            assert_eq!(answer_part2, 4375225);
+            let (nums, num_bits) = parse_input(crate::data::DAY03);
+            assert_eq!(part1(&nums, num_bits), 3885894);
+            assert_eq!(part2(&nums, num_bits), 4375225);
         }
     }
 }
