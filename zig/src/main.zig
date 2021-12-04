@@ -1,7 +1,6 @@
 const expect = @import("std").testing.expect;
 const std = @import("std");
 
-
 pub fn main() anyerror!void {
     var alloc = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(!alloc.deinit());
@@ -12,11 +11,10 @@ pub fn main() anyerror!void {
     try day04(&alloc.allocator);
 }
 
-pub fn day01(alloc: *std.mem.Allocator) anyerror!void
-{   
+pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
     // Read file
     var cwd = std.fs.cwd();
-    const file_string : []u8 = try cwd.readFileAlloc(alloc, "../data/day01.txt", std.math.maxInt(usize) );
+    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day01.txt", std.math.maxInt(usize));
     defer alloc.free(file_string);
 
     // Parse file
@@ -32,14 +30,14 @@ pub fn day01(alloc: *std.mem.Allocator) anyerror!void
 
     // Part 1
     {
-        var part1 : u32 = 0;
+        var part1: u32 = 0;
         var i: u32 = 0;
 
-        while (i < len-1) : (i += 1) {
-            const j = i+1;
+        while (i < len - 1) : (i += 1) {
+            const j = i + 1;
             if (nums.items[j] > nums.items[i]) {
                 part1 += 1;
-            }        
+            }
         }
         std.log.info("Day 1, Problem 1 - [{}]", .{part1});
         try expect(part1 == 1696);
@@ -47,9 +45,9 @@ pub fn day01(alloc: *std.mem.Allocator) anyerror!void
 
     // Part 2
     {
-        var part2 : u32 = 0;
-        var i : u32 = 0;
-        while (i < len - 3) : (i +=1) {
+        var part2: u32 = 0;
+        var i: u32 = 0;
+        while (i < len - 3) : (i += 1) {
             const j = i + 3;
             if (nums.items[j] > nums.items[i]) {
                 part2 += 1;
@@ -61,23 +59,15 @@ pub fn day01(alloc: *std.mem.Allocator) anyerror!void
     }
 }
 
-pub fn day02(alloc: *std.mem.Allocator) anyerror!void
-{   
+pub fn day02(alloc: *std.mem.Allocator) anyerror!void {
     // Data types
-    const Dir = enum {
-        Forward,
-        Up,
-        Down
-    };
+    const Dir = enum { Forward, Up, Down };
 
-    const Entry = struct {
-        dir: Dir,
-        amount: i32
-    };
+    const Entry = struct { dir: Dir, amount: i32 };
 
     // Read file
     var cwd = std.fs.cwd();
-    const file_string : []u8 = try cwd.readFileAlloc(alloc, "../data/day02.txt", std.math.maxInt(usize) );
+    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day02.txt", std.math.maxInt(usize));
     defer alloc.free(file_string);
 
     // Parse file
@@ -92,11 +82,11 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void
 
         const amount = try std.fmt.parseInt(i32, amount_str, 10);
         if (std.mem.eql(u8, dir_str, "forward")) {
-            try commands.append( Entry{ .dir = Dir.Forward, .amount = amount});
+            try commands.append(Entry{ .dir = Dir.Forward, .amount = amount });
         } else if (std.mem.eql(u8, dir_str, "up")) {
-            try commands.append( Entry{ .dir = Dir.Up, .amount = amount});
+            try commands.append(Entry{ .dir = Dir.Up, .amount = amount });
         } else if (std.mem.eql(u8, dir_str, "down")) {
-            try commands.append( Entry{ .dir = Dir.Down, .amount = amount});
+            try commands.append(Entry{ .dir = Dir.Down, .amount = amount });
         } else {
             unreachable;
         }
@@ -117,11 +107,11 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void
             }
         }
 
-        const result = x*y;
+        const result = x * y;
         std.log.info("Day 2, Problem 1 - [{}]", .{result});
     }
 
-    // Part 2 
+    // Part 2
     {
         var x: i32 = 0;
         var y: i32 = 0;
@@ -138,7 +128,7 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void
             }
         }
 
-        const result = x*y;
+        const result = x * y;
         std.log.info("Day 2, Problem 2 - [{}]", .{result});
     }
 }
@@ -147,7 +137,7 @@ pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
 
     // Read file
     var cwd = std.fs.cwd();
-    const file_string : []u8 = try cwd.readFileAlloc(alloc, "../data/day03.txt", std.math.maxInt(usize) );
+    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day03.txt", std.math.maxInt(usize));
     defer alloc.free(file_string);
 
     // Parse file
@@ -155,24 +145,23 @@ pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
     defer nums.deinit();
 
     var lines = std.mem.tokenize(file_string, "\r\n");
-    var num_bits : usize = 0;
+    var num_bits: usize = 0;
     while (lines.next()) |line| {
         const num = try std.fmt.parseInt(u16, line, 2);
         num_bits = line.len;
         try nums.append(num);
     }
 
-
     // Part 1
     {
-        var gamma : usize = 0;
-        var epsilon : usize = 0;
-        var i : usize = 0;
-        while (i<num_bits) : (i+=1) {
-            const mask : u16 = @truncate(u16, @as(usize, 1) << @truncate(u6, i));
-            
+        var gamma: usize = 0;
+        var epsilon: usize = 0;
+        var i: usize = 0;
+        while (i < num_bits) : (i += 1) {
+            const mask: u16 = @truncate(u16, @as(usize, 1) << @truncate(u6, i));
+
             // Count bits
-            var count : usize = 0;
+            var count: usize = 0;
             for (nums.items) |num| {
                 //std.log.info("num {}  mask {}", .{num, mask});
                 if ((num & mask) > 0) {
@@ -181,7 +170,7 @@ pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
             }
 
             // Accumulate gamma
-            if (count > nums.items.len/2) {
+            if (count > nums.items.len / 2) {
                 gamma |= mask;
             } else {
                 epsilon |= mask;
@@ -192,7 +181,7 @@ pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
         std.log.info("Day 3, Problem 1 - [{}]", .{solution1});
     }
 
-    // Part 2 
+    // Part 2
     {
         const oxygen = try d3p2_calc(alloc, nums.items, num_bits, false);
         const co2 = try d3p2_calc(alloc, nums.items, num_bits, true);
@@ -213,8 +202,8 @@ pub fn d3p2_calc(alloc: *std.mem.Allocator, numsInput: []u16, num_bits: usize, i
     for (numsInput) |num| {
         try nums.append(num);
     }
-    
-    var mask : u16 = @truncate(u16, @as(usize, 1) << @truncate(u6, num_bits - 1));
+
+    var mask: u16 = @truncate(u16, @as(usize, 1) << @truncate(u6, num_bits - 1));
     while (nums.items.len > 1) {
         const count = d3p2_count_bits(nums.items, mask);
         var needs_bit = (count >= (nums.items.len - count));
@@ -222,7 +211,7 @@ pub fn d3p2_calc(alloc: *std.mem.Allocator, numsInput: []u16, num_bits: usize, i
             needs_bit = !needs_bit;
         }
 
-        var idx : usize = 0;
+        var idx: usize = 0;
         while (idx < nums.items.len) {
             const num = nums.items[idx];
             const has_bit = (num & mask) > 0;
@@ -240,7 +229,7 @@ pub fn d3p2_calc(alloc: *std.mem.Allocator, numsInput: []u16, num_bits: usize, i
 }
 
 pub fn d3p2_count_bits(nums: []u16, mask: u16) usize {
-    var count : usize = 0;
+    var count: usize = 0;
     for (nums) |num| {
         if ((num & mask) > 0) {
             count += 1;
@@ -250,15 +239,12 @@ pub fn d3p2_count_bits(nums: []u16, mask: u16) usize {
 }
 
 pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
-    const Tile = struct {
-        number: u8,
-        marked: bool
-    };
+    const Tile = struct { number: u8, marked: bool };
     const Board = std.ArrayList(Tile);
 
     // Read file
     var cwd = std.fs.cwd();
-    const file_string : []u8 = try cwd.readFileAlloc(alloc, "../data/day04.txt", std.math.maxInt(usize) );
+    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day04.txt", std.math.maxInt(usize));
     defer alloc.free(file_string);
 
     // Parse file
@@ -267,12 +253,12 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
 
     // Split into chunks
     var chunks = std.mem.tokenize(file_string, "\r\n\r\n");
-    
+
     // First chunk is numbers
     const numbers_chunk = chunks.next().?;
     var numbers_iter = std.mem.tokenize(numbers_chunk, ",");
     while (numbers_iter.next()) |number_str| {
-        const num : u8 = try std.fmt.parseInt(u8, number_str, 10);
+        const num: u8 = try std.fmt.parseInt(u8, number_str, 10);
         try numbers.append(num);
     }
 
@@ -292,7 +278,7 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
             var board_numbers = std.mem.tokenize(line, " ");
             while (board_numbers.next()) |board_number_str| {
                 const num = try std.fmt.parseInt(u8, board_number_str, 10);
-                try new_board.append( Tile{ .number = num, .marked = false } );
+                try new_board.append(Tile{ .number = num, .marked = false });
             }
         }
         try boards.append(new_board);
