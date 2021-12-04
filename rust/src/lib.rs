@@ -293,6 +293,7 @@ pub mod day04 {
     }
 
     fn parse_input(input: &str) -> (Moves, Vec<Board>) {
+        // Read moves from first line
         let first_line = input.lines().next().unwrap();
         let moves: Vec<u8> = input
             .lines()
@@ -302,6 +303,7 @@ pub mod day04 {
             .map(|num| num.parse::<u8>().unwrap())
             .collect();
 
+        // Rest of input is boards, separated by an empty line
         let board_input = input[first_line.len()..].trim();
         let boards: Vec<Board> = board_input
             .split("\r\n\r\n")
