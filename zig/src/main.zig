@@ -8,7 +8,8 @@ pub fn main() anyerror!void {
 
     //try day01(&alloc.allocator);
     //try day02(&alloc.allocator);
-    try day03(&alloc.allocator);
+    //try day03(&alloc.allocator);
+    try day04(&alloc.allocator);
 }
 
 pub fn day01(alloc: *std.mem.Allocator) anyerror!void
@@ -248,14 +249,52 @@ pub fn d3p2_count_bits(nums: []u16, mask: u16) usize {
     return count;
 }
 
+pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
+    const Tile = struct {
+        number: u8,
+        marked: bool
+    };
+    const Board = std.ArrayList(Tile);
 
-// pub fn main() void {
-//     const j = 1;
-//     var b = struct{
-//         fn function(x: i32) i32 {
-//             return x+j;
-//         }
-//     }.function;
+    // Read file
+    var cwd = std.fs.cwd();
+    const file_string : []u8 = try cwd.readFileAlloc(alloc, "../data/day04.txt", std.math.maxInt(usize) );
+    defer alloc.free(file_string);
 
-//     var c = b(1);
-// }
+    // Parse file
+    var numbers = std.ArrayList(u8).init(alloc);
+    defer numbers.deinit();
+
+    // Split into chunks
+    var chunks = std.mem.tokenize(file_string, "\r\n\r\n");
+    
+    // First chunk is numbers
+    const numbers_chunk = chunks.next().?;
+    var numbers_iter = std.mem.tokenize(numbers_chunk, ",");
+    while (numbers_iter.next()) |number_str| {
+        const num : u8 = try std.fmt.parseInt(u8, number_str, 10);
+        try numbers.append(num);
+    }
+
+    // Create List of Boards
+    var boards = std.ArrayList(Board).init(alloc);
+    defer {
+        for (boards.items) |board|
+            board.deinit();
+        boards.deinit();
+    }
+
+    // All remainder chunks are boards
+    while (chunks.next()) |board_chunk| {
+        var lines = std.mem.tokenize(board_chunk, "\r\n");
+        var new_board = Board.init(alloc);
+        while (lines.next()) |line| {
+            var board_numbers = std.mem.tokenize(line, " ");
+            while (board_numbers.next()) |board_number_str| {
+                const num = try std.fmt.parseInt(u8, board_number_str, 10);
+                try new_board.append( Tile{ .number = num, .marked = false } );
+            }
+        }
+        try boards.append(new_board);
+    }
+}
