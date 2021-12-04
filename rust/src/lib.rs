@@ -283,13 +283,12 @@ pub mod day04 {
 
         let (moves, boards) = parse_input(crate::data::DAY04);
 
-        let answer_part1 = part1(& moves, boards);
+        let answer_part1 = part1(&moves, boards.clone());
         writeln!(&mut result, "Day 04, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY00);
+        let answer_part2 = part2(&moves, boards);
         writeln!(&mut result, "Day 04, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -322,6 +321,7 @@ pub mod day04 {
         for move_value in moves {
             let mut found_tile = false;
             for board in &mut boards {
+                // Mark tiles
                 for tile in board.iter_mut() {
                     if tile.0 == *move_value {
                         tile.1 = true;
@@ -329,6 +329,7 @@ pub mod day04 {
                     }
                 }
 
+                // If any tile marked, check for win
                 if found_tile {
                     if let Some(answer) = check_board(*move_value, board) {
                         return answer;
@@ -340,12 +341,58 @@ pub mod day04 {
         unreachable!("Failed to find a solution");
     }
 
-    fn part2(_input: &str) -> usize {
-        0
+    fn part2(moves: &[u8], mut boards: Vec<Board>) -> usize {
+        // Apply all moves
+        for move_value in moves {
+            // Apply move to each board
+            let mut board_idx = 0;
+            while board_idx < boards.len() {
+                let board = &mut boards[board_idx];
+                let mut found_tile = false;
+
+                // Apply move to board
+                for tile in board.iter_mut() {
+                    if tile.0 == *move_value {
+                        tile.1 = true;
+                        found_tile = true;
+                    }
+                }
+
+                // If tile found, check for win
+                if found_tile {
+                    // If board wins, remove it from list
+                    if let Some(_) = check_board(*move_value, board) {
+                        // Return answer if it's the last board
+                        if boards.len() == 1 {
+                            return boards[0]
+                                .iter()
+                                .filter_map(|(value, marked)| (!marked).then(|| *value as usize))
+                                .sum::<usize>()
+                                * *move_value as usize;
+                        }
+
+                        boards.remove(board_idx);
+                        continue;
+                    }
+                }
+
+                // Apply move to next board
+                board_idx += 1;
+            }
+
+            // Only one board left
+            if boards.len() == 1 {
+                println!(
+                    "Solution! Last Move: [{}]. Board: [{:?}]",
+                    move_value, &boards[0]
+                );
+            }
+        }
+
+        unreachable!("Failed to find a solution");
     }
 
     fn check_board(value: u8, board: &Board) -> Option<usize> {
-        /*
         let indices = [
             // rows
             [0, 1, 2, 3, 4],
@@ -353,24 +400,29 @@ pub mod day04 {
             [10, 11, 12, 13, 14],
             [15, 16, 17, 18, 19],
             [20, 21, 22, 23, 24],
-
             // cols
             [0, 5, 10, 15, 20],
             [1, 6, 11, 16, 21],
             [2, 7, 12, 17, 22],
             [3, 8, 13, 18, 23],
-            [4, 9, 14, 19, 24]
+            [4, 9, 14, 19, 24],
         ];
-        */
 
         // TODO: cache
-        let rows = (0..5).map(|row| (row * 5..row * 5 + 5).collect());
-        let cols = (0..5).map(|col| (col..25).step_by(5).collect());
-        let indices: Vec<Vec<u8>> = rows.chain(cols).collect();
+        /*
+            let rows = (0..5).map(|row| (row * 5..row * 5 + 5).collect());
+            let cols = (0..5).map(|col| (col..25).step_by(5).collect());
+            let indices: Vec<Vec<u8>> = rows.chain(cols).collect();
+        */
 
         for line in &indices {
             let tiles = line.iter().map(|idx| board[*idx as usize]);
             if tiles.clone().all(|(_, marked)| marked) {
+                println!(
+                    "Matched line: [{:?}]  with values: [{:?}]",
+                    line.iter().collect::<Vec<_>>(),
+                    tiles.clone().collect::<Vec<_>>()
+                );
                 let result = board
                     .iter()
                     .filter_map(
@@ -392,13 +444,15 @@ pub mod day04 {
         #[test]
         fn examples() {
             let (moves, boards) = parse_input(crate::data::_DAY04_EXAMPLE1);
-            assert_eq!(part1(&moves, boards), 4512);
+            assert_eq!(part1(&moves, boards.clone()), 4512);
+            assert_eq!(part2(&moves, boards), 1924);
         }
 
         #[test]
         fn verify() {
             let (moves, boards) = parse_input(crate::data::DAY04);
-            assert_eq!(part1(&moves, boards), 22680);
+            assert_eq!(part1(&moves, boards.clone()), 22680);
+            assert_eq!(part2(&moves, boards), 16168);
         }
     }
 }
