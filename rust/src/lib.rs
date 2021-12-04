@@ -379,57 +379,36 @@ pub mod day04 {
                 // Apply move to next board
                 board_idx += 1;
             }
-
-            // Only one board left
-            if boards.len() == 1 {
-                println!(
-                    "Solution! Last Move: [{}]. Board: [{:?}]",
-                    move_value, &boards[0]
-                );
-            }
         }
 
         unreachable!("Failed to find a solution");
     }
 
-    fn check_board(value: u8, board: &Board) -> Option<usize> {
-        let indices = [
-            // rows
-            [0, 1, 2, 3, 4],
-            [5, 6, 7, 8, 9],
-            [10, 11, 12, 13, 14],
-            [15, 16, 17, 18, 19],
-            [20, 21, 22, 23, 24],
-            // cols
-            [0, 5, 10, 15, 20],
-            [1, 6, 11, 16, 21],
-            [2, 7, 12, 17, 22],
-            [3, 8, 13, 18, 23],
-            [4, 9, 14, 19, 24],
-        ];
+    fn check_board(last_value: u8, board: &Board) -> Option<usize> {
+        // Overly clever way to generate row and col indices
+        lazy_static::lazy_static! {
+            static ref ROWCOLS: Vec<Vec<u8>> =
+                (0..5).map(|row| (row * 5..row * 5 + 5).collect())
+                .chain(
+                    (0..5).map(|col| (col..25).step_by(5).collect())
+                ).collect();
+        }
 
-        // TODO: cache
-        /*
-            let rows = (0..5).map(|row| (row * 5..row * 5 + 5).collect());
-            let cols = (0..5).map(|col| (col..25).step_by(5).collect());
-            let indices: Vec<Vec<u8>> = rows.chain(cols).collect();
-        */
+        // Test each rowcol
+        for rowcol in ROWCOLS.iter() {
+            // Get tiles
+            let tiles = rowcol.iter().map(|idx| board[*idx as usize]);
 
-        for line in &indices {
-            let tiles = line.iter().map(|idx| board[*idx as usize]);
+            // Check if all tiles in rowcol marked
             if tiles.clone().all(|(_, marked)| marked) {
-                println!(
-                    "Matched line: [{:?}]  with values: [{:?}]",
-                    line.iter().collect::<Vec<_>>(),
-                    tiles.clone().collect::<Vec<_>>()
-                );
+                // If yes, answer is UNMARKED tiles *
                 let result = board
                     .iter()
                     .filter_map(
-                        |(value, marked)| if !marked { Some(*value as usize) } else { None },
+                        |(value, marked)| (!marked).then(||*value as usize)
                     )
                     .sum::<usize>()
-                    * value as usize;
+                    * last_value as usize;
                 return Some(result);
             }
         }
