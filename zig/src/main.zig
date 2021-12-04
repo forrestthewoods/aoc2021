@@ -193,13 +193,61 @@ pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
 
     // Part 2 
     {
-        const filter = struct {
-            fn count_bits(invert: bool) usize {
-                return 0;
-            }
-        }.count_bits;
+        const oxygen = try d3p2_calc(alloc, nums.items, num_bits, false);
+        const co2 = try d3p2_calc(alloc, nums.items, num_bits, true);
+
+        // Oxygen = [3775]
+        // co2: [1159]
+
+        const solution2 = oxygen * co2;
+        std.log.info("Day 3, Problem 2 - [{}]", .{solution2});
     }
 }
+
+pub fn d3p2_calc(alloc: *std.mem.Allocator, numsInput: []u16, num_bits: usize, invert: bool) anyerror!usize {
+    // Make a copy of nums
+    var nums = std.ArrayList(u16).init(alloc);
+    defer nums.deinit();
+
+    for (numsInput) |num| {
+        try nums.append(num);
+    }
+    
+    var mask : u16 = @truncate(u16, @as(usize, 1) << @truncate(u6, num_bits - 1));
+    while (nums.items.len > 1) {
+        const count = d3p2_count_bits(nums.items, mask);
+        var needs_bit = (count >= (nums.items.len - count));
+        if (invert) {
+            needs_bit = !needs_bit;
+        }
+
+        var idx : usize = 0;
+        while (idx < nums.items.len) {
+            const num = nums.items[idx];
+            const has_bit = (num & mask) > 0;
+            if (has_bit != needs_bit) {
+                _ = nums.swapRemove(idx);
+            } else {
+                idx += 1;
+            }
+        }
+
+        mask >>= 1;
+    }
+    std.debug.assert(nums.items.len == 1);
+    return nums.items[0];
+}
+
+pub fn d3p2_count_bits(nums: []u16, mask: u16) usize {
+    var count : usize = 0;
+    for (nums) |num| {
+        if ((num & mask) > 0) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
 
 // pub fn main() void {
 //     const j = 1;

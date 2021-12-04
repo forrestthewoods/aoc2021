@@ -225,7 +225,8 @@ pub mod day03 {
 
         let mask = (0..num_bits - 1).fold(1, |acc, _| (acc << 1) + 1);
 
-        gamma as usize * ((!gamma) & mask) as usize
+        let epsilon = !gamma & mask;
+        gamma as usize * epsilon as usize
     }
 
     fn part2(nums: &[u16], num_bits: usize) -> usize {
