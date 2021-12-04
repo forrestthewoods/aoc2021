@@ -270,3 +270,135 @@ pub mod day03 {
         }
     }
 }
+
+pub mod day04 {
+    use std::fmt::Write;
+
+    type Moves = Vec<u8>;
+    type Tile = (u8, bool);
+    type Board = Vec<Tile>;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let (moves, boards) = parse_input(crate::data::DAY04);
+
+        let answer_part1 = part1(& moves, boards);
+        writeln!(&mut result, "Day 04, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY00);
+        writeln!(&mut result, "Day 04, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> (Moves, Vec<Board>) {
+        let first_line = input.lines().next().unwrap();
+        let moves: Vec<u8> = input
+            .lines()
+            .next()
+            .unwrap()
+            .split(',')
+            .map(|num| num.parse::<u8>().unwrap())
+            .collect();
+
+        let board_input = input[first_line.len()..].trim();
+        let boards: Vec<Board> = board_input
+            .split("\r\n\r\n")
+            .map(|chunk| {
+                chunk
+                    .split_ascii_whitespace()
+                    .flat_map(|line| line.split(' '))
+                    .map(|num| (num.parse::<u8>().unwrap(), false))
+                    .collect()
+            })
+            .collect();
+
+        (moves, boards)
+    }
+
+    fn part1(moves: &[u8], mut boards: Vec<Board>) -> usize {
+        for move_value in moves {
+            let mut found_tile = false;
+            for board in &mut boards {
+                for tile in board.iter_mut() {
+                    if tile.0 == *move_value {
+                        tile.1 = true;
+                        found_tile = true;
+                    }
+                }
+
+                if found_tile {
+                    if let Some(answer) = check_board(*move_value, board) {
+                        return answer;
+                    }
+                }
+            }
+        }
+
+        unreachable!("Failed to find a solution");
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    fn check_board(value: u8, board: &Board) -> Option<usize> {
+        /*
+        let indices = [
+            // rows
+            [0, 1, 2, 3, 4],
+            [5, 6, 7, 8, 9],
+            [10, 11, 12, 13, 14],
+            [15, 16, 17, 18, 19],
+            [20, 21, 22, 23, 24],
+
+            // cols
+            [0, 5, 10, 15, 20],
+            [1, 6, 11, 16, 21],
+            [2, 7, 12, 17, 22],
+            [3, 8, 13, 18, 23],
+            [4, 9, 14, 19, 24]
+        ];
+        */
+
+        // TODO: cache
+        let rows = (0..5).map(|row| (row * 5..row * 5 + 5).collect());
+        let cols = (0..5).map(|col| (col..25).step_by(5).collect());
+        let indices: Vec<Vec<u8>> = rows.chain(cols).collect();
+
+        for line in &indices {
+            let tiles = line.iter().map(|idx| board[*idx as usize]);
+            if tiles.clone().all(|(_, marked)| marked) {
+                let result = board
+                    .iter()
+                    .filter_map(
+                        |(value, marked)| if !marked { Some(*value as usize) } else { None },
+                    )
+                    .sum::<usize>()
+                    * value as usize;
+                return Some(result);
+            }
+        }
+
+        None
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (moves, boards) = parse_input(crate::data::_DAY04_EXAMPLE1);
+            assert_eq!(part1(&moves, boards), 4512);
+        }
+
+        #[test]
+        fn verify() {
+            let (moves, boards) = parse_input(crate::data::DAY04);
+            assert_eq!(part1(&moves, boards), 22680);
+        }
+    }
+}

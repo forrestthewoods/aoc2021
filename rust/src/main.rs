@@ -21,8 +21,8 @@ fn main() {
     let days = [
         // aoc2021::day01::run as DayFn,
         // aoc2021::day02::run as DayFn,
-        aoc2021::day03::run as DayFn,
-        // aoc2021::day04::run as DayFn,
+        // aoc2021::day03::run as DayFn,
+        aoc2021::day04::run as DayFn,
         // aoc2021::day05::run as DayFn,
         // aoc2021::day06::run as DayFn,
         // aoc2021::day07::run as DayFn,
