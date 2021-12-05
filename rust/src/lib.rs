@@ -478,7 +478,15 @@ pub mod day05 {
     }
 
     fn solve(segments: &[Segment], include_diagonals: bool) -> usize {
-        let mut grid: HashMap<Point, usize> = Default::default();
+        // Find max
+        let mut width = 0;
+        let mut height = 0;
+        for segment in segments {
+            width = width.max(segment.0.x).max(segment.1.x);
+            height = height.max(segment.0.y).max(segment.1.y);
+        }
+        let mut overlaps: Vec<u16> = Default::default();
+        overlaps.resize((width as usize + 1) * (height as usize + 1), 0);
 
         // Process all segments
         for segment in segments {
@@ -492,18 +500,15 @@ pub mod day05 {
             }
 
             let mut pt = segment.0;
-            loop {
-                *grid.entry(pt).or_default() += 1;
-
-                if pt == segment.1 {
-                    break;
-                }
-
+            let end = segment.1 + delta;
+            while pt != end {
+                let idx = pt.y * width + pt.x;
+                overlaps[idx as usize] += 1;
                 pt += delta;
             }
         }
 
-        grid.iter().filter(|(_, overlaps)| **overlaps >= 2).count()
+        overlaps.iter().filter(|count| **count >= 2).count()
     }
 
     fn part1(segments: &[Segment]) -> usize {
