@@ -406,9 +406,7 @@ pub mod day04 {
                 // If yes, answer is UNMARKED tiles *
                 let result = board
                     .iter()
-                    .filter_map(
-                        |(value, marked)| (!marked).then(||*value as usize)
-                    )
+                    .filter_map(|(value, marked)| (!marked).then(|| *value as usize))
                     .sum::<usize>()
                     * last_value as usize;
                 return Some(result);
@@ -434,6 +432,163 @@ pub mod day04 {
             let (moves, boards) = parse_input(crate::data::DAY04);
             assert_eq!(part1(&moves, boards.clone()), 22680);
             assert_eq!(part2(&moves, boards), 16168);
+        }
+    }
+}
+
+pub mod day05 {
+    use regex::Regex;
+    use std::collections::HashMap;
+    use std::fmt::Write;
+
+    type Point = fts_vecmath::point2::Point2<i32>;
+    type Vector = fts_vecmath::vector2::Vector2<i32>;
+    type Segment = (Point, Point);
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let segments = parse_input(crate::data::DAY05);
+
+        let answer_part1 = part1(&segments);
+        writeln!(&mut result, "Day 05, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(&segments);
+        writeln!(&mut result, "Day 05, Problem 2 - [{}]", answer_part2).unwrap();
+
+        result
+    }
+
+    fn parse_input(input: &str) -> Vec<Segment> {
+        lazy_static::lazy_static! {
+            static ref LINE_REGEX: Regex = Regex::new(r"(\d+),(\d+) -> (\d+),(\d+)").unwrap();
+        }
+
+        input
+            .lines()
+            .map(|line| {
+                let caps = LINE_REGEX.captures(line).unwrap();
+                let x1 = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
+                let y1 = caps.get(2).unwrap().as_str().parse::<i32>().unwrap();
+                let x2 = caps.get(3).unwrap().as_str().parse::<i32>().unwrap();
+                let y2 = caps.get(4).unwrap().as_str().parse::<i32>().unwrap();
+                (Point::new(x1, y1), Point::new(x2, y2))
+            })
+            .collect()
+    }
+
+    fn part1(segments: &[Segment]) -> usize {
+        let mut grid: HashMap<Point, usize> = Default::default();
+
+        // Process all segments
+        for segment in segments {
+            // Process
+            let dx = (segment.1.x - segment.0.x).clamp(-1, 1);
+            let dy = (segment.1.y - segment.0.y).clamp(-1, 1);
+            let delta = Vector::new(dx, dy);
+
+            if dx != 0 && dy != 0 {
+                continue;
+            }
+
+            let mut pt = segment.0;
+            loop {
+                *grid.entry(pt).or_default() += 1;
+
+                if pt == segment.1 {
+                    break;
+                }
+
+                pt += delta;
+            }
+        }
+/*
+        for row in (0..12) {
+            let mut line = String::with_capacity(10);
+            for col in (0..12) {
+                let maybe_overlaps = grid.get(&Point::new(col, row));
+                if let Some(overlaps) = maybe_overlaps {
+                    line.push_str(&overlaps.to_string());
+                } else {
+                    line.push('.');
+                }
+            }
+            println!("{}", line);
+        }
+
+        println!("segments: [{:?}]", segments);
+        let overlap_points: Vec<_> = grid
+            .iter()
+            .filter(|(_, overlaps)| **overlaps >= 2)
+            .map(|(pos, _)| pos)
+            .collect();
+        println!("overlaps: [{:?}]", overlap_points);
+*/
+        grid.iter().filter(|(_, overlaps)| **overlaps >= 2).count()
+    }
+
+    fn part2(segments: &[Segment]) -> usize {
+        let mut grid: HashMap<Point, usize> = Default::default();
+
+        // Process all segments
+        for segment in segments {
+            // Process
+            let dx = (segment.1.x - segment.0.x).clamp(-1, 1);
+            let dy = (segment.1.y - segment.0.y).clamp(-1, 1);
+            let delta = Vector::new(dx, dy);
+
+            let mut pt = segment.0;
+            loop {
+                *grid.entry(pt).or_default() += 1;
+
+                if pt == segment.1 {
+                    break;
+                }
+
+                pt += delta;
+            }
+        }
+/*
+        for row in (0..12) {
+            let mut line = String::with_capacity(10);
+            for col in (0..12) {
+                let maybe_overlaps = grid.get(&Point::new(col, row));
+                if let Some(overlaps) = maybe_overlaps {
+                    line.push_str(&overlaps.to_string());
+                } else {
+                    line.push('.');
+                }
+            }
+            println!("{}", line);
+        }
+
+        println!("segments: [{:?}]", segments);
+        let overlap_points: Vec<_> = grid
+            .iter()
+            .filter(|(_, overlaps)| **overlaps >= 2)
+            .map(|(pos, _)| pos)
+            .collect();
+        println!("overlaps: [{:?}]", overlap_points);
+*/
+        grid.iter().filter(|(_, overlaps)| **overlaps >= 2).count()
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let segments = parse_input(crate::data::_DAY05_EXAMPLE1);
+            assert_eq!(part1(&segments), 5);
+            assert_eq!(part2(&segments), 12);
+        }
+
+        #[test]
+        fn verify() {
+            let segments = parse_input(crate::data::DAY05);
+            assert_eq!(part1(&segments), 5145);
+            assert_eq!(part2(&segments), 16518);
         }
     }
 }
