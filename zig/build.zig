@@ -11,7 +11,9 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
+
     const exe = b.addExecutable("zig", "src/main.zig");
+    exe.addPackagePath("regex", "thirdparty/zig-regex/src/regex.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();

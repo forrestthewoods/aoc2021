@@ -1,5 +1,5 @@
 const expect = @import("std").testing.expect;
-//const Regex = @import("regex.zig").Regex;
+const Regex = @import("regex").Regex;
 const std = @import("std");
 
 pub fn main() anyerror!void {
@@ -288,8 +288,11 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
 }
 
 pub fn day05(alloc: *std.mem.Allocator) anyerror!void {
-    //var re = try Regex.compile(debug.global_allocator, "\\w+");
-    //debug.assert(try re.match("hej") == true);
+    var re = try Regex.compile(alloc, "\\w+");
+    defer re.deinit();
+    
+    const matched = try re.match("hej");
+    std.debug.assert(matched == true);
 }
 
 // Useful stdlib functions
