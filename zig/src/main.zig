@@ -9,8 +9,8 @@ pub fn main() anyerror!void {
     //try day01(&alloc.allocator);
     //try day02(&alloc.allocator);
     //try day03(&alloc.allocator);
-    //try day04(&alloc.allocator);
-    try day05(&alloc.allocator);
+    try day04(&alloc.allocator);
+    //try day05(&alloc.allocator);
 }
 
 pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
@@ -242,11 +242,12 @@ pub fn d3p2_count_bits(nums: []u16, mask: u16) usize {
 
 pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
     const Tile = struct { number: u8, marked: bool };
-    const Board = std.ArrayList(Tile);
+    const Tiles = std.ArrayList(Tile);
+    const Board = struct { tiles: Tiles, solved: bool };
 
     // Read file
     var cwd = std.fs.cwd();
-    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day04.txt", std.math.maxInt(usize));
+    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day04_example1.txt", std.math.maxInt(usize));
     defer alloc.free(file_string);
 
     // Parse file
@@ -254,7 +255,7 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
     defer numbers.deinit();
 
     // Split into chunks
-    var chunks = std.mem.tokenize(file_string, "\r\n\r\n");
+    var chunks = std.mem.split(file_string, "\r\n\r\n");
 
     // First chunk is numbers
     const numbers_chunk = chunks.next().?;
@@ -268,29 +269,130 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
     var boards = std.ArrayList(Board).init(alloc);
     defer {
         for (boards.items) |board|
-            board.deinit();
+            board.tiles.deinit();
         boards.deinit();
     }
 
     // All remainder chunks are boards
     while (chunks.next()) |board_chunk| {
-        var lines = std.mem.tokenize(board_chunk, "\r\n");
-        var new_board = Board.init(alloc);
+        var lines = std.mem.split(board_chunk, "\r\n");
+        var new_board = Board {
+            .tiles = Tiles.init(alloc),
+            .solved = false
+        };
         while (lines.next()) |line| {
             var board_numbers = std.mem.tokenize(line, " ");
             while (board_numbers.next()) |board_number_str| {
                 const num = try std.fmt.parseInt(u8, board_number_str, 10);
-                try new_board.append(Tile{ .number = num, .marked = false });
+                try new_board.tiles.append(Tile{ .number = num, .marked = false });
             }
         }
         try boards.append(new_board);
     }
+
+    // Helper function to check if a board has a solution or not
+    const check_board = (struct {
+        fn call(self: @This(), last_number: u8, tiles: []Tile) ?usize {
+            const rowcols = [_][5]u16{
+                // rows
+                [_]u16{0, 1, 2, 3, 4},
+                [_]u16{5, 6, 7, 8, 9},
+                [_]u16{10, 11, 12, 13, 14},
+                [_]u16{15, 16, 17, 18, 19},
+                [_]u16{20, 21, 22, 23, 24},
+
+                // cols
+                [_]u16{0, 5, 10, 15, 20},
+                [_]u16{1, 6, 11, 16, 21},
+                [_]u16{2, 7, 12, 17, 22},
+                [_]u16{3, 8, 13, 18, 23},
+                [_]u16{4, 9, 14, 19, 24},
+            };
+
+            // Check all rows and all columns
+            for (rowcols) |rowcol| {
+                // Check if all tiles in this rowcol are marked
+                var all_marked = true;
+                for (rowcol) |idx| {
+                    if (tiles[idx].marked == false) {
+                        all_marked = false;
+                        break;
+                    }
+                }
+
+                // If rowcol is all marked, compute result
+                if (all_marked) {
+                    var sum : usize = 0;
+                    
+                    // Sum unmarked tiles
+                    for (tiles) |tile| {
+                        if (!tile.marked) {
+                            sum += tile.number;
+                        }
+                    }
+
+                    // Answer is sum_of_unmarked * last_number
+                    return sum * @as(usize, last_number);
+                }
+            }
+
+            return null;
+        }
+    }{}).call;
+
+
+    var solution1 : usize = 0;
+    var solution2 : usize = 0;
+    const num_boards = boards.items.len;
+    var num_boards_solved : usize = 0;
+
+    // Apply all moves
+    for (numbers.items) |number| numbers_loop: {
+        // Mark number on all boards that have not won
+        for (boards.items) |board| {
+            if (!board.solved) {
+                for (board.tiles.items) |*tile| {
+                    if (tile.number == number) {
+                        tile.marked = true;
+                    }
+                }
+            }
+        }
+
+        // Check all unsolved boards for solutions
+        for (boards.items) |*board| {
+            // Skip solved boards
+            if (board.solved) {
+                continue;
+            }
+
+            // Check if board is solved
+            const maybe_answer = check_board(number, board.tiles.items);
+            //const maybe_answer: ?usize = null;
+            if (maybe_answer) |answer| {
+                board.solved = true;
+                num_boards_solved += 1;
+
+                if (num_boards_solved == 1) {
+                    // First board is answer1
+                    solution1 = answer;
+                } else if (num_boards_solved == num_boards) {
+                    // Last board is answer2
+                    solution2 = answer;
+                    break :numbers_loop;
+                }
+            }
+        }
+    }
+
+    std.log.info("Day 4, Problem 1 - [{}]", .{solution1});
+    std.log.info("Day 4, Problem 2 - [{}]", .{solution2});
 }
 
 pub fn day05(alloc: *std.mem.Allocator) anyerror!void {
     var re = try Regex.compile(alloc, "\\w+");
     defer re.deinit();
-    
+
     const matched = try re.match("hej");
     std.debug.assert(matched == true);
 }
