@@ -477,7 +477,7 @@ pub mod day05 {
             .collect()
     }
 
-    fn part1(segments: &[Segment]) -> usize {
+    fn solve(segments: &[Segment], include_diagonals: bool) -> usize {
         let mut grid: HashMap<Point, usize> = Default::default();
 
         // Process all segments
@@ -487,7 +487,7 @@ pub mod day05 {
             let dy = (segment.1.y - segment.0.y).clamp(-1, 1);
             let delta = Vector::new(dx, dy);
 
-            if dx != 0 && dy != 0 {
+            if !include_diagonals && dx != 0 && dy != 0 {
                 continue;
             }
 
@@ -502,75 +502,16 @@ pub mod day05 {
                 pt += delta;
             }
         }
-/*
-        for row in (0..12) {
-            let mut line = String::with_capacity(10);
-            for col in (0..12) {
-                let maybe_overlaps = grid.get(&Point::new(col, row));
-                if let Some(overlaps) = maybe_overlaps {
-                    line.push_str(&overlaps.to_string());
-                } else {
-                    line.push('.');
-                }
-            }
-            println!("{}", line);
-        }
 
-        println!("segments: [{:?}]", segments);
-        let overlap_points: Vec<_> = grid
-            .iter()
-            .filter(|(_, overlaps)| **overlaps >= 2)
-            .map(|(pos, _)| pos)
-            .collect();
-        println!("overlaps: [{:?}]", overlap_points);
-*/
         grid.iter().filter(|(_, overlaps)| **overlaps >= 2).count()
     }
 
+    fn part1(segments: &[Segment]) -> usize {
+        solve(segments, false)
+    }
+
     fn part2(segments: &[Segment]) -> usize {
-        let mut grid: HashMap<Point, usize> = Default::default();
-
-        // Process all segments
-        for segment in segments {
-            // Process
-            let dx = (segment.1.x - segment.0.x).clamp(-1, 1);
-            let dy = (segment.1.y - segment.0.y).clamp(-1, 1);
-            let delta = Vector::new(dx, dy);
-
-            let mut pt = segment.0;
-            loop {
-                *grid.entry(pt).or_default() += 1;
-
-                if pt == segment.1 {
-                    break;
-                }
-
-                pt += delta;
-            }
-        }
-/*
-        for row in (0..12) {
-            let mut line = String::with_capacity(10);
-            for col in (0..12) {
-                let maybe_overlaps = grid.get(&Point::new(col, row));
-                if let Some(overlaps) = maybe_overlaps {
-                    line.push_str(&overlaps.to_string());
-                } else {
-                    line.push('.');
-                }
-            }
-            println!("{}", line);
-        }
-
-        println!("segments: [{:?}]", segments);
-        let overlap_points: Vec<_> = grid
-            .iter()
-            .filter(|(_, overlaps)| **overlaps >= 2)
-            .map(|(pos, _)| pos)
-            .collect();
-        println!("overlaps: [{:?}]", overlap_points);
-*/
-        grid.iter().filter(|(_, overlaps)| **overlaps >= 2).count()
+        solve(segments, true)
     }
 
     #[cfg(test)]
