@@ -438,7 +438,6 @@ pub mod day04 {
 
 pub mod day05 {
     use regex::Regex;
-    use std::collections::HashMap;
     use std::fmt::Write;
 
     type Point = fts_vecmath::point2::Point2<i32>;
@@ -485,20 +484,25 @@ pub mod day05 {
             width = width.max(segment.0.x).max(segment.1.x);
             height = height.max(segment.0.y).max(segment.1.y);
         }
+
+        // Create 1D vec of overlap counts
         let mut overlaps: Vec<u16> = Default::default();
         overlaps.resize((width as usize + 1) * (height as usize + 1), 0);
 
         // Process all segments
         for segment in segments {
-            // Process
+            // Compute segment delta
+            // Assumed to be horizontal, vertical, 45-degree diagonal
             let dx = (segment.1.x - segment.0.x).clamp(-1, 1);
             let dy = (segment.1.y - segment.0.y).clamp(-1, 1);
             let delta = Vector::new(dx, dy);
 
+            // Diagonals may or may not be ignored
             if !include_diagonals && dx != 0 && dy != 0 {
                 continue;
             }
 
+            // Iterate segment
             let mut pt = segment.0;
             let end = segment.1 + delta;
             while pt != end {
@@ -508,6 +512,7 @@ pub mod day05 {
             }
         }
 
+        // Count points with more than 1 overlap
         overlaps.iter().filter(|count| **count >= 2).count()
     }
 
