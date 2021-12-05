@@ -276,10 +276,7 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
     // All remainder chunks are boards
     while (chunks.next()) |board_chunk| {
         var lines = std.mem.split(board_chunk, "\r\n");
-        var new_board = Board {
-            .tiles = Tiles.init(alloc),
-            .solved = false
-        };
+        var new_board = Board{ .tiles = Tiles.init(alloc), .solved = false };
         while (lines.next()) |line| {
             var board_numbers = std.mem.tokenize(line, " ");
             while (board_numbers.next()) |board_number_str| {
@@ -295,18 +292,18 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
         fn call(self: @This(), last_number: u8, tiles: []Tile) ?usize {
             const rowcols = [_][5]u16{
                 // rows
-                [_]u16{0, 1, 2, 3, 4},
-                [_]u16{5, 6, 7, 8, 9},
-                [_]u16{10, 11, 12, 13, 14},
-                [_]u16{15, 16, 17, 18, 19},
-                [_]u16{20, 21, 22, 23, 24},
+                [_]u16{ 0, 1, 2, 3, 4 },
+                [_]u16{ 5, 6, 7, 8, 9 },
+                [_]u16{ 10, 11, 12, 13, 14 },
+                [_]u16{ 15, 16, 17, 18, 19 },
+                [_]u16{ 20, 21, 22, 23, 24 },
 
                 // cols
-                [_]u16{0, 5, 10, 15, 20},
-                [_]u16{1, 6, 11, 16, 21},
-                [_]u16{2, 7, 12, 17, 22},
-                [_]u16{3, 8, 13, 18, 23},
-                [_]u16{4, 9, 14, 19, 24},
+                [_]u16{ 0, 5, 10, 15, 20 },
+                [_]u16{ 1, 6, 11, 16, 21 },
+                [_]u16{ 2, 7, 12, 17, 22 },
+                [_]u16{ 3, 8, 13, 18, 23 },
+                [_]u16{ 4, 9, 14, 19, 24 },
             };
 
             // Check all rows and all columns
@@ -322,8 +319,8 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
 
                 // If rowcol is all marked, compute result
                 if (all_marked) {
-                    var sum : usize = 0;
-                    
+                    var sum: usize = 0;
+
                     // Sum unmarked tiles
                     for (tiles) |tile| {
                         if (!tile.marked) {
@@ -340,11 +337,10 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
         }
     }{}).call;
 
-
-    var solution1 : usize = 0;
-    var solution2 : usize = 0;
+    var solution1: usize = 0;
+    var solution2: usize = 0;
     const num_boards = boards.items.len;
-    var num_boards_solved : usize = 0;
+    var num_boards_solved: usize = 0;
 
     // Apply all moves
     for (numbers.items) |number| numbers_loop: {
