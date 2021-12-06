@@ -551,11 +551,11 @@ pub mod day06 {
         let mut result = String::with_capacity(128);
         
         let fish = parse_input(crate::data::DAY06);
-        let answer_part1 = solve(fish.clone(), 80);
+        let answer_part1 = solve(&fish, 80);
         writeln!(&mut result, "Day 06, Problem 1 - [{}]", answer_part1).unwrap();
 
-        //let answer_part2 = solve(fish, 256);
-        //writeln!(&mut result, "Day 06, Problem 2 - [{}]", answer_part2).unwrap();
+        let answer_part2 = solve(&fish, 256);
+        writeln!(&mut result, "Day 06, Problem 2 - [{}]", answer_part2).unwrap();
 
         result
     }
@@ -564,20 +564,31 @@ pub mod day06 {
         input.split(",").map(|s| s.parse::<u8>().unwrap()).collect()
     }
 
-    fn solve(mut fishies: Vec<u8>, num_days: usize) -> usize {
-        for _ in 0..num_days {
-            let len = fishies.len();
-            for idx in 0..len {
-                let fish = &mut fishies[idx];
-                if *fish == 0 {
-                    *fish = 6;
-                    fishies.push(8);
-                } else {
-                    *fish -= 1;
-                }
-            }
+    fn solve(fishies: &[u8], num_days: usize) -> usize {
+        // Create buckets
+        let mut buckets : Vec<usize> = Default::default();
+        buckets.resize(9, 0);
+
+        // Initialize buckets
+        for fish in fishies {
+            buckets[*fish as usize] += 1;
         }
-        fishies.len()
+
+        // Simulate
+        for _ in 0..num_days {
+            let initial_zero = buckets[0];
+            buckets[0] = buckets[1];
+            buckets[1] = buckets[2];
+            buckets[2] = buckets[3];
+            buckets[3] = buckets[4];
+            buckets[4] = buckets[5];
+            buckets[5] = buckets[6];
+            buckets[6] = buckets[7] + initial_zero;
+            buckets[7] = buckets[8];
+            buckets[8] = initial_zero;
+        }
+
+        buckets.iter().sum()
     }
 
     #[cfg(test)]
@@ -588,15 +599,15 @@ pub mod day06 {
         fn examples() {
             let input = "3,4,3,1,2";
             let fish = parse_input(input);
-            assert_eq!(solve(fish.clone(), 80), 5934);
-            assert_eq!(solve(fish, 256), 26_984_457_539);
+            assert_eq!(solve(&fish, 80), 5934);
+            assert_eq!(solve(&fish, 256), 26_984_457_539);
         }
 
         #[test]
         fn verify() {
             let fish = parse_input(crate::data::DAY06);
-            assert_eq!(solve(fish.clone(), 80), 390923);
-            //assert_eq!(solve(fish, 256), 390923);
+            assert_eq!(solve(&fish, 80), 390923);
+            assert_eq!(solve(&fish, 256), 1_749_945_484_935);
         }
     }
 }
