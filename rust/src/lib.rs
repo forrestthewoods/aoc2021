@@ -543,3 +543,60 @@ pub mod day05 {
         }
     }
 }
+
+pub mod day06 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+        
+        let fish = parse_input(crate::data::DAY06);
+        let answer_part1 = solve(fish.clone(), 80);
+        writeln!(&mut result, "Day 06, Problem 1 - [{}]", answer_part1).unwrap();
+
+        //let answer_part2 = solve(fish, 256);
+        //writeln!(&mut result, "Day 06, Problem 2 - [{}]", answer_part2).unwrap();
+
+        result
+    }
+
+    fn parse_input(input: &str) -> Vec<u8> {
+        input.split(",").map(|s| s.parse::<u8>().unwrap()).collect()
+    }
+
+    fn solve(mut fishies: Vec<u8>, num_days: usize) -> usize {
+        for _ in 0..num_days {
+            let len = fishies.len();
+            for idx in 0..len {
+                let fish = &mut fishies[idx];
+                if *fish == 0 {
+                    *fish = 6;
+                    fishies.push(8);
+                } else {
+                    *fish -= 1;
+                }
+            }
+        }
+        fishies.len()
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let input = "3,4,3,1,2";
+            let fish = parse_input(input);
+            assert_eq!(solve(fish.clone(), 80), 5934);
+            assert_eq!(solve(fish, 256), 26_984_457_539);
+        }
+
+        #[test]
+        fn verify() {
+            let fish = parse_input(crate::data::DAY06);
+            assert_eq!(solve(fish.clone(), 80), 390923);
+            //assert_eq!(solve(fish, 256), 390923);
+        }
+    }
+}
