@@ -566,8 +566,7 @@ pub mod day06 {
 
     fn solve(fishies: &[u8], num_days: usize) -> usize {
         // Create buckets
-        let mut buckets : Vec<usize> = Default::default();
-        buckets.resize(9, 0);
+        let mut buckets : [usize; 9] = [0, 0, 0, 0, 0, 0, 0 ,0 ,0];
 
         // Initialize buckets
         for fish in fishies {
@@ -588,6 +587,7 @@ pub mod day06 {
             buckets[8] = initial_zero;
         }
 
+        // Count total number of fishies
         buckets.iter().sum()
     }
 
