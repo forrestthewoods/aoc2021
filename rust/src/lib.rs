@@ -549,7 +549,7 @@ pub mod day06 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        
+
         let fish = parse_input(crate::data::DAY06);
         let answer_part1 = solve(&fish, 80);
         writeln!(&mut result, "Day 06, Problem 1 - [{}]", answer_part1).unwrap();
@@ -566,7 +566,7 @@ pub mod day06 {
 
     fn solve(fishies: &[u8], num_days: usize) -> usize {
         // Create buckets
-        let mut buckets : [usize; 9] = [0, 0, 0, 0, 0, 0, 0 ,0 ,0];
+        let mut buckets: [usize; 9] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         // Initialize buckets
         for fish in fishies {
@@ -575,16 +575,8 @@ pub mod day06 {
 
         // Simulate
         for _ in 0..num_days {
-            let initial_zero = buckets[0];
-            buckets[0] = buckets[1];
-            buckets[1] = buckets[2];
-            buckets[2] = buckets[3];
-            buckets[3] = buckets[4];
-            buckets[4] = buckets[5];
-            buckets[5] = buckets[6];
-            buckets[6] = buckets[7] + initial_zero;
-            buckets[7] = buckets[8];
-            buckets[8] = initial_zero;
+            buckets.rotate_left(1);
+            buckets[6] += buckets[8];
         }
 
         // Count total number of fishies

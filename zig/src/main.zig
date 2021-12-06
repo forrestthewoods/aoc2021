@@ -10,7 +10,8 @@ pub fn main() anyerror!void {
     //try day02(&alloc.allocator);
     //try day03(&alloc.allocator);
     //try day04(&alloc.allocator);
-    try day05(&alloc.allocator);
+    //try day05(&alloc.allocator);
+    try day06(&alloc.allocator);
 }
 
 pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
@@ -401,6 +402,7 @@ pub fn day05(alloc: *std.mem.Allocator) anyerror!void {
         try segments.append(segment);
     }
 
+    // Solve both parts
     const solution1 = d5_solve(alloc, segments.items, false);
     const solution2 = d5_solve(alloc, segments.items, true);
 
@@ -486,6 +488,64 @@ const Segment2 = struct {
         };
     }
 };
+
+pub fn day06(alloc: *std.mem.Allocator) anyerror!void {
+    // Open file
+    var cwd = std.fs.cwd();
+    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day06.txt", std.math.maxInt(usize));
+    defer alloc.free(file_string);
+
+    // Parse file
+    var fishies = std.ArrayList(u8).init(alloc);
+    defer fishies.deinit();
+
+    var values = std.mem.split(file_string, ",");
+    while (values.next()) |value| {
+        const fish = try std.fmt.parseInt(u8, value, 10);
+        try fishies.append(fish);
+    }
+
+    // Solve
+    const solution1 = try d6_solve(fishies.items, 80);
+    const solution2 = try d6_solve(fishies.items, 256);
+
+    // Print results
+    std.log.info("Day 6, Problem 1 - [{}]", .{solution1});
+    std.log.info("Day 6, Problem 2 - [{}]", .{solution2});
+}
+
+pub fn d6_solve(fishies: []u8, num_days: usize) anyerror!usize {
+    // Create buckets
+    var buckets = [_]usize{0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    // Initialize buckets
+    for (fishies)|fish| {
+        buckets[fish] += 1;
+    }
+
+    // Simulate
+    var day: usize = 0;
+    while (day < num_days) : (day += 1) {
+        var initial_zero = buckets[0];
+        buckets[0] = buckets[1];
+        buckets[1] = buckets[2];
+        buckets[2] = buckets[3];
+        buckets[3] = buckets[4];
+        buckets[4] = buckets[5];
+        buckets[5] = buckets[6];
+        buckets[6] = buckets[7] + initial_zero;
+        buckets[7] = buckets[8];
+        buckets[8] = initial_zero;
+    }   
+
+    // Sum
+    var result : usize = 0;
+    for (buckets) |num_fishies| {
+        result += num_fishies;
+    }
+
+    return result;
+}
 
 // Useful stdlib functions
 const tokenize = std.mem.tokenize;
