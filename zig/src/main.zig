@@ -9,8 +9,8 @@ pub fn main() anyerror!void {
     //try day01(&alloc.allocator);
     //try day02(&alloc.allocator);
     //try day03(&alloc.allocator);
-    try day04(&alloc.allocator);
-    //try day05(&alloc.allocator);
+    //try day04(&alloc.allocator);
+    try day05(&alloc.allocator);
 }
 
 pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
@@ -84,11 +84,11 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void {
 
         const amount = try std.fmt.parseInt(i32, amount_str, 10);
         if (std.mem.eql(u8, dir_str, "forward")) {
-            try commands.append(Entry{ .dir = Dir.Forward, .amount = amount });
+            try commands.append(Entry{ .dir = .Forward, .amount = amount });
         } else if (std.mem.eql(u8, dir_str, "up")) {
-            try commands.append(Entry{ .dir = Dir.Up, .amount = amount });
+            try commands.append(Entry{ .dir = .Up, .amount = amount });
         } else if (std.mem.eql(u8, dir_str, "down")) {
-            try commands.append(Entry{ .dir = Dir.Down, .amount = amount });
+            try commands.append(Entry{ .dir = .Down, .amount = amount });
         } else {
             unreachable;
         }
@@ -386,12 +386,106 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
 }
 
 pub fn day05(alloc: *std.mem.Allocator) anyerror!void {
-    var re = try Regex.compile(alloc, "\\w+");
-    defer re.deinit();
+    // Open file
+    var cwd = std.fs.cwd();
+    const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day05.txt", std.math.maxInt(usize));
+    defer alloc.free(file_string);
 
-    const matched = try re.match("hej");
-    std.debug.assert(matched == true);
+    // Parse file
+    var segments = std.ArrayList(Segment2).init(alloc);
+    defer segments.deinit();
+
+    var lines = std.mem.split(file_string, "\r\n");
+    while (lines.next()) |line| {
+        const segment = try Segment2.from_str(line);
+        try segments.append(segment);
+    }
+
+    const solution1 = d5_solve(alloc, segments.items, false);
+    const solution2 = d5_solve(alloc, segments.items, true);
+
+    std.log.info("Day 5, Problem 1 - [{}]", .{solution1});
+    std.log.info("Day 5, Problem 2 - [{}]", .{solution2});
 }
+
+pub fn d5_solve(alloc: *std.mem.Allocator, segments: []Segment2, include_diagonals: bool) anyerror!usize {
+    // Compute width/height
+    var width : i32 = 0;
+    var height : i32 = 0;
+    for (segments) |segment| {
+        width = std.math.max(width, std.math.max(segment.p0.x + 1, segment.p1.x + 1));
+        height = std.math.max(height, std.math.max(segment.p0.y + 1, segment.p1.y + 1));
+    }
+
+    // Create 1D ArrayList of overlap counts
+    var overlaps = std.ArrayList(u16).init(alloc);
+    defer overlaps.deinit();
+    try overlaps.appendNTimes(0, @intCast(usize, (width + 1) * (height * 1)));
+
+    // Process all segments
+    for (segments) |segment| {
+        // Compute segment delta
+        const dx = std.math.clamp(segment.p1.x - segment.p0.x, -1, 1);
+        const dy = std.math.clamp(segment.p1.y - segment.p0.y, -1, 1);
+
+        // Maybe ignore diagonals
+        if (!include_diagonals and dx != 0 and dy != 0) {
+            continue;
+        }
+
+        // Iterate segments
+        var px = segment.p0.x;
+        var py = segment.p0.y;
+        const end_x = segment.p1.x + dx;
+        const end_y = segment.p1.y + dy;
+        while (!(px == end_x and py == end_y)) {
+            const idx = py*width + px;
+            overlaps.items[@intCast(usize, idx)] += 1;
+
+            px += dx;
+            py += dy;
+        }
+    }
+
+    // Count points with more than 1 overlap
+    var count: usize = 0;
+    for (overlaps.items)|overlap| {
+        if (overlap >= 2) {
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
+const Vector2 = struct {
+    x: i32,
+    y: i32,
+
+    pub fn init(x: i32, y: i32) Vector2 {
+        return Vector2{ .x = x, .y = y };
+    }
+    pub fn from_str(str: []const u8) !Vector2 {
+        var iter = std.mem.tokenize(str, " ,");
+        return Vector2.init(
+            try parseInt(i32, iter.next().?, 10),
+            try parseInt(i32, iter.next().?, 10),
+        );
+    }
+};
+
+const Segment2 = struct {
+    p0: Vector2,
+    p1: Vector2,
+
+    pub fn from_str(str: []const u8) !Segment2 {
+        var iter = std.mem.split(str, " -> ");
+        return Segment2{
+            .p0 = try Vector2.from_str(iter.next().?),
+            .p1 = try Vector2.from_str(iter.next().?),
+        };
+    }
+};
 
 // Useful stdlib functions
 const tokenize = std.mem.tokenize;
@@ -423,3 +517,5 @@ const assert = std.debug.assert;
 const sort = std.sort.sort;
 const asc = std.sort.asc;
 const desc = std.sort.desc;
+
+// readUntilDelimiterOrEof
