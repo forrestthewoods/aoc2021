@@ -609,22 +609,37 @@ pub mod day07 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        /*
-        let answer_part1 = part1(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part2 = part2(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
+        let data = parse_input(crate::data::DAY07);
+
+        let answer_part1 = part1(&data);
+        writeln!(&mut result, "Day 07, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY07);
+        writeln!(&mut result, "Day 07, Problem 2 - [{}]", answer_part2).unwrap();
         */
         result
     }
 
     fn parse_input(input: &str) -> Vec<i32> {
-        input.split(",").map(|s| s.parse::<i32>().unwrap()).collect()
+        input
+            .split(",")
+            .map(|s| s.parse::<i32>().unwrap())
+            .collect()
     }
 
-    fn part1(crabs: &mut[i32]) -> usize {
-        0
+    fn part1(crabs: &[i32]) -> usize {
+        let max = *crabs.iter().max().unwrap();
+
+        (0..=max)
+            .map(|tgt| crabs.iter().map(|crab| (crab - tgt).abs()).sum::<i32>() as usize)
+            .min()
+            .unwrap()
+        /*
+                for target in 0..=max {
+                }
+        */
     }
 
     fn part2(_input: &str) -> usize {
@@ -644,6 +659,8 @@ pub mod day07 {
 
         #[test]
         fn verify() {
+            let data = parse_input(crate::data::DAY07);
+            assert_eq!(part1(&data), 329389);
         }
     }
 }
