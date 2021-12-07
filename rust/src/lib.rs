@@ -603,3 +603,47 @@ pub mod day06 {
         }
     }
 }
+
+pub mod day07 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+        /*
+        let answer_part1 = part1(crate::data::DAY00);
+        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(crate::data::DAY00);
+        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> Vec<i32> {
+        input.split(",").map(|s| s.parse::<i32>().unwrap()).collect()
+    }
+
+    fn part1(crabs: &mut[i32]) -> usize {
+        0
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let input = "16,1,2,0,4,2,7,1,2,14";
+            let data = parse_input(input);
+            assert_eq!(part1(&mut data.clone()), 37);
+        }
+
+        #[test]
+        fn verify() {
+        }
+    }
+}
