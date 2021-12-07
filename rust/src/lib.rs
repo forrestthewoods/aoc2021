@@ -615,10 +615,9 @@ pub mod day07 {
         let answer_part1 = part1(&data);
         writeln!(&mut result, "Day 07, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY07);
+        let answer_part2 = part2(&data);
         writeln!(&mut result, "Day 07, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -636,14 +635,23 @@ pub mod day07 {
             .map(|tgt| crabs.iter().map(|crab| (crab - tgt).abs()).sum::<i32>() as usize)
             .min()
             .unwrap()
-        /*
-                for target in 0..=max {
-                }
-        */
     }
 
-    fn part2(_input: &str) -> usize {
-        0
+    fn part2(crabs: &[i32]) -> usize {
+        let max = *crabs.iter().max().unwrap();
+
+        (0..=max)
+            .map(|tgt| {
+                crabs
+                    .iter()
+                    .map(|crab| {
+                        let diff = (crab - tgt).abs();
+                        (diff * (diff + 1)) / 2
+                    })
+                    .sum::<i32>() as usize
+            })
+            .min()
+            .unwrap()
     }
 
     #[cfg(test)]
@@ -654,13 +662,19 @@ pub mod day07 {
         fn examples() {
             let input = "16,1,2,0,4,2,7,1,2,14";
             let data = parse_input(input);
-            assert_eq!(part1(&mut data.clone()), 37);
+            assert_eq!(part1(&data), 37);
+            assert_eq!(part2(&data), 168);
         }
 
         #[test]
         fn verify() {
             let data = parse_input(crate::data::DAY07);
             assert_eq!(part1(&data), 329389);
+            assert_eq!(part2(&data), 86397080);
         }
     }
 }
+
+// 1
+// 1+2 = 3
+// 5+4+3+2+1=15 =
