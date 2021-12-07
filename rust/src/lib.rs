@@ -612,10 +612,10 @@ pub mod day07 {
 
         let data = parse_input(crate::data::DAY07);
 
-        let answer_part1 = part1(&data);
+        let answer_part1 = part1(data.clone());
         writeln!(&mut result, "Day 07, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part2 = part2(&data);
+        let answer_part2 = part2(data);
         writeln!(&mut result, "Day 07, Problem 2 - [{}]", answer_part2).unwrap();
 
         result
@@ -628,30 +628,32 @@ pub mod day07 {
             .collect()
     }
 
-    fn part1(crabs: &[i32]) -> usize {
-        let max = *crabs.iter().max().unwrap();
+    fn part1(crabs: Vec<i32>) -> usize {
+        let mut crabs: Vec<i32> = crabs.iter().cloned().collect();
 
-        (0..=max)
-            .map(|tgt| crabs.iter().map(|crab| (crab - tgt).abs()).sum::<i32>() as usize)
-            .min()
-            .unwrap()
+        let idx = crabs.len() / 2;
+        crabs.select_nth_unstable(idx);
+        let target = crabs[idx];
+
+        crabs.iter().map(|crab| (*crab - target).abs()).sum::<i32>() as usize
     }
 
-    fn part2(crabs: &[i32]) -> usize {
-        let max = *crabs.iter().max().unwrap();
+    fn part2(crabs: Vec<i32>) -> usize {
+        let calc = |target: i32| -> usize {
+            crabs
+                .iter()
+                .map(|crab| {
+                    let diff = (*crab - target).abs();
+                    ((diff * (diff + 1)) / 2) as usize
+                })
+                .sum()
+        };
 
-        (0..=max)
-            .map(|tgt| {
-                crabs
-                    .iter()
-                    .map(|crab| {
-                        let diff = (crab - tgt).abs();
-                        (diff * (diff + 1)) / 2
-                    })
-                    .sum::<i32>() as usize
-            })
-            .min()
-            .unwrap()
+        let avg: f64 = crabs.iter().map(|crab| *crab as f64).sum::<f64>() / crabs.len() as f64;
+
+        let lo = calc(avg.floor() as i32);
+        let hi = calc(avg.ceil() as i32);
+        lo.min(hi) as usize
     }
 
     #[cfg(test)]
@@ -662,15 +664,15 @@ pub mod day07 {
         fn examples() {
             let input = "16,1,2,0,4,2,7,1,2,14";
             let data = parse_input(input);
-            assert_eq!(part1(&data), 37);
-            assert_eq!(part2(&data), 168);
+            assert_eq!(part1(data.clone()), 37);
+            assert_eq!(part2(data), 168);
         }
 
         #[test]
         fn verify() {
             let data = parse_input(crate::data::DAY07);
-            assert_eq!(part1(&data), 329389);
-            assert_eq!(part2(&data), 86397080);
+            assert_eq!(part1(data.clone()), 329389);
+            assert_eq!(part2(data), 86397080);
         }
     }
 }
