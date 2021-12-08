@@ -677,6 +677,65 @@ pub mod day07 {
     }
 }
 
-// 1
-// 1+2 = 3
-// 5+4+3+2+1=15 =
+pub mod day08 {
+    use std::fmt::Write;
+
+    type Digit<'a> = &'a str;
+    type Signal<'a> = Vec<Digit<'a>>;
+    type Output<'a> = Vec<Digit<'a>>;
+    type Entry<'a> = (Signal<'a>, Output<'a>);
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let entries = parse_input(crate::data::DAY08);
+
+        let answer_part1 = part1(&entries);
+        writeln!(&mut result, "Day 08, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY08);
+        writeln!(&mut result, "Day 08, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> Vec<Entry> {
+        input.lines()
+            .map(|line| {
+                let halves : Vec<_> = line.split(" | ").collect();
+                (halves[0].split(" ").collect(), halves[1].split(" ").collect())
+            })
+            .collect()
+    }
+
+    fn part1(entries: &[Entry]) -> usize {
+        entries.iter()
+            .flat_map(|(_, output)| output.iter())
+            .filter(|digit| {
+                let len = digit.len();
+                len == 2 || len == 3 || len == 4 || len == 7
+            }).count()
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let entries = parse_input(crate::data::_DAY08_EXAMPLE1);
+            assert_eq!(part1(&entries), 26);
+        }
+
+        #[test]
+        fn verify() {
+            let entries = parse_input(crate::data::DAY08);
+            assert_eq!(part1(&entries), 342);
+        }
+    }
+}
