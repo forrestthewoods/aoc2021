@@ -693,33 +693,185 @@ pub mod day08 {
         let answer_part1 = part1(&entries);
         writeln!(&mut result, "Day 08, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY08);
+        let answer_part2 = part2(&entries);
         writeln!(&mut result, "Day 08, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
     fn parse_input(input: &str) -> Vec<Entry> {
-        input.lines()
+        input
+            .lines()
             .map(|line| {
-                let halves : Vec<_> = line.split(" | ").collect();
-                (halves[0].split(" ").collect(), halves[1].split(" ").collect())
+                let halves: Vec<_> = line.split(" | ").collect();
+                (
+                    halves[0].split(" ").collect(),
+                    halves[1].split(" ").collect(),
+                )
             })
             .collect()
     }
 
     fn part1(entries: &[Entry]) -> usize {
-        entries.iter()
+        entries
+            .iter()
             .flat_map(|(_, output)| output.iter())
             .filter(|digit| {
                 let len = digit.len();
                 len == 2 || len == 3 || len == 4 || len == 7
-            }).count()
+            })
+            .count()
     }
 
-    fn part2(_input: &str) -> usize {
+    //   0:      1:      2:      3:      4:
+    //  (6)     (2)     (5)     (5)     (4)
+    //  aaaa    ....    aaaa    aaaa    ....
+    // b    c  .    c  .    c  .    c  b    c
+    // b    c  .    c  .    c  .    c  b    c
+    //  ....    ....    dddd    dddd    dddd
+    // e    f  .    f  e    .  .    f  .    f
+    // e    f  .    f  e    .  .    f  .    f
+    //  gggg    ....    gggg    gggg    ....
+
+    //   5:      6:      7:      8:      9:
+    //  (5)     (6)     (3)     (7)     (6)
+    //  aaaa    aaaa    aaaa    aaaa    aaaa
+    // b    .  b    .  .    c  b    c  b    c
+    // b    .  b    .  .    c  b    c  b    c
+    //  dddd    dddd    ....    dddd    dddd
+    // .    f  e    f  .    f  e    f  .    f
+    // .    f  e    f  .    f  e    f  .    f
+    //  gggg    gggg    ....    gggg    gggg
+
+    // 0 = A       0000
+    // 1 = B      1    2
+    // 2 = C      1    2
+    // 3 = D       3333
+    // 4 = E      4    5
+    // 5 = F      4    5
+    // 6 = G       6666
+
+    fn decode_entry(entry: &Entry) -> usize {
+        let all_bits = 0b_111_1111;
+        let char_to_mask: [u8; 7] = [
+            0b_000_0001,
+            0b_000_0010,
+            0b_000_0100,
+            0b_000_1000,
+            0b_001_0000,
+            0b_010_0000,
+            0b_100_0000,
+        ];
+        let digit_to_mask = |digit: Digit| -> u8 {
+            digit.chars().map(|c| c as usize - 'a' as usize)
+                .fold(0, |mask, i| mask | char_to_mask[i])
+        };
+
+        // initialize solver
+        let mut solver: [u8; 7] = [all_bits, all_bits, all_bits, all_bits, all_bits, all_bits, all_bits];
+
+        let print_state = |s: &[u8], header: &str| {
+            println!("\n{}", header);
+            for (i, mask) in s.iter().enumerate() {
+                println!("  {}: {:#9b}", i, mask);
+            }
+            println!("");
+        };
+
+        print_state(&solver, "Initial");
+
+        let digits = entry.0.iter().chain(entry.1.iter());
+
+        // find 2 letter digit. this is a "one". remove from everything but 2, 5
+        let maybe_one = digits.clone().find(|digit| digit.len() == 2);
+        if let Some(digit) = maybe_one {
+            let digit_mask : u8 = digit_to_mask(digit);
+            solver[2] &= digit_mask;
+            solver[5] &= digit_mask;
+
+            (0..7)
+                .filter(|idx| *idx != 2 && *idx != 5)
+                .for_each(|idx| {
+                    solver[idx] &= !digit_mask;
+                });
+        }
+        print_state(&solver, "After looking for clock one");
+
+        
+
+        // find 3 letter digit. this is a "seven". remove from everything but 0, 2, 5
+        let maybe_seven = digits.clone().find(|digit| digit.len() == 3);
+        if let Some(digit) = maybe_seven {
+            let digit_mask : u8 = digit_to_mask(digit);
+            solver[0] &= digit_mask;
+            solver[2] &= digit_mask;
+            solver[5] &= digit_mask;
+            (0..7)
+                .filter(|idx| *idx != 0 && *idx != 2 && *idx != 5)
+                .for_each(|idx| {
+                    solver[idx] &= !digit_mask;
+                });
+        }
+        print_state(&solver, "After looking for clock seven");
+
+        // find 4 letter digit. remove from everything but 1, 2, 3, 5
+        let maybe_four = digits.clone().find(|digit| digit.len() == 4);
+        if let Some(digit) = maybe_four {
+            let digit_mask : u8 = digit_to_mask(digit);
+            solver[1] &= digit_mask;
+            solver[2] &= digit_mask;
+            solver[3] &= digit_mask;
+            solver[5] &= digit_mask;
+
+            (0..7)
+                .filter(|idx| *idx != 1 && *idx != 2 && *idx != 3 && *idx != 5)
+                .for_each(|idx| {
+                    solver[idx] &= !digit_mask;
+                });
+        }
+        print_state(&solver, "After looking for clock four");
+
+        // array of solved = false
+        let mut solved_flags: [bool; 7] = [false, false, false, false, false, false, false];
+
+        while solved_flags.iter().any(|solved_flag| !solved_flag) {
+            // look for unsolved with maybe 1 letter
+            for (idx, solved_flag) in solved_flags.iter_mut().enumerate() {
+                // Ignore already solved
+                if *solved_flag {
+                    continue;
+                }
+
+                let solved_mask = solver[idx];
+                if solved_mask.count_ones() == 1 {
+                    println!("Found solution for letter {}", idx);
+
+                    // Solved!
+                    *solved_flag = true;
+
+                    // Remove mask from other entries
+                    solver
+                        .iter_mut()
+                        .enumerate()
+                        .filter(|(j, _)| idx != *j)
+                        .for_each(|(_, mask)| *mask &= !solved_mask);
+                    print_state(&solver, "After clearing");
+
+                    break;
+                }
+
+                unreachable!("Uh oh failed to find a solution");
+            }
+        }
+
+        // while !solver.all(|e| e.count_ones() == 1)
+        //   look for unsolved maybe with 1 letter. remove from everything else
+
         0
+    }
+
+    fn part2(entries: &[Entry]) -> usize {
+        entries.iter().map(|entry| decode_entry(entry)).sum()
     }
 
     #[cfg(test)]
@@ -730,6 +882,11 @@ pub mod day08 {
         fn examples() {
             let entries = parse_input(crate::data::_DAY08_EXAMPLE1);
             assert_eq!(part1(&entries), 26);
+
+            let sample = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf";
+            let sample_entries = parse_input(sample);
+            assert_eq!(sample_entries.len(), 1);
+            assert_eq!(decode_entry(&sample_entries[0]), 5353);
         }
 
         #[test]
