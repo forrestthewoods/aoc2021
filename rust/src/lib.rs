@@ -932,10 +932,9 @@ pub mod day09 {
         let answer_part1 = part1(&tiles, width);
         writeln!(&mut result, "Day 09, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY09);
+        let answer_part2 = part2(&tiles, width);
         writeln!(&mut result, "Day 09, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -963,14 +962,15 @@ pub mod day09 {
         (tiles, width)
     }
 
-    fn part1(tiles: &[u8], width: usize) -> usize {
+    fn find_low_points(tiles: &[u8], width: usize) -> Vec<usize> {
+        let mut result : Vec<usize> = Default::default();
+        
         let height = tiles.len() / width;
 
         let to_idx = |row: usize, col: usize| -> usize {
             row*width + col
         };
 
-        let mut result : usize = 0;
         for row in 1..height-1 {
             for col in 1..width-1 {
                 let l = to_idx(row, col - 1);
@@ -978,9 +978,10 @@ pub mod day09 {
                 let u = to_idx(row - 1, col);
                 let d = to_idx(row + 1, col);
 
-                let v = tiles[to_idx(row, col)];
+                let vi = to_idx(row, col);
+                let v = tiles[vi];
                 if v < tiles[l] && v < tiles[r] && v < tiles[u] && v < tiles[d] {
-                    result += v as usize + 1;
+                    result.push(vi);
                 }
             }
         }
@@ -988,8 +989,77 @@ pub mod day09 {
         result
     }
 
-    fn part2(_input: &str) -> usize {
-        0
+    fn part1(tiles: &[u8], width: usize) -> usize {
+        find_low_points(&tiles, width).iter().map(|idx| tiles[*idx] as usize + 1).sum()
+    }
+
+    fn part2(tiles: &[u8], width: usize) -> usize {
+        let mut next_basin_id : u16 = 0;
+        let mut basin_sizes : Vec<usize> = Default::default();
+
+        // Precompute offsets
+        let offsets : [isize; 4] = [-1, 1, -(width as isize), width as isize];
+
+        // Find all low points
+        let low_points = find_low_points(tiles, width);
+
+        // Initialize basin map
+        let mut basin_map : Vec<u16> = Default::default();
+        let unvisited = u16::MAX;
+        basin_map.resize(tiles.len(), unvisited);
+
+        // Process each low point
+        for low_point in low_points {
+            // Counter for this basin
+            let mut basin_size : usize = 0;
+
+            // Initialize basin data
+            let mut open_list : Vec<usize> = vec![low_point];
+            basin_map[low_point] = next_basin_id;
+            basin_size += 1;
+
+            // Flood fill
+            while !open_list.is_empty() {
+                // Process next tile
+                let tile_idx = open_list.pop().unwrap();
+
+                // Check neighbors
+                for offset in offsets {
+                    // Get neighbor index
+                    let neighbor_idx = (tile_idx as isize + offset) as usize;
+                    
+                    // Skip visited tiles
+                    if basin_map[neighbor_idx] != unvisited {
+                        continue;
+                    }   
+
+                    // Skip tall tiles
+                    let neighbor_value = tiles[neighbor_idx];
+                    if neighbor_value >= 9 {
+                        continue;
+                    }
+
+                    open_list.push(neighbor_idx);
+                    basin_map[neighbor_idx] = next_basin_id;
+                    basin_size += 1;
+                }
+
+            }
+
+            // Store this basin count
+            basin_sizes.push(basin_size);
+
+            // Next basin
+            next_basin_id += 1;
+        }
+
+        // Get three largest
+        basin_sizes.sort();
+        let len = basin_sizes.len();
+        let a = basin_sizes[len-3];
+        let b = basin_sizes[len-2];
+        let c = basin_sizes[len-1];
+        a * b * c
     }
 
     #[cfg(test)]
@@ -1000,13 +1070,14 @@ pub mod day09 {
         fn examples() {
             let (tiles, width) = parse_input(&crate::data::_DAY09_EXAMPLE1);
             assert_eq!(part1(&tiles, width), 15);
+            assert_eq!(part2(&tiles, width), 1134);
         }
 
         #[test]
         fn verify() {
             let (tiles, width) = parse_input(&crate::data::DAY09);
             assert_eq!(part1(&tiles, width), 452);
-            
+            assert_eq!(part2(&tiles, width), 1263735);
         }
     }
 }
