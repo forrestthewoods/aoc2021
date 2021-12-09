@@ -775,12 +775,14 @@ pub mod day08 {
             .iter()
             .map(|signal| signal_to_mask(signal))
             .collect();
+        signal_masks.iter().enumerate().for_each(|(i, mask)| println!("  {}: {:#9b}", i, mask));
 
         // Calculate how many times each bit occurs
         let bit_counts: Vec<usize> = (0..7)
             .map(|i| 1 << i)
             .map(|bit| signal_masks.iter().filter(|mask| (*mask & bit) > 0).count())
             .collect();
+        println!("Bit counts: [{:?}]", bit_counts);
 
         // Helper functions
         let exclude_bits = |masks: &mut [u8], exclude_mask: u8, ignores: &[usize]| {
@@ -802,15 +804,29 @@ pub mod day08 {
             all_bits, all_bits, all_bits, all_bits, all_bits, all_bits, all_bits,
         ];
 
+        let print_state = |s: &[u8], header: &str| {
+            println!("\n{}", header);
+            for (i, mask) in s.iter().enumerate() {
+                println!("  {}: {:#9b}", i, mask);
+            }
+            println!("");
+        };
+
+        print_state(&segment_bits, "Initial");
+
         // find "clock one"
         let signal = signals.iter().find(|signals| signals.len() == 2).unwrap();
         require_bits(&mut segment_bits, signal_to_mask(signal), &[2, 5]);
+        print_state(&segment_bits, "Found Clock One");
+        
 
         // find "clock seven"
         // this solves segment 0
         let signal = *signals.iter().find(|signal| signal.len() == 3).unwrap();
         require_bits(&mut segment_bits, signal_to_mask(signal), &[0, 2, 5]);
         assert_eq!(segment_bits[0].count_ones(), 1);
+        print_state(&segment_bits, "Found Clock Seven");
+
 /*
         // find "clock four"
         let signal = *signals.iter().find(|signal| signal.len() == 4).unwrap();
@@ -825,6 +841,8 @@ pub mod day08 {
             .unwrap();
         require_bits(&mut segment_bits, 1 << bit, &[1]);
         assert_eq!(segment_bits[1].count_ones(), 1);
+        print_state(&segment_bits, "Found Bit that occurs six times");
+
 
         // find bit that occurs 9 times. this is segment 5
         // this solves segment 5 directly
@@ -837,6 +855,7 @@ pub mod day08 {
         require_bits(&mut segment_bits, 1 << bit, &[5]);
         assert_eq!(segment_bits[5].count_ones(), 1);
         assert_eq!(segment_bits[2].count_ones(), 1);
+        print_state(&segment_bits, "Found Bit that occurs nine times");
 
         // find bit that occurs 4 times. this is segment 4
         let (bit, _) = bit_counts
@@ -846,17 +865,25 @@ pub mod day08 {
             .unwrap();
         require_bits(&mut segment_bits, 1 << bit, &[4]);
         assert_eq!(segment_bits[4].count_ones(), 1);
+        print_state(&segment_bits, "Found Bit that occurs four times");
+
 
         // find signal with len 6 AND contains bit in segment 4
         // this is "clock 0". it's missing bit is segment 3
         // this solves segment 3 directly
         // this solves segment 6 indirectly
-        let (idx, _) = signals
+        let mut iter = signals
             .iter()
             .enumerate()
-            .find(|(idx, signal)| signal.len() == 6 && ((signal_masks[*idx] & segment_bits[4]) > 0))
-            .unwrap();
+            .filter(|(_, signal)| signal.len() == 6)
+            .filter(|(idx, _)| (signal_masks[*idx] & segment_bits[4]) != 0)
+            .filter(|(idx, _)| (signal_masks[*idx] & segment_bits[2]) != 0);
+        println!("HACK DEBUG");
+        assert_eq!(iter.clone().count(), 1);
+        let (idx, _) = iter.next().unwrap();
+        println!("WAT. {}: [{:?}] [{}]", idx, signal_masks[idx], signal_masks[idx] ^ all_bits);
         require_bits(&mut segment_bits, signal_masks[idx] ^ all_bits, &[3]);
+        print_state(&segment_bits, "Found signal with len 6 AND contains bit in segment4");
         assert_eq!(segment_bits[3].count_ones(), 1);
         assert_eq!(segment_bits[6].count_ones(), 1);
 
