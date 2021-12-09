@@ -775,7 +775,10 @@ pub mod day08 {
             .iter()
             .map(|signal| signal_to_mask(signal))
             .collect();
-        signal_masks.iter().enumerate().for_each(|(i, mask)| println!("  {}: {:#9b}", i, mask));
+        signal_masks
+            .iter()
+            .enumerate()
+            .for_each(|(i, mask)| println!("  {}: {:#9b}", i, mask));
 
         // Calculate how many times each bit occurs
         let bit_counts: Vec<usize> = (0..7)
@@ -818,7 +821,6 @@ pub mod day08 {
         let signal = signals.iter().find(|signals| signals.len() == 2).unwrap();
         require_bits(&mut segment_bits, signal_to_mask(signal), &[2, 5]);
         print_state(&segment_bits, "Found Clock One");
-        
 
         // find "clock seven"
         // this solves segment 0
@@ -827,11 +829,6 @@ pub mod day08 {
         assert_eq!(segment_bits[0].count_ones(), 1);
         print_state(&segment_bits, "Found Clock Seven");
 
-/*
-        // find "clock four"
-        let signal = *signals.iter().find(|signal| signal.len() == 4).unwrap();
-        require_bits(&mut segment_bits, signal_to_mask(signal), &[1, 2, 3, 5]);
-*/
         // find bit that occurs 6 times.
         // this solves segment 1
         let (bit, _) = bit_counts
@@ -842,7 +839,6 @@ pub mod day08 {
         require_bits(&mut segment_bits, 1 << bit, &[1]);
         assert_eq!(segment_bits[1].count_ones(), 1);
         print_state(&segment_bits, "Found Bit that occurs six times");
-
 
         // find bit that occurs 9 times. this is segment 5
         // this solves segment 5 directly
@@ -867,7 +863,6 @@ pub mod day08 {
         assert_eq!(segment_bits[4].count_ones(), 1);
         print_state(&segment_bits, "Found Bit that occurs four times");
 
-
         // find signal with len 6 AND contains bit in segment 4
         // this is "clock 0". it's missing bit is segment 3
         // this solves segment 3 directly
@@ -881,111 +876,51 @@ pub mod day08 {
         println!("HACK DEBUG");
         assert_eq!(iter.clone().count(), 1);
         let (idx, _) = iter.next().unwrap();
-        println!("WAT. {}: [{:?}] [{}]", idx, signal_masks[idx], signal_masks[idx] ^ all_bits);
+        println!(
+            "WAT. {}: [{:?}] [{}]",
+            idx,
+            signal_masks[idx],
+            signal_masks[idx] ^ all_bits
+        );
         require_bits(&mut segment_bits, signal_masks[idx] ^ all_bits, &[3]);
-        print_state(&segment_bits, "Found signal with len 6 AND contains bit in segment4");
+        print_state(
+            &segment_bits,
+            "Found signal with len 6 AND contains bit in segment4",
+        );
         assert_eq!(segment_bits[3].count_ones(), 1);
         assert_eq!(segment_bits[6].count_ones(), 1);
 
-        // All bits solved?
+        // All bits solved!
         assert_eq!(segment_bits.iter().all(|bits| bits.count_ones() == 1), true);
 
-        /*
+        // Helper to compute result
+        let mask_to_digit : std::collections::HashMap<u8, usize> = [
+            (0b1110111, 0),
+            (0b0100100, 1),
+            (0b1011101, 2),
+            (0b1101101, 3),
+            (0b0101110, 4),
+            (0b1101011, 5),
+            (0b1111011, 6),
+            (0b0100101, 7),
+            (0b1111111, 8),
+            (0b1101111, 9)
+        ].iter().cloned().collect();
 
-                let print_state = |s: &[u8], header: &str| {
-                    println!("\n{}", header);
-                    for (i, mask) in s.iter().enumerate() {
-                        println!("  {}: {:#9b}", i, mask);
-                    }
-                    println!("");
-                };
-
-                print_state(&solver, "Initial");
-
-                let digits = entry.0.iter().chain(entry.1.iter());
-
-                // find 2 letter digit. this is a "one". remove from everything but 2, 5
-                let maybe_one = digits.clone().find(|digit| digit.len() == 2);
-                if let Some(digit) = maybe_one {
-                    let digit_mask: u8 = digit_to_mask(digit);
-                    solver[2] &= digit_mask;
-                    solver[5] &= digit_mask;
-
-                    (0..7).filter(|idx| *idx != 2 && *idx != 5).for_each(|idx| {
-                        solver[idx] &= !digit_mask;
-                    });
-                }
-                print_state(&solver, "After looking for clock one");
-
-                // find 3 letter digit. this is a "seven". remove from everything but 0, 2, 5
-                let maybe_seven = digits.clone().find(|digit| digit.len() == 3);
-                if let Some(digit) = maybe_seven {
-                    let digit_mask: u8 = digit_to_mask(digit);
-                    solver[0] &= digit_mask;
-                    solver[2] &= digit_mask;
-                    solver[5] &= digit_mask;
-                    (0..7)
-                        .filter(|idx| *idx != 0 && *idx != 2 && *idx != 5)
-                        .for_each(|idx| {
-                            solver[idx] &= !digit_mask;
-                        });
-                }
-                print_state(&solver, "After looking for clock seven");
-
-                // find 4 letter digit. remove from everything but 1, 2, 3, 5
-                let maybe_four = digits.clone().find(|digit| digit.len() == 4);
-                if let Some(digit) = maybe_four {
-                    let digit_mask: u8 = digit_to_mask(digit);
-                    solver[1] &= digit_mask;
-                    solver[2] &= digit_mask;
-                    solver[3] &= digit_mask;
-                    solver[5] &= digit_mask;
-
-                    (0..7)
-                        .filter(|idx| *idx != 1 && *idx != 2 && *idx != 3 && *idx != 5)
-                        .for_each(|idx| {
-                            solver[idx] &= !digit_mask;
-                        });
-                }
-                print_state(&solver, "After looking for clock four");
-
-                // array of solved = false
-                let mut solved_flags: [bool; 7] = [false, false, false, false, false, false, false];
-
-                while solved_flags.iter().any(|solved_flag| !solved_flag) {
-                    // look for unsolved with maybe 1 letter
-                    for (idx, solved_flag) in solved_flags.iter_mut().enumerate() {
-                        // Ignore already solved
-                        if *solved_flag {
-                            continue;
-                        }
-
-                        let solved_mask = solver[idx];
-                        if solved_mask.count_ones() == 1 {
-                            println!("Found solution for letter {}", idx);
-
-                            // Solved!
-                            *solved_flag = true;
-
-                            // Remove mask from other entries
-                            solver
-                                .iter_mut()
-                                .enumerate()
-                                .filter(|(j, _)| idx != *j)
-                                .for_each(|(_, mask)| *mask &= !solved_mask);
-                            print_state(&solver, "After clearing");
-
-                            break;
-                        }
-
-                        unreachable!("Uh oh failed to find a solution");
-                    }
-                }
-
-                // while !solver.all(|e| e.count_ones() == 1)
-                //   look for unsolved maybe with 1 letter. remove from everything else
-        */
-        0
+        // Compute result
+        let outputs = &entry.1;
+        
+        let result = outputs.iter().map(|output| signal_to_mask(output))
+            .map(|output_mask| {
+                // transcribe bits
+                let segment_mask = (0..7)
+                    .filter(|idx| (output_mask & segment_bits[*idx]) > 0)
+                    .map(|idx| 1 << idx)
+                    .fold(0, |acc, next| acc | next);
+                mask_to_digit.get(&segment_mask).unwrap()
+        })
+        .fold(0, |acc, digit| acc*10 + digit);
+        result
     }
 
     fn part2(entries: &[Entry]) -> usize {
@@ -1005,12 +940,14 @@ pub mod day08 {
             let sample_entries = parse_input(sample);
             assert_eq!(sample_entries.len(), 1);
             assert_eq!(decode_entry(&sample_entries[0]), 5353);
+            assert_eq!(part2(&entries), 61229);
         }
 
         #[test]
         fn verify() {
             let entries = parse_input(crate::data::DAY08);
             assert_eq!(part1(&entries), 342);
+            assert_eq!(part2(&entries), 1068933);
         }
     }
 }
