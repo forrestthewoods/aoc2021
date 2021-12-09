@@ -752,7 +752,7 @@ pub mod day08 {
     // 6 = G       6666
 
     fn decode_entry(entry: &Entry) -> usize {
-        let all_bits = 0b_111_1111;
+        // Helpers
         let char_to_mask: [u8; 7] = [
             0b_000_0001,
             0b_000_0010,
@@ -762,111 +762,202 @@ pub mod day08 {
             0b_010_0000,
             0b_100_0000,
         ];
-        let digit_to_mask = |digit: Digit| -> u8 {
-            digit.chars().map(|c| c as usize - 'a' as usize)
+        let signal_to_mask = |signal: Digit| -> u8 {
+            signal
+                .chars()
+                .map(|c| c as usize - 'a' as usize)
                 .fold(0, |mask, i| mask | char_to_mask[i])
         };
 
-        // initialize solver
-        let mut solver: [u8; 7] = [all_bits, all_bits, all_bits, all_bits, all_bits, all_bits, all_bits];
+        // Compute signal masks
+        let signals = &entry.0;
+        let signal_masks: Vec<u8> = signals
+            .iter()
+            .map(|signal| signal_to_mask(signal))
+            .collect();
 
-        let print_state = |s: &[u8], header: &str| {
-            println!("\n{}", header);
-            for (i, mask) in s.iter().enumerate() {
-                println!("  {}: {:#9b}", i, mask);
-            }
-            println!("");
+        // Calculate how many times each bit occurs
+        let bit_counts: Vec<usize> = (0..7)
+            .map(|i| 1 << i)
+            .map(|bit| signal_masks.iter().filter(|mask| (*mask & bit) > 0).count())
+            .collect();
+
+        // Helper functions
+        let exclude_bits = |masks: &mut [u8], exclude_mask: u8, ignores: &[usize]| {
+            masks
+                .iter_mut()
+                .enumerate()
+                .filter(|(idx, _)| !ignores.contains(idx))
+                .for_each(|(_, mask)| *mask &= !exclude_mask);
         };
 
-        print_state(&solver, "Initial");
+        let require_bits = |masks: &mut [u8], mask: u8, indices: &[usize]| {
+            indices.iter().for_each(|idx| masks[*idx] &= mask);
+            exclude_bits(masks, mask, indices);
+        };
 
-        let digits = entry.0.iter().chain(entry.1.iter());
+        // Initialize segment bits
+        let all_bits = 0b_111_1111;
+        let mut segment_bits: [u8; 7] = [
+            all_bits, all_bits, all_bits, all_bits, all_bits, all_bits, all_bits,
+        ];
 
-        // find 2 letter digit. this is a "one". remove from everything but 2, 5
-        let maybe_one = digits.clone().find(|digit| digit.len() == 2);
-        if let Some(digit) = maybe_one {
-            let digit_mask : u8 = digit_to_mask(digit);
-            solver[2] &= digit_mask;
-            solver[5] &= digit_mask;
+        // find "clock one"
+        let signal = signals.iter().find(|signals| signals.len() == 2).unwrap();
+        require_bits(&mut segment_bits, signal_to_mask(signal), &[2, 5]);
 
-            (0..7)
-                .filter(|idx| *idx != 2 && *idx != 5)
-                .for_each(|idx| {
-                    solver[idx] &= !digit_mask;
-                });
-        }
-        print_state(&solver, "After looking for clock one");
+        // find "clock seven"
+        // this solves segment 0
+        let signal = *signals.iter().find(|signal| signal.len() == 3).unwrap();
+        require_bits(&mut segment_bits, signal_to_mask(signal), &[0, 2, 5]);
+        assert_eq!(segment_bits[0].count_ones(), 1);
+/*
+        // find "clock four"
+        let signal = *signals.iter().find(|signal| signal.len() == 4).unwrap();
+        require_bits(&mut segment_bits, signal_to_mask(signal), &[1, 2, 3, 5]);
+*/
+        // find bit that occurs 6 times.
+        // this solves segment 1
+        let (bit, _) = bit_counts
+            .iter()
+            .enumerate()
+            .find(|(_, count)| **count == 6)
+            .unwrap();
+        require_bits(&mut segment_bits, 1 << bit, &[1]);
+        assert_eq!(segment_bits[1].count_ones(), 1);
 
-        
+        // find bit that occurs 9 times. this is segment 5
+        // this solves segment 5 directly
+        // this solves segment 2 indirectly
+        let (bit, _) = bit_counts
+            .iter()
+            .enumerate()
+            .find(|(_, count)| **count == 9)
+            .unwrap();
+        require_bits(&mut segment_bits, 1 << bit, &[5]);
+        assert_eq!(segment_bits[5].count_ones(), 1);
+        assert_eq!(segment_bits[2].count_ones(), 1);
 
-        // find 3 letter digit. this is a "seven". remove from everything but 0, 2, 5
-        let maybe_seven = digits.clone().find(|digit| digit.len() == 3);
-        if let Some(digit) = maybe_seven {
-            let digit_mask : u8 = digit_to_mask(digit);
-            solver[0] &= digit_mask;
-            solver[2] &= digit_mask;
-            solver[5] &= digit_mask;
-            (0..7)
-                .filter(|idx| *idx != 0 && *idx != 2 && *idx != 5)
-                .for_each(|idx| {
-                    solver[idx] &= !digit_mask;
-                });
-        }
-        print_state(&solver, "After looking for clock seven");
+        // find bit that occurs 4 times. this is segment 4
+        let (bit, _) = bit_counts
+            .iter()
+            .enumerate()
+            .find(|(_, count)| **count == 4)
+            .unwrap();
+        require_bits(&mut segment_bits, 1 << bit, &[4]);
+        assert_eq!(segment_bits[4].count_ones(), 1);
 
-        // find 4 letter digit. remove from everything but 1, 2, 3, 5
-        let maybe_four = digits.clone().find(|digit| digit.len() == 4);
-        if let Some(digit) = maybe_four {
-            let digit_mask : u8 = digit_to_mask(digit);
-            solver[1] &= digit_mask;
-            solver[2] &= digit_mask;
-            solver[3] &= digit_mask;
-            solver[5] &= digit_mask;
+        // find signal with len 6 AND contains bit in segment 4
+        // this is "clock 0". it's missing bit is segment 3
+        // this solves segment 3 directly
+        // this solves segment 6 indirectly
+        let (idx, _) = signals
+            .iter()
+            .enumerate()
+            .find(|(idx, signal)| signal.len() == 6 && ((signal_masks[*idx] & segment_bits[4]) > 0))
+            .unwrap();
+        require_bits(&mut segment_bits, signal_masks[idx] ^ all_bits, &[3]);
+        assert_eq!(segment_bits[3].count_ones(), 1);
+        assert_eq!(segment_bits[6].count_ones(), 1);
 
-            (0..7)
-                .filter(|idx| *idx != 1 && *idx != 2 && *idx != 3 && *idx != 5)
-                .for_each(|idx| {
-                    solver[idx] &= !digit_mask;
-                });
-        }
-        print_state(&solver, "After looking for clock four");
+        // All bits solved?
+        assert_eq!(segment_bits.iter().all(|bits| bits.count_ones() == 1), true);
 
-        // array of solved = false
-        let mut solved_flags: [bool; 7] = [false, false, false, false, false, false, false];
+        /*
 
-        while solved_flags.iter().any(|solved_flag| !solved_flag) {
-            // look for unsolved with maybe 1 letter
-            for (idx, solved_flag) in solved_flags.iter_mut().enumerate() {
-                // Ignore already solved
-                if *solved_flag {
-                    continue;
+                let print_state = |s: &[u8], header: &str| {
+                    println!("\n{}", header);
+                    for (i, mask) in s.iter().enumerate() {
+                        println!("  {}: {:#9b}", i, mask);
+                    }
+                    println!("");
+                };
+
+                print_state(&solver, "Initial");
+
+                let digits = entry.0.iter().chain(entry.1.iter());
+
+                // find 2 letter digit. this is a "one". remove from everything but 2, 5
+                let maybe_one = digits.clone().find(|digit| digit.len() == 2);
+                if let Some(digit) = maybe_one {
+                    let digit_mask: u8 = digit_to_mask(digit);
+                    solver[2] &= digit_mask;
+                    solver[5] &= digit_mask;
+
+                    (0..7).filter(|idx| *idx != 2 && *idx != 5).for_each(|idx| {
+                        solver[idx] &= !digit_mask;
+                    });
+                }
+                print_state(&solver, "After looking for clock one");
+
+                // find 3 letter digit. this is a "seven". remove from everything but 0, 2, 5
+                let maybe_seven = digits.clone().find(|digit| digit.len() == 3);
+                if let Some(digit) = maybe_seven {
+                    let digit_mask: u8 = digit_to_mask(digit);
+                    solver[0] &= digit_mask;
+                    solver[2] &= digit_mask;
+                    solver[5] &= digit_mask;
+                    (0..7)
+                        .filter(|idx| *idx != 0 && *idx != 2 && *idx != 5)
+                        .for_each(|idx| {
+                            solver[idx] &= !digit_mask;
+                        });
+                }
+                print_state(&solver, "After looking for clock seven");
+
+                // find 4 letter digit. remove from everything but 1, 2, 3, 5
+                let maybe_four = digits.clone().find(|digit| digit.len() == 4);
+                if let Some(digit) = maybe_four {
+                    let digit_mask: u8 = digit_to_mask(digit);
+                    solver[1] &= digit_mask;
+                    solver[2] &= digit_mask;
+                    solver[3] &= digit_mask;
+                    solver[5] &= digit_mask;
+
+                    (0..7)
+                        .filter(|idx| *idx != 1 && *idx != 2 && *idx != 3 && *idx != 5)
+                        .for_each(|idx| {
+                            solver[idx] &= !digit_mask;
+                        });
+                }
+                print_state(&solver, "After looking for clock four");
+
+                // array of solved = false
+                let mut solved_flags: [bool; 7] = [false, false, false, false, false, false, false];
+
+                while solved_flags.iter().any(|solved_flag| !solved_flag) {
+                    // look for unsolved with maybe 1 letter
+                    for (idx, solved_flag) in solved_flags.iter_mut().enumerate() {
+                        // Ignore already solved
+                        if *solved_flag {
+                            continue;
+                        }
+
+                        let solved_mask = solver[idx];
+                        if solved_mask.count_ones() == 1 {
+                            println!("Found solution for letter {}", idx);
+
+                            // Solved!
+                            *solved_flag = true;
+
+                            // Remove mask from other entries
+                            solver
+                                .iter_mut()
+                                .enumerate()
+                                .filter(|(j, _)| idx != *j)
+                                .for_each(|(_, mask)| *mask &= !solved_mask);
+                            print_state(&solver, "After clearing");
+
+                            break;
+                        }
+
+                        unreachable!("Uh oh failed to find a solution");
+                    }
                 }
 
-                let solved_mask = solver[idx];
-                if solved_mask.count_ones() == 1 {
-                    println!("Found solution for letter {}", idx);
-
-                    // Solved!
-                    *solved_flag = true;
-
-                    // Remove mask from other entries
-                    solver
-                        .iter_mut()
-                        .enumerate()
-                        .filter(|(j, _)| idx != *j)
-                        .for_each(|(_, mask)| *mask &= !solved_mask);
-                    print_state(&solver, "After clearing");
-
-                    break;
-                }
-
-                unreachable!("Uh oh failed to find a solution");
-            }
-        }
-
-        // while !solver.all(|e| e.count_ones() == 1)
-        //   look for unsolved maybe with 1 letter. remove from everything else
-
+                // while !solver.all(|e| e.count_ones() == 1)
+                //   look for unsolved maybe with 1 letter. remove from everything else
+        */
         0
     }
 
