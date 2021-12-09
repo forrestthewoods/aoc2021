@@ -920,3 +920,93 @@ pub mod day08 {
         }
     }
 }
+
+pub mod day09 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let (tiles, width) = parse_input(&crate::data::DAY09);
+
+        let answer_part1 = part1(&tiles, width);
+        writeln!(&mut result, "Day 09, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY09);
+        writeln!(&mut result, "Day 09, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> (Vec<u8>, usize) {
+        let lines = input.lines();
+        let width = lines.clone().next().unwrap().len() + 2;
+
+        let mut pad_row : Vec<u8> = Default::default();
+        let pad_value = 10;
+        pad_row.resize(width, pad_value);
+
+        let mut tiles : Vec<u8> = Default::default();
+        tiles.extend(&pad_row);
+
+        for line in lines {
+            tiles.push(pad_value);
+            for c in line.chars() {
+                tiles.push(c as u8 - '0' as u8);
+            }
+            tiles.push(pad_value);
+        }
+        tiles.extend(&pad_row);
+
+
+        (tiles, width)
+    }
+
+    fn part1(tiles: &[u8], width: usize) -> usize {
+        let height = tiles.len() / width;
+
+        let to_idx = |row: usize, col: usize| -> usize {
+            row*width + col
+        };
+
+        let mut result : usize = 0;
+        for row in 1..height-1 {
+            for col in 1..width-1 {
+                let l = to_idx(row, col - 1);
+                let r = to_idx(row, col + 1);
+                let u = to_idx(row - 1, col);
+                let d = to_idx(row + 1, col);
+
+                let v = tiles[to_idx(row, col)];
+                if v < tiles[l] && v < tiles[r] && v < tiles[u] && v < tiles[d] {
+                    result += v as usize + 1;
+                }
+            }
+        }
+
+        result
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (tiles, width) = parse_input(&crate::data::_DAY09_EXAMPLE1);
+            assert_eq!(part1(&tiles, width), 15);
+        }
+
+        #[test]
+        fn verify() {
+            let (tiles, width) = parse_input(&crate::data::DAY09);
+            assert_eq!(part1(&tiles, width), 452);
+            
+        }
+    }
+}

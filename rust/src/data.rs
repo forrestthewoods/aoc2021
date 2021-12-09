@@ -9,3 +9,5 @@ pub const DAY06: &'static str = include_str!("../../data/day06.txt");
 pub const DAY07: &'static str = include_str!("../../data/day07.txt");
 pub const DAY08: &'static str = include_str!("../../data/day08.txt");
 pub const _DAY08_EXAMPLE1: &'static str = include_str!("../../data/day08_example1.txt");
+pub const DAY09: &'static str = include_str!("../../data/day09.txt");
+pub const _DAY09_EXAMPLE1: &'static str = include_str!("../../data/day09_example1.txt");
