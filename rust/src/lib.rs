@@ -863,7 +863,7 @@ pub mod day08 {
         assert_eq!(segment_bits.iter().all(|bits| bits.count_ones() == 1), true);
 
         // Helper to compute result
-        let mask_to_digit : std::collections::HashMap<u8, usize> = [
+        let mask_to_digit: std::collections::HashMap<u8, usize> = [
             (0b1110111, 0),
             (0b0100100, 1),
             (0b1011101, 2),
@@ -873,13 +873,18 @@ pub mod day08 {
             (0b1111011, 6),
             (0b0100101, 7),
             (0b1111111, 8),
-            (0b1101111, 9)
-        ].iter().cloned().collect();
+            (0b1101111, 9),
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
         // Compute result
         let outputs = &entry.1;
-        
-        let result = outputs.iter().map(|output| signal_to_mask(output))
+
+        let result = outputs
+            .iter()
+            .map(|output| signal_to_mask(output))
             .map(|output_mask| {
                 // transcribe bits
                 let segment_mask = (0..7)
@@ -887,8 +892,8 @@ pub mod day08 {
                     .map(|idx| 1 << idx)
                     .fold(0, |acc, next| acc | next);
                 mask_to_digit.get(&segment_mask).unwrap()
-        })
-        .fold(0, |acc, digit| acc*10 + digit);
+            })
+            .fold(0, |acc, digit| acc * 10 + digit);
         result
     }
 
@@ -942,11 +947,11 @@ pub mod day09 {
         let lines = input.lines();
         let width = lines.clone().next().unwrap().len() + 2;
 
-        let mut pad_row : Vec<u8> = Default::default();
+        let mut pad_row: Vec<u8> = Default::default();
         let pad_value = 10;
         pad_row.resize(width, pad_value);
 
-        let mut tiles : Vec<u8> = Default::default();
+        let mut tiles: Vec<u8> = Default::default();
         tiles.extend(&pad_row);
 
         for line in lines {
@@ -958,21 +963,18 @@ pub mod day09 {
         }
         tiles.extend(&pad_row);
 
-
         (tiles, width)
     }
 
     fn find_low_points(tiles: &[u8], width: usize) -> Vec<usize> {
-        let mut result : Vec<usize> = Default::default();
-        
+        let mut result: Vec<usize> = Default::default();
+
         let height = tiles.len() / width;
 
-        let to_idx = |row: usize, col: usize| -> usize {
-            row*width + col
-        };
+        let to_idx = |row: usize, col: usize| -> usize { row * width + col };
 
-        for row in 1..height-1 {
-            for col in 1..width-1 {
+        for row in 1..height - 1 {
+            for col in 1..width - 1 {
                 let l = to_idx(row, col - 1);
                 let r = to_idx(row, col + 1);
                 let u = to_idx(row - 1, col);
@@ -990,31 +992,34 @@ pub mod day09 {
     }
 
     fn part1(tiles: &[u8], width: usize) -> usize {
-        find_low_points(&tiles, width).iter().map(|idx| tiles[*idx] as usize + 1).sum()
+        find_low_points(&tiles, width)
+            .iter()
+            .map(|idx| tiles[*idx] as usize + 1)
+            .sum()
     }
 
     fn part2(tiles: &[u8], width: usize) -> usize {
-        let mut next_basin_id : u16 = 0;
-        let mut basin_sizes : Vec<usize> = Default::default();
+        let mut next_basin_id: u16 = 0;
+        let mut basin_sizes: Vec<usize> = Default::default();
 
         // Precompute offsets
-        let offsets : [isize; 4] = [-1, 1, -(width as isize), width as isize];
+        let offsets: [isize; 4] = [-1, 1, -(width as isize), width as isize];
 
         // Find all low points
         let low_points = find_low_points(tiles, width);
 
         // Initialize basin map
-        let mut basin_map : Vec<u16> = Default::default();
+        let mut basin_map: Vec<u16> = Default::default();
         let unvisited = u16::MAX;
         basin_map.resize(tiles.len(), unvisited);
 
         // Process each low point
         for low_point in low_points {
             // Counter for this basin
-            let mut basin_size : usize = 0;
+            let mut basin_size: usize = 0;
 
             // Initialize basin data
-            let mut open_list : Vec<usize> = vec![low_point];
+            let mut open_list: Vec<usize> = vec![low_point];
             basin_map[low_point] = next_basin_id;
             basin_size += 1;
 
@@ -1027,11 +1032,11 @@ pub mod day09 {
                 for offset in offsets {
                     // Get neighbor index
                     let neighbor_idx = (tile_idx as isize + offset) as usize;
-                    
+
                     // Skip visited tiles
                     if basin_map[neighbor_idx] != unvisited {
                         continue;
-                    }   
+                    }
 
                     // Skip tall tiles
                     let neighbor_value = tiles[neighbor_idx];
@@ -1043,7 +1048,6 @@ pub mod day09 {
                     basin_map[neighbor_idx] = next_basin_id;
                     basin_size += 1;
                 }
-
             }
 
             // Store this basin count
@@ -1056,9 +1060,9 @@ pub mod day09 {
         // Get three largest
         basin_sizes.sort();
         let len = basin_sizes.len();
-        let a = basin_sizes[len-3];
-        let b = basin_sizes[len-2];
-        let c = basin_sizes[len-1];
+        let a = basin_sizes[len - 3];
+        let b = basin_sizes[len - 2];
+        let c = basin_sizes[len - 1];
         a * b * c
     }
 
@@ -1078,6 +1082,145 @@ pub mod day09 {
             let (tiles, width) = parse_input(&crate::data::DAY09);
             assert_eq!(part1(&tiles, width), 452);
             assert_eq!(part2(&tiles, width), 1263735);
+        }
+    }
+}
+pub mod day10 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+        let answer_part1 = part1(crate::data::DAY10);
+        writeln!(&mut result, "Day 10, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY10);
+        writeln!(&mut result, "Day 10, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+    /*
+    fn recurse(s: &[u8], cursor: &mut usize) -> Option<char> {
+        // End of line, no problem
+        if *cursor >= s.len() {
+            return None;
+        }
+
+        // Get first char
+        let next = s[*cursor];
+
+
+
+
+        // Parse inner
+        *cursor += 1;
+        if let Some(err) = recurse(s, cursor) {
+            return Some(err);
+        }
+
+        // Incomplete line, no problem
+        if *cursor >= s.len() {
+            return None;
+        }
+
+        let close = s[*cursor];
+        match (open as char, close as char) {
+            ('(', ')') => None,
+            ('[', ']') => None,
+            ('{', '}') => None,
+            ('<', '>') => None,
+            _ => Some(close as char)
+        }
+    }
+    */
+
+    fn find_illegal(input: &str) -> Option<char> {
+        let mut open_list: Vec<char> = Default::default();
+
+        for c in input.chars() {
+            match c {
+                '(' | '[' | '{' | '<' => {
+                    open_list.push(c);
+                }
+                ')' | ']' | '}' | '>' => {
+                    if open_list.is_empty() {
+                        return Some(c);
+                    }
+
+                    let open = open_list.pop().unwrap();
+                    match (open, c) {
+                        ('(', ')') => (),
+                        ('[', ']') => (),
+                        ('{', '}') => (),
+                        ('<', '>') => (),
+                        _ => return Some(c),
+                    };
+                }
+                _ => unreachable!(&format!("Unexpected char: [{}]", c)),
+            }
+        }
+
+        None
+    }
+
+    fn part1(input: &str) -> usize {
+        //let mut cursor = 0;
+        //recurse(input.as_bytes(), &mut cursor)
+
+        let illegal_chars: Vec<char> = input
+            .lines()
+            .filter_map(|line| find_illegal(line))
+            .collect();
+
+        let mut counts: [usize; 4] = [0, 0, 0, 0];
+        for illegal_char in illegal_chars {
+            let idx = match illegal_char {
+                ')' => 0,
+                ']' => 1,
+                '}' => 2,
+                '>' => 3,
+                _ => unreachable!(&format!("Unexpected illegal char: [{}]", illegal_char)),
+            };
+            counts[idx] += 1;
+        }
+
+        counts[0] * 3 + counts[1] * 57 + counts[2] * 1197 + counts[3] * 25137
+        /*
+                input
+                    .lines()
+                    .filter_map(|line| find_illegal(line))
+                    .map(|c| match c {
+                        ')' => 3,
+                        ']' => 57,
+                        '}' => 1197,
+                        '>' => 25137,
+                        _ => unreachable!(&format!("Unexpected illegal character [{}]", c)),
+                    })
+                    .product()
+        */
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            assert_eq!(find_illegal("{([(<{}[<>[]}>{[]{[(<()>"), Some('}'));
+            assert_eq!(find_illegal("[[<[([]))<([[{}[[()]]] "), Some(')'));
+            assert_eq!(find_illegal("[{[{({}]{}}([{[{{{}}([]"), Some(']'));
+            assert_eq!(find_illegal("[<(<(<(<{}))><([]([]() "), Some(')'));
+            assert_eq!(find_illegal("<{([([[(<>()){}]>(<<{{ "), Some('>'));
+            assert_eq!(part1(crate::data::_DAY10_EXAMPLE1), 26397);
+        }
+
+        #[test]
+        fn verify() {
+            assert_eq!(part1(crate::data::DAY10), 318081);
         }
     }
 }
