@@ -1099,40 +1099,6 @@ pub mod day10 {
         */
         result
     }
-    /*
-    fn recurse(s: &[u8], cursor: &mut usize) -> Option<char> {
-        // End of line, no problem
-        if *cursor >= s.len() {
-            return None;
-        }
-
-        // Get first char
-        let next = s[*cursor];
-
-
-
-
-        // Parse inner
-        *cursor += 1;
-        if let Some(err) = recurse(s, cursor) {
-            return Some(err);
-        }
-
-        // Incomplete line, no problem
-        if *cursor >= s.len() {
-            return None;
-        }
-
-        let close = s[*cursor];
-        match (open as char, close as char) {
-            ('(', ')') => None,
-            ('[', ']') => None,
-            ('{', '}') => None,
-            ('<', '>') => None,
-            _ => Some(close as char)
-        }
-    }
-    */
 
     fn find_illegal(input: &str) -> Option<char> {
         let mut open_list: Vec<char> = Default::default();
@@ -1164,9 +1130,6 @@ pub mod day10 {
     }
 
     fn part1(input: &str) -> usize {
-        //let mut cursor = 0;
-        //recurse(input.as_bytes(), &mut cursor)
-
         let illegal_chars: Vec<char> = input
             .lines()
             .filter_map(|line| find_illegal(line))
@@ -1185,19 +1148,6 @@ pub mod day10 {
         }
 
         counts[0] * 3 + counts[1] * 57 + counts[2] * 1197 + counts[3] * 25137
-        /*
-                input
-                    .lines()
-                    .filter_map(|line| find_illegal(line))
-                    .map(|c| match c {
-                        ')' => 3,
-                        ']' => 57,
-                        '}' => 1197,
-                        '>' => 25137,
-                        _ => unreachable!(&format!("Unexpected illegal character [{}]", c)),
-                    })
-                    .product()
-        */
     }
 
     fn part2(_input: &str) -> usize {
