@@ -1088,36 +1088,36 @@ pub mod day09 {
 pub mod day10 {
     use std::fmt::Write;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+    #[derive(Clone, Debug, Eq, PartialEq)]
     enum ParseResult {
         Ok,
         IllegalChar(char),
-        IncompleteLine(Vec<char>)
+        IncompleteLine(Vec<char>),
     }
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
+        
         let answer_part1 = part1(crate::data::DAY10);
         writeln!(&mut result, "Day 10, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
         let answer_part2 = part2(crate::data::DAY10);
         writeln!(&mut result, "Day 10, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+        
         result
     }
 
     fn parse_line(input: &str) -> ParseResult {
         let mut open_list: Vec<char> = Default::default();
 
-        for c in input.chars() {
+        for c in input.trim().chars() {
             match c {
                 '(' | '[' | '{' | '<' => {
                     open_list.push(c);
                 }
                 ')' | ']' | '}' | '>' => {
                     if open_list.is_empty() {
-                        return ParseResult::IncompleteLine(open_list);
+                        unreachable!("Problem does not define an unexpected close char");
                     }
 
                     let open = open_list.pop().unwrap();
@@ -1133,13 +1133,23 @@ pub mod day10 {
             }
         }
 
-        ParseResult::Ok
+        if !open_list.is_empty() {
+            ParseResult::IncompleteLine(open_list)
+        } else {
+            ParseResult::Ok
+        }
     }
 
     fn part1(input: &str) -> usize {
         let illegal_chars: Vec<char> = input
             .lines()
-            .filter_map(|line| if let ParseResult::IllegalChar(c) = parse_line(line) { Some(c) } else { None} )
+            .filter_map(|line| {
+                if let ParseResult::IllegalChar(c) = parse_line(line) {
+                    Some(c)
+                } else {
+                    None
+                }
+            })
             .collect();
 
         let mut counts: [usize; 4] = [0, 0, 0, 0];
@@ -1157,8 +1167,29 @@ pub mod day10 {
         counts[0] * 3 + counts[1] * 57 + counts[2] * 1197 + counts[3] * 25137
     }
 
-    fn part2(_input: &str) -> usize {
-        0
+    fn part2(input: &str) -> usize {
+        let mut scores : Vec<usize> = input
+            .lines()
+            .filter_map(|line| {
+                if let ParseResult::IncompleteLine(incomplete) = parse_line(line) {
+                    Some(incomplete)
+                } else {
+                    None
+                }
+            })
+            .map(|incomplete| incomplete.iter().rev().fold(0, |acc, c| {
+                    acc*5 + match c {
+                        '(' => 1,
+                        '[' => 2,
+                        '{' => 3,
+                        '<' => 4,
+                        _ => unreachable!(&format!("Unexpected open list char: [{}]", c)),
+            }}))
+            .collect();
+
+        let mid = scores.len() / 2;
+        scores.select_nth_unstable(mid);
+        scores[mid]
     }
 
     #[cfg(test)]
@@ -1167,17 +1198,34 @@ pub mod day10 {
 
         #[test]
         fn examples() {
-            assert_eq!(parse_line("{([(<{}[<>[]}>{[]{[(<()>"), ParseResult::IllegalChar('}'));
-            assert_eq!(parse_line("[[<[([]))<([[{}[[()]]] "), ParseResult::IllegalChar(')'));
-            assert_eq!(parse_line("[{[{({}]{}}([{[{{{}}([]"), ParseResult::IllegalChar(']'));
-            assert_eq!(parse_line("[<(<(<(<{}))><([]([]() "), ParseResult::IllegalChar(')'));
-            assert_eq!(parse_line("<{([([[(<>()){}]>(<<{{ "), ParseResult::IllegalChar('>'));
+            assert_eq!(
+                parse_line("{([(<{}[<>[]}>{[]{[(<()>"),
+                ParseResult::IllegalChar('}')
+            );
+            assert_eq!(
+                parse_line("[[<[([]))<([[{}[[()]]] "),
+                ParseResult::IllegalChar(')')
+            );
+            assert_eq!(
+                parse_line("[{[{({}]{}}([{[{{{}}([]"),
+                ParseResult::IllegalChar(']')
+            );
+            assert_eq!(
+                parse_line("[<(<(<(<{}))><([]([]() "),
+                ParseResult::IllegalChar(')')
+            );
+            assert_eq!(
+                parse_line("<{([([[(<>()){}]>(<<{{ "),
+                ParseResult::IllegalChar('>')
+            );
             assert_eq!(part1(crate::data::_DAY10_EXAMPLE1), 26397);
+            assert_eq!(part2(crate::data::_DAY10_EXAMPLE1), 288957);
         }
 
         #[test]
         fn verify() {
             assert_eq!(part1(crate::data::DAY10), 318081);
+            assert_eq!(part2(crate::data::DAY10), 4361305341);
         }
     }
 }
