@@ -1088,6 +1088,13 @@ pub mod day09 {
 pub mod day10 {
     use std::fmt::Write;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+    enum ParseResult {
+        Ok,
+        IllegalChar(char),
+        IncompleteLine(Vec<char>)
+    }
+
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
         let answer_part1 = part1(crate::data::DAY10);
@@ -1100,7 +1107,7 @@ pub mod day10 {
         result
     }
 
-    fn find_illegal(input: &str) -> Option<char> {
+    fn parse_line(input: &str) -> ParseResult {
         let mut open_list: Vec<char> = Default::default();
 
         for c in input.chars() {
@@ -1110,7 +1117,7 @@ pub mod day10 {
                 }
                 ')' | ']' | '}' | '>' => {
                     if open_list.is_empty() {
-                        return Some(c);
+                        return ParseResult::IncompleteLine(open_list);
                     }
 
                     let open = open_list.pop().unwrap();
@@ -1119,20 +1126,20 @@ pub mod day10 {
                         ('[', ']') => (),
                         ('{', '}') => (),
                         ('<', '>') => (),
-                        _ => return Some(c),
+                        _ => return ParseResult::IllegalChar(c),
                     };
                 }
                 _ => unreachable!(&format!("Unexpected char: [{}]", c)),
             }
         }
 
-        None
+        ParseResult::Ok
     }
 
     fn part1(input: &str) -> usize {
         let illegal_chars: Vec<char> = input
             .lines()
-            .filter_map(|line| find_illegal(line))
+            .filter_map(|line| if let ParseResult::IllegalChar(c) = parse_line(line) { Some(c) } else { None} )
             .collect();
 
         let mut counts: [usize; 4] = [0, 0, 0, 0];
@@ -1160,11 +1167,11 @@ pub mod day10 {
 
         #[test]
         fn examples() {
-            assert_eq!(find_illegal("{([(<{}[<>[]}>{[]{[(<()>"), Some('}'));
-            assert_eq!(find_illegal("[[<[([]))<([[{}[[()]]] "), Some(')'));
-            assert_eq!(find_illegal("[{[{({}]{}}([{[{{{}}([]"), Some(']'));
-            assert_eq!(find_illegal("[<(<(<(<{}))><([]([]() "), Some(')'));
-            assert_eq!(find_illegal("<{([([[(<>()){}]>(<<{{ "), Some('>'));
+            assert_eq!(parse_line("{([(<{}[<>[]}>{[]{[(<()>"), ParseResult::IllegalChar('}'));
+            assert_eq!(parse_line("[[<[([]))<([[{}[[()]]] "), ParseResult::IllegalChar(')'));
+            assert_eq!(parse_line("[{[{({}]{}}([{[{{{}}([]"), ParseResult::IllegalChar(']'));
+            assert_eq!(parse_line("[<(<(<(<{}))><([]([]() "), ParseResult::IllegalChar(')'));
+            assert_eq!(parse_line("<{([([[(<>()){}]>(<<{{ "), ParseResult::IllegalChar('>'));
             assert_eq!(part1(crate::data::_DAY10_EXAMPLE1), 26397);
         }
 
