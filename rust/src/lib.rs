@@ -1244,14 +1244,11 @@ pub mod day11 {
         let mut result = String::with_capacity(128);
 
         let (tiles, width) = parse_input(crate::data::DAY11);
+        let (answer_part1, answer_part2) = solve(&tiles, width, 100);
 
-        let answer_part1 = part1(&tiles, width, 100);
         writeln!(&mut result, "Day 11, Problem 1 - [{}]", answer_part1).unwrap();
-
-        /*
-        let answer_part2 = part2(crate::data::DAY11);
         writeln!(&mut result, "Day 11, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -1264,7 +1261,7 @@ pub mod day11 {
         (tiles, width)
     }
 
-    fn part1(tiles: &[u8], width: usize, num_steps: usize) -> usize {
+    fn solve(tiles: &[u8], width: usize, num_steps: usize) -> (usize, usize) {
         let height = tiles.len() / width;
 
         let mut board : Vec<u8> = tiles.iter().cloned().collect();
@@ -1284,7 +1281,7 @@ pub mod day11 {
         ];
 
         let mut num_flashes: usize = 0;
-
+/*
         let print_board = |board: &[u8], step: usize| {
             println!("Board after step {}", step);
             for row in 0..height {
@@ -1298,10 +1295,11 @@ pub mod day11 {
 
             println!("");
         };
+        */
 
 
         for _step in 0..num_steps {
-            print_board(&board, _step);
+            //print_board(&board, _step);
 
             to_flash.clear();
 
@@ -1364,14 +1362,11 @@ pub mod day11 {
                 }
             }
         }
-        print_board(&board, num_steps);
+       // print_board(&board, num_steps);
 
-        num_flashes
+        (num_flashes, 0)
     }
 
-    fn part2(_input: &str) -> usize {
-        0
-    }
 
     #[cfg(test)]
     mod tests {
@@ -1380,14 +1375,17 @@ pub mod day11 {
         #[test]
         fn examples() {
             let (tiles, width) = parse_input(crate::data::_DAY11_EXAMPLE1);
-            assert_eq!(part1(&tiles, width, 10), 204);
-            assert_eq!(part1(&tiles, width, 100), 1656);
+
+            let (answer_part1, answer_part2) = solve(&tiles, width, 100);
+            assert_eq!(answer_part1, 1656);
+            assert_eq!(answer_part2, 195);
         }
 
         #[test]
         fn verify() {
             let (tiles, width) = parse_input(crate::data::DAY11);
-            assert_eq!(part1(&tiles, width, 100), 1603);
+            let (answer_part1, answer_part2) = solve(&tiles, width, 100);
+            assert_eq!(answer_part1, 1603);
         }
     }
 }
