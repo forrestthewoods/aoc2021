@@ -1237,6 +1237,10 @@ pub mod day10 {
 pub mod day11 {
     use std::fmt::Write;
 
+    use fts_vecmath::vector2::Vector2;
+    type Point = fts_vecmath::point2::Point2<isize>;
+    type Vector = fts_vecmath::vector2::Vector2<isize>;
+
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
         /*
@@ -1249,8 +1253,94 @@ pub mod day11 {
         result
     }
 
-    fn part1(_input: &str) -> usize {
-        0
+    fn parse_input(input: &str) -> (Vec<u8>, usize) {
+        let width = input.lines().next().unwrap().len();
+        let tiles = input
+            .lines()
+            .flat_map(|line| line.chars().map(|c| c.to_digit(10).unwrap() as u8))
+            .collect();
+        (tiles, width)
+    }
+
+    fn part1(tiles: &[u8], width: usize, num_steps: usize) -> usize {
+        let height = tiles.len() / width;
+
+        let mut board : Vec<u8> = tiles.iter().cloned().collect();
+        let mut flashed : Vec<bool> = Default::default();
+        flashed.resize(tiles.len(), false);
+        let mut to_flash: Vec<usize> = Default::default();
+
+        let offsets : Vec<Vector> = vec![
+            Vector::new(-1, -1),
+            Vector::new(0, -1),
+            Vector::new(1, -1),
+            Vector::new(-1, 0),
+            Vector::new(1, 0),
+            Vector::new(-1, 1),
+            Vector::new(0, 1),
+            Vector::new(1, 1),
+        ];
+
+        let mut num_flashes: usize = 0;
+
+        for _ in 0..num_steps {
+            to_flash.clear();
+
+            // Clear flashed
+            flashed.fill(false);
+
+            // Increment everything by one
+            for (idx, tile) in board.iter_mut().enumerate() {
+                *tile += 1;
+
+                // Mark tiles to flash
+                if *tile == 9 {
+                    to_flash.push(idx);
+                    flashed[idx] = true;
+                    num_flashes += 1;
+                }
+            }
+
+            while !to_flash.is_empty() {
+                let idx = to_flash.pop().unwrap();
+
+                let row = idx / width;
+                let col = idx % width;
+                let center = Point::new(col as isize, row as isize);
+                let w = width as isize;
+                let h = height as isize;
+
+                let neighbors = offsets.iter()
+                    .map(|offset| center + *offset)
+                    .filter(|pt| pt.x >= 0 && pt.x < w && pt.y >= 0 && pt.y < h)
+                    .map(|pt| (pt.y*w + pt.x) as usize);
+
+                for neighbor_idx in neighbors {
+                    if flashed[neighbor_idx] {
+                        continue;
+                    }
+
+                    let neighbor_tile = &mut board[neighbor_idx];
+                    *neighbor_tile += 1;
+
+                    if *neighbor_tile == 9 {
+                        to_flash.push(neighbor_idx);
+                        flashed[neighbor_idx] = true;
+                        num_flashes += 1;
+                    }
+                }
+            }
+
+
+            // Reset 9s
+            for tile in &mut board {
+                if *tile == 9 {
+                    *tile = 0;
+                }
+            }
+        }
+
+        num_flashes
     }
 
     fn part2(_input: &str) -> usize {
@@ -1263,10 +1353,11 @@ pub mod day11 {
 
         #[test]
         fn examples() {
+            let (tiles, width) = parse_input(crate::data::day11);
+            assert_eq!(part1(&tiles, width, 100), 1656);
         }
 
         #[test]
-        fn verify() {
-        }
+        fn verify() {}
     }
 }
