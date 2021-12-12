@@ -1097,13 +1097,13 @@ pub mod day10 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        
+
         let answer_part1 = part1(crate::data::DAY10);
         writeln!(&mut result, "Day 10, Problem 1 - [{}]", answer_part1).unwrap();
 
         let answer_part2 = part2(crate::data::DAY10);
         writeln!(&mut result, "Day 10, Problem 2 - [{}]", answer_part2).unwrap();
-        
+
         result
     }
 
@@ -1168,7 +1168,7 @@ pub mod day10 {
     }
 
     fn part2(input: &str) -> usize {
-        let mut scores : Vec<usize> = input
+        let mut scores: Vec<usize> = input
             .lines()
             .filter_map(|line| {
                 if let ParseResult::IncompleteLine(incomplete) = parse_line(line) {
@@ -1177,14 +1177,18 @@ pub mod day10 {
                     None
                 }
             })
-            .map(|incomplete| incomplete.iter().rev().fold(0, |acc, c| {
-                    acc*5 + match c {
-                        '(' => 1,
-                        '[' => 2,
-                        '{' => 3,
-                        '<' => 4,
-                        _ => unreachable!(&format!("Unexpected open list char: [{}]", c)),
-            }}))
+            .map(|incomplete| {
+                incomplete.iter().rev().fold(0, |acc, c| {
+                    acc * 5
+                        + match c {
+                            '(' => 1,
+                            '[' => 2,
+                            '{' => 3,
+                            '<' => 4,
+                            _ => unreachable!(&format!("Unexpected open list char: [{}]", c)),
+                        }
+                })
+            })
             .collect();
 
         let mid = scores.len() / 2;
@@ -1226,6 +1230,43 @@ pub mod day10 {
         fn verify() {
             assert_eq!(part1(crate::data::DAY10), 318081);
             assert_eq!(part2(crate::data::DAY10), 4361305341);
+        }
+    }
+}
+
+pub mod day11 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+        /*
+        let answer_part1 = part1(crate::data::DAY11);
+        writeln!(&mut result, "Day 11, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(crate::data::DAY11);
+        writeln!(&mut result, "Day 11, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn part1(_input: &str) -> usize {
+        0
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+        }
+
+        #[test]
+        fn verify() {
         }
     }
 }
