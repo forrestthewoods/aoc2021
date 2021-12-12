@@ -1237,16 +1237,18 @@ pub mod day10 {
 pub mod day11 {
     use std::fmt::Write;
 
-    use fts_vecmath::vector2::Vector2;
     type Point = fts_vecmath::point2::Point2<isize>;
     type Vector = fts_vecmath::vector2::Vector2<isize>;
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        /*
-        let answer_part1 = part1(crate::data::DAY11);
+
+        let (tiles, width) = parse_input(crate::data::DAY11);
+
+        let answer_part1 = part1(&tiles, width, 100);
         writeln!(&mut result, "Day 11, Problem 1 - [{}]", answer_part1).unwrap();
 
+        /*
         let answer_part2 = part2(crate::data::DAY11);
         writeln!(&mut result, "Day 11, Problem 2 - [{}]", answer_part2).unwrap();
         */
@@ -1283,7 +1285,24 @@ pub mod day11 {
 
         let mut num_flashes: usize = 0;
 
-        for _ in 0..num_steps {
+        let print_board = |board: &[u8], step: usize| {
+            println!("Board after step {}", step);
+            for row in 0..height {
+                let mut row_str = String::with_capacity(width);
+                for col in 0..width {
+                    let idx = row*width + col;
+                    row_str.push(char::from_digit(board[idx] as u32, 10).unwrap());
+                } 
+                println!("    {}", row_str);
+            }
+
+            println!("");
+        };
+
+
+        for _step in 0..num_steps {
+            print_board(&board, _step);
+
             to_flash.clear();
 
             // Clear flashed
@@ -1294,7 +1313,7 @@ pub mod day11 {
                 *tile += 1;
 
                 // Mark tiles to flash
-                if *tile == 9 {
+                if *tile == 10 {
                     to_flash.push(idx);
                     flashed[idx] = true;
                     num_flashes += 1;
@@ -1320,10 +1339,15 @@ pub mod day11 {
                         continue;
                     }
 
+                    if neighbor_idx == 0 {
+                        let mut x = 5;
+                        x += 3;
+                    }
+
                     let neighbor_tile = &mut board[neighbor_idx];
                     *neighbor_tile += 1;
 
-                    if *neighbor_tile == 9 {
+                    if *neighbor_tile == 10 {
                         to_flash.push(neighbor_idx);
                         flashed[neighbor_idx] = true;
                         num_flashes += 1;
@@ -1332,13 +1356,15 @@ pub mod day11 {
             }
 
 
-            // Reset 9s
+            // Reset 10s
             for tile in &mut board {
-                if *tile == 9 {
+                assert_eq!(*tile <= 10, true);
+                if *tile == 10 {
                     *tile = 0;
                 }
             }
         }
+        print_board(&board, num_steps);
 
         num_flashes
     }
@@ -1353,11 +1379,15 @@ pub mod day11 {
 
         #[test]
         fn examples() {
-            let (tiles, width) = parse_input(crate::data::day11);
+            let (tiles, width) = parse_input(crate::data::_DAY11_EXAMPLE1);
+            assert_eq!(part1(&tiles, width, 10), 204);
             assert_eq!(part1(&tiles, width, 100), 1656);
         }
 
         #[test]
-        fn verify() {}
+        fn verify() {
+            let (tiles, width) = parse_input(crate::data::DAY11);
+            assert_eq!(part1(&tiles, width, 100), 1603);
+        }
     }
 }
