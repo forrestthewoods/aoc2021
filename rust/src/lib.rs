@@ -1297,9 +1297,11 @@ pub mod day11 {
         };
         */
 
+        let mut answer_part1 = 0;
+        let mut step = 0;
 
-        for _step in 0..num_steps {
-            //print_board(&board, _step);
+        loop {
+            step += 1;
 
             to_flash.clear();
 
@@ -1337,11 +1339,6 @@ pub mod day11 {
                         continue;
                     }
 
-                    if neighbor_idx == 0 {
-                        let mut x = 5;
-                        x += 3;
-                    }
-
                     let neighbor_tile = &mut board[neighbor_idx];
                     *neighbor_tile += 1;
 
@@ -1361,10 +1358,17 @@ pub mod day11 {
                     *tile = 0;
                 }
             }
-        }
-       // print_board(&board, num_steps);
 
-        (num_flashes, 0)
+            if step == num_steps {
+                answer_part1 = num_flashes;
+            }
+
+            if flashed.iter().all(|flash| *flash) {
+                let answer_part2 = step;
+                return (answer_part1, answer_part2);
+            }
+        }
+        // unreachable due to infinite-loop
     }
 
 
@@ -1386,6 +1390,7 @@ pub mod day11 {
             let (tiles, width) = parse_input(crate::data::DAY11);
             let (answer_part1, answer_part2) = solve(&tiles, width, 100);
             assert_eq!(answer_part1, 1603);
+            assert_eq!(answer_part2, 222);
         }
     }
 }
