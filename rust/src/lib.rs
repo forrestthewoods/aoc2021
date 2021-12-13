@@ -1543,3 +1543,111 @@ pub mod day12 {
         }
     }
 }
+
+pub mod day13 {
+    use itertools::Itertools;
+    use std::fmt::Write;
+
+    type Point = fts_vecmath::point2::Point2<i16>;
+
+    enum Fold {
+        X(i16),
+        Y(i16)
+    }
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let (points, folds) = parse_input(crate::data::DAY13);
+
+        let answer_part1 = part1(points.clone(), &folds[..1]);
+        writeln!(&mut result, "Day 13, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY13);
+        writeln!(&mut result, "Day 13, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> (Vec<Point>, Vec<Fold>) {
+        let (points_chunk, folds_chunk) = input.split("\r\n\r\n").collect_tuple().unwrap();
+
+        let points : Vec<Point> = points_chunk.lines().map(|line| {
+            let (x,y) = line.split(",").collect_tuple().unwrap();
+            Point::new(x.parse::<i16>().unwrap(), y.parse::<i16>().unwrap())
+        }).collect();
+
+        let folds = folds_chunk.lines().map(|line| {
+            let prefix = "fold along ";
+            let (axis, value) = line[prefix.len()..].split("=").collect_tuple().unwrap();
+            let value = value.parse::<i16>().unwrap();
+
+            match axis {
+                "x" => Fold::X(value),
+                "y" => Fold::Y(value),
+                _ => unreachable!(&format!("Unexpected axis: [{}]", axis))
+            }
+        }).collect();
+
+        (points, folds)
+    }
+
+    fn part1(mut points: Vec<Point>, folds: &[Fold]) -> usize {
+
+        for fold in folds {
+            points = points.iter()
+                .filter(|point| {
+                    match fold {
+                        Fold::X(x) => point.x != *x,
+                        Fold::Y(y) => point.y != *y
+                    }
+                })
+                .map(|point| {
+                    match fold {
+                        Fold::X(fold_x) => {
+                            if point.x < *fold_x {
+                                *point
+                            } else {
+                                let new_x = fold_x - (point.x - fold_x);
+                                Point::new(new_x, point.y)
+                            }
+                        },
+                        Fold::Y(fold_y) => {
+                            if point.y < *fold_y {
+                                *point
+                            } else {
+                                let new_y = fold_y - (point.y - fold_y);
+                                Point::new(point.x, new_y)
+                            }
+                        }
+                    }
+                })     
+                .unique()           
+                .collect();
+        }
+
+        points.len()
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (points, folds) = parse_input(crate::data::_DAY13_EXAMPLE1);
+            assert_eq!(part1(points.clone(), &folds[0..1]), 17);
+        }
+
+        #[test]
+        fn verify() {
+            let (points, folds) = parse_input(crate::data::DAY13);
+            assert_eq!(part1(points.clone(), &folds[0..1]), 745);
+        }
+    }
+}
