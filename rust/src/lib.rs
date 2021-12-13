@@ -1394,3 +1394,128 @@ pub mod day11 {
         }
     }
 }
+
+pub mod day12 {
+    use std::fmt::Write;
+    use itertools::Itertools;
+
+    type Edge = (usize, usize);
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        // parse input
+        let (verts, edges) = parse_input(crate::data::DAY12);
+        
+        let answer_part1 = part1(&verts, &edges);
+        writeln!(&mut result, "Day 12, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY12);
+        writeln!(&mut result, "Day 12, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> (Vec<&str>, Vec<Edge>) {
+        let mut verts: Vec<&str> = Default::default();
+        let mut edges: Vec<(usize, usize)> = Default::default();
+
+        let mut vert_map : std::collections::HashMap<&str, usize> = Default::default();
+
+        for line in input.lines() {
+            let (a,b) = line.split("-").collect_tuple().unwrap();
+
+            let idx_a = *vert_map.entry(a).or_insert_with(|| { verts.push(a); verts.len() - 1 });
+            let idx_b = *vert_map.entry(b).or_insert_with(|| { verts.push(b); verts.len() - 1 });
+            edges.push((idx_a, idx_b));
+        }
+
+        (verts, edges)
+    }
+
+    fn part1(verts: &[&str], edges: &[Edge]) -> usize {
+        // Precompute small cave flag
+        let is_small_cave : Vec<bool> = verts.iter().map(|cave| cave.chars().all(|c| c.is_ascii_lowercase())).collect();
+        
+        // Precompute edges per vert
+        let mut vert_to_edge : Vec<Vec<&Edge>> = Default::default();
+        vert_to_edge.resize(verts.len(), Default::default());
+        for edge in edges {
+            vert_to_edge[edge.0].push(edge);
+            vert_to_edge[edge.1].push(edge);
+        }
+
+        let get_neighbor = |edge: &Edge, this: usize| -> usize {
+            if edge.0 != this {
+                edge.0
+            } else {
+                edge.1
+            }
+        };
+
+        // Create open list
+        type Path = Vec<usize>;
+        let mut open_list : Vec<Path> = Default::default();
+        let mut unique_paths = 0;
+
+        // Initialize Open list
+        let start_idx = verts.iter().enumerate().find(|(_, name)| **name == "start").unwrap().0;
+        let end_idx = verts.iter().enumerate().find(|(_, name)| **name == "end").unwrap().0;
+        open_list.push(vec![start_idx]);
+
+        while !open_list.is_empty() {
+            // Get an open path
+            let path = open_list.pop().unwrap();
+            let idx = *path.last().unwrap();
+
+            // get edges
+            let edges = &vert_to_edge[idx];
+            for edge in edges {
+                // get neighbor
+                let neighbor = get_neighbor(edge, idx);
+
+                if neighbor == end_idx {
+                    unique_paths += 1;
+                    continue;
+                }
+
+                // don't visit small caves twice
+                if is_small_cave[neighbor] && path.contains(&neighbor) {
+                    continue;
+                }
+
+                // Visit neighbor
+                let mut new_path = path.clone();
+                new_path.push(neighbor);
+                open_list.push(new_path);
+            }
+        }
+
+        unique_paths
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (verts, edges) = parse_input(crate::data::_DAY12_EXAMPLE1);
+            assert_eq!(part1(&verts, &edges), 19);
+
+            let (verts, edges) = parse_input(crate::data::_DAY12_EXAMPLE2);
+            assert_eq!(part1(&verts, &edges), 226);
+        }
+
+        #[test]
+        fn verify() {
+            let (verts, edges) = parse_input(crate::data::DAY12);
+            assert_eq!(part1(&verts, &edges), 3738);
+        }
+    }
+}
