@@ -1407,7 +1407,7 @@ pub mod day12 {
         // parse input
         let (verts, edges) = parse_input(crate::data::DAY12);
         
-        let answer_part1 = part1(&verts, &edges);
+        let answer_part1 = solve(&verts, &edges, true);
         writeln!(&mut result, "Day 12, Problem 1 - [{}]", answer_part1).unwrap();
 
         /*
@@ -1434,7 +1434,7 @@ pub mod day12 {
         (verts, edges)
     }
 
-    fn part1(verts: &[&str], edges: &[Edge]) -> usize {
+    fn solve(verts: &[&str], edges: &[Edge], part_one: bool) -> usize {
         // Precompute small cave flag
         let is_small_cave : Vec<bool> = verts.iter().map(|cave| cave.chars().all(|c| c.is_ascii_lowercase())).collect();
         
@@ -1495,10 +1495,6 @@ pub mod day12 {
         unique_paths
     }
 
-    fn part2(_input: &str) -> usize {
-        0
-    }
-
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -1506,16 +1502,16 @@ pub mod day12 {
         #[test]
         fn examples() {
             let (verts, edges) = parse_input(crate::data::_DAY12_EXAMPLE1);
-            assert_eq!(part1(&verts, &edges), 19);
+            assert_eq!(solve(&verts, &edges, true), 19);
 
             let (verts, edges) = parse_input(crate::data::_DAY12_EXAMPLE2);
-            assert_eq!(part1(&verts, &edges), 226);
+            assert_eq!(solve(&verts, &edges, true), 226);
         }
 
         #[test]
         fn verify() {
             let (verts, edges) = parse_input(crate::data::DAY12);
-            assert_eq!(part1(&verts, &edges), 3738);
+            assert_eq!(solve(&verts, &edges, true), 3738);
         }
     }
 }
