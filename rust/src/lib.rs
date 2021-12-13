@@ -1410,10 +1410,9 @@ pub mod day12 {
         let answer_part1 = solve(&verts, &edges, true);
         writeln!(&mut result, "Day 12, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY12);
+        let answer_part2 = solve(&verts, &edges, false);
         writeln!(&mut result, "Day 12, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -1456,17 +1455,21 @@ pub mod day12 {
 
         // Create open list
         type Path = Vec<usize>;
-        let mut open_list : Vec<Path> = Default::default();
+        type Entry = (Path, bool);
+
+        let mut open_list : Vec<Entry> = Default::default();
         let mut unique_paths = 0;
 
         // Initialize Open list
         let start_idx = verts.iter().enumerate().find(|(_, name)| **name == "start").unwrap().0;
         let end_idx = verts.iter().enumerate().find(|(_, name)| **name == "end").unwrap().0;
-        open_list.push(vec![start_idx]);
+        open_list.push((vec![start_idx], false));
 
         while !open_list.is_empty() {
             // Get an open path
-            let path = open_list.pop().unwrap();
+            let entry : Entry = open_list.pop().unwrap();
+            let path : &Path = &entry.0;
+            let has_visited_small_cave_twice = entry.1;
             let idx = *path.last().unwrap();
 
             // get edges
@@ -1474,21 +1477,39 @@ pub mod day12 {
             for edge in edges {
                 // get neighbor
                 let neighbor = get_neighbor(edge, idx);
+                
+                // never go back to start
+                if neighbor == start_idx {
+                    continue;
+                }
 
+                // check for end
                 if neighbor == end_idx {
                     unique_paths += 1;
                     continue;
                 }
-
-                // don't visit small caves twice
-                if is_small_cave[neighbor] && path.contains(&neighbor) {
-                    continue;
+                
+                let mut is_second_visit = false;
+                if part_one {
+                    // don't visit small caves twice
+                    if is_small_cave[neighbor] && path.contains(&neighbor) {
+                        continue;
+                    }
+                } else {
+                    // visit at most one small cave twice
+                    if is_small_cave[neighbor] && path.contains(&neighbor) {
+                        if has_visited_small_cave_twice {
+                            continue;
+                        } else {
+                            is_second_visit = true;
+                        }
+                    }
                 }
 
                 // Visit neighbor
                 let mut new_path = path.clone();
                 new_path.push(neighbor);
-                open_list.push(new_path);
+                open_list.push((new_path, has_visited_small_cave_twice || is_second_visit));
             }
         }
 
@@ -1501,17 +1522,24 @@ pub mod day12 {
 
         #[test]
         fn examples() {
+            let (verts, edges) = parse_input(crate::data::_DAY12_EXAMPLE0);
+            assert_eq!(solve(&verts, &edges, true), 10);
+            assert_eq!(solve(&verts, &edges, false), 36);
+
             let (verts, edges) = parse_input(crate::data::_DAY12_EXAMPLE1);
             assert_eq!(solve(&verts, &edges, true), 19);
+            assert_eq!(solve(&verts, &edges, false), 103);
 
             let (verts, edges) = parse_input(crate::data::_DAY12_EXAMPLE2);
             assert_eq!(solve(&verts, &edges, true), 226);
+            assert_eq!(solve(&verts, &edges, false), 3509);
         }
 
         #[test]
         fn verify() {
             let (verts, edges) = parse_input(crate::data::DAY12);
             assert_eq!(solve(&verts, &edges, true), 3738);
+            assert_eq!(solve(&verts, &edges, false), 120506);
         }
     }
 }
