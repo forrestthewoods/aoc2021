@@ -1264,12 +1264,12 @@ pub mod day11 {
     fn solve(tiles: &[u8], width: usize, num_steps: usize) -> (usize, usize) {
         let height = tiles.len() / width;
 
-        let mut board : Vec<u8> = tiles.iter().cloned().collect();
-        let mut flashed : Vec<bool> = Default::default();
+        let mut board: Vec<u8> = tiles.iter().cloned().collect();
+        let mut flashed: Vec<bool> = Default::default();
         flashed.resize(tiles.len(), false);
         let mut to_flash: Vec<usize> = Default::default();
 
-        let offsets : Vec<Vector> = vec![
+        let offsets: Vec<Vector> = vec![
             Vector::new(-1, -1),
             Vector::new(0, -1),
             Vector::new(1, -1),
@@ -1281,7 +1281,7 @@ pub mod day11 {
         ];
 
         let mut num_flashes: usize = 0;
-/*
+        /*
         let print_board = |board: &[u8], step: usize| {
             println!("Board after step {}", step);
             for row in 0..height {
@@ -1289,7 +1289,7 @@ pub mod day11 {
                 for col in 0..width {
                     let idx = row*width + col;
                     row_str.push(char::from_digit(board[idx] as u32, 10).unwrap());
-                } 
+                }
                 println!("    {}", row_str);
             }
 
@@ -1329,10 +1329,11 @@ pub mod day11 {
                 let w = width as isize;
                 let h = height as isize;
 
-                let neighbors = offsets.iter()
+                let neighbors = offsets
+                    .iter()
                     .map(|offset| center + *offset)
                     .filter(|pt| pt.x >= 0 && pt.x < w && pt.y >= 0 && pt.y < h)
-                    .map(|pt| (pt.y*w + pt.x) as usize);
+                    .map(|pt| (pt.y * w + pt.x) as usize);
 
                 for neighbor_idx in neighbors {
                     if flashed[neighbor_idx] {
@@ -1349,7 +1350,6 @@ pub mod day11 {
                     }
                 }
             }
-
 
             // Reset 10s
             for tile in &mut board {
@@ -1370,7 +1370,6 @@ pub mod day11 {
         }
         // unreachable due to infinite-loop
     }
-
 
     #[cfg(test)]
     mod tests {
@@ -1396,8 +1395,8 @@ pub mod day11 {
 }
 
 pub mod day12 {
-    use std::fmt::Write;
     use itertools::Itertools;
+    use std::fmt::Write;
 
     type Edge = (usize, usize);
 
@@ -1406,7 +1405,7 @@ pub mod day12 {
 
         // parse input
         let (verts, edges) = parse_input(crate::data::DAY12);
-        
+
         let answer_part1 = solve(&verts, &edges, true);
         writeln!(&mut result, "Day 12, Problem 1 - [{}]", answer_part1).unwrap();
 
@@ -1420,13 +1419,19 @@ pub mod day12 {
         let mut verts: Vec<&str> = Default::default();
         let mut edges: Vec<(usize, usize)> = Default::default();
 
-        let mut vert_map : std::collections::HashMap<&str, usize> = Default::default();
+        let mut vert_map: std::collections::HashMap<&str, usize> = Default::default();
 
         for line in input.lines() {
-            let (a,b) = line.split("-").collect_tuple().unwrap();
+            let (a, b) = line.split("-").collect_tuple().unwrap();
 
-            let idx_a = *vert_map.entry(a).or_insert_with(|| { verts.push(a); verts.len() - 1 });
-            let idx_b = *vert_map.entry(b).or_insert_with(|| { verts.push(b); verts.len() - 1 });
+            let idx_a = *vert_map.entry(a).or_insert_with(|| {
+                verts.push(a);
+                verts.len() - 1
+            });
+            let idx_b = *vert_map.entry(b).or_insert_with(|| {
+                verts.push(b);
+                verts.len() - 1
+            });
             edges.push((idx_a, idx_b));
         }
 
@@ -1435,10 +1440,13 @@ pub mod day12 {
 
     fn solve(verts: &[&str], edges: &[Edge], part_one: bool) -> usize {
         // Precompute small cave flag
-        let is_small_cave : Vec<bool> = verts.iter().map(|cave| cave.chars().all(|c| c.is_ascii_lowercase())).collect();
-        
+        let is_small_cave: Vec<bool> = verts
+            .iter()
+            .map(|cave| cave.chars().all(|c| c.is_ascii_lowercase()))
+            .collect();
+
         // Precompute edges per vert
-        let mut vert_to_edge : Vec<Vec<&Edge>> = Default::default();
+        let mut vert_to_edge: Vec<Vec<&Edge>> = Default::default();
         vert_to_edge.resize(verts.len(), Default::default());
         for edge in edges {
             vert_to_edge[edge.0].push(edge);
@@ -1457,18 +1465,28 @@ pub mod day12 {
         type Path = Vec<usize>;
         type Entry = (Path, bool);
 
-        let mut open_list : Vec<Entry> = Default::default();
+        let mut open_list: Vec<Entry> = Default::default();
         let mut unique_paths = 0;
 
         // Initialize Open list
-        let start_idx = verts.iter().enumerate().find(|(_, name)| **name == "start").unwrap().0;
-        let end_idx = verts.iter().enumerate().find(|(_, name)| **name == "end").unwrap().0;
+        let start_idx = verts
+            .iter()
+            .enumerate()
+            .find(|(_, name)| **name == "start")
+            .unwrap()
+            .0;
+        let end_idx = verts
+            .iter()
+            .enumerate()
+            .find(|(_, name)| **name == "end")
+            .unwrap()
+            .0;
         open_list.push((vec![start_idx], false));
 
         while !open_list.is_empty() {
             // Get an open path
-            let entry : Entry = open_list.pop().unwrap();
-            let path : &Path = &entry.0;
+            let entry: Entry = open_list.pop().unwrap();
+            let path: &Path = &entry.0;
             let has_visited_small_cave_twice = entry.1;
             let idx = *path.last().unwrap();
 
@@ -1477,7 +1495,7 @@ pub mod day12 {
             for edge in edges {
                 // get neighbor
                 let neighbor = get_neighbor(edge, idx);
-                
+
                 // never go back to start
                 if neighbor == start_idx {
                     continue;
@@ -1488,7 +1506,7 @@ pub mod day12 {
                     unique_paths += 1;
                     continue;
                 }
-                
+
                 let mut is_second_visit = false;
                 if part_one {
                     // don't visit small caves twice
@@ -1552,7 +1570,7 @@ pub mod day13 {
 
     enum Fold {
         X(i16),
-        Y(i16)
+        Y(i16),
     }
 
     pub fn run() -> String {
@@ -1560,78 +1578,95 @@ pub mod day13 {
 
         let (points, folds) = parse_input(crate::data::DAY13);
 
-        let answer_part1 = part1(points.clone(), &folds[..1]);
+        let answer_part1 = solve(points.clone(), &folds[..1], false);
         writeln!(&mut result, "Day 13, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY13);
+        let answer_part2 = solve(points.clone(), &folds, false);
         writeln!(&mut result, "Day 13, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
     fn parse_input(input: &str) -> (Vec<Point>, Vec<Fold>) {
         let (points_chunk, folds_chunk) = input.split("\r\n\r\n").collect_tuple().unwrap();
 
-        let points : Vec<Point> = points_chunk.lines().map(|line| {
-            let (x,y) = line.split(",").collect_tuple().unwrap();
-            Point::new(x.parse::<i16>().unwrap(), y.parse::<i16>().unwrap())
-        }).collect();
+        let points: Vec<Point> = points_chunk
+            .lines()
+            .map(|line| {
+                let (x, y) = line.split(",").collect_tuple().unwrap();
+                Point::new(x.parse::<i16>().unwrap(), y.parse::<i16>().unwrap())
+            })
+            .collect();
 
-        let folds = folds_chunk.lines().map(|line| {
-            let prefix = "fold along ";
-            let (axis, value) = line[prefix.len()..].split("=").collect_tuple().unwrap();
-            let value = value.parse::<i16>().unwrap();
+        let folds = folds_chunk
+            .lines()
+            .map(|line| {
+                let prefix = "fold along ";
+                let (axis, value) = line[prefix.len()..].split("=").collect_tuple().unwrap();
+                let value = value.parse::<i16>().unwrap();
 
-            match axis {
-                "x" => Fold::X(value),
-                "y" => Fold::Y(value),
-                _ => unreachable!(&format!("Unexpected axis: [{}]", axis))
-            }
-        }).collect();
+                match axis {
+                    "x" => Fold::X(value),
+                    "y" => Fold::Y(value),
+                    _ => unreachable!(&format!("Unexpected axis: [{}]", axis)),
+                }
+            })
+            .collect();
 
         (points, folds)
     }
 
-    fn part1(mut points: Vec<Point>, folds: &[Fold]) -> usize {
-
+    fn solve(mut points: Vec<Point>, folds: &[Fold], print_grid: bool) -> usize {
         for fold in folds {
-            points = points.iter()
-                .filter(|point| {
-                    match fold {
-                        Fold::X(x) => point.x != *x,
-                        Fold::Y(y) => point.y != *y
-                    }
+            points = points
+                .iter()
+                .filter(|point| match fold {
+                    Fold::X(x) => point.x != *x,
+                    Fold::Y(y) => point.y != *y,
                 })
-                .map(|point| {
-                    match fold {
-                        Fold::X(fold_x) => {
-                            if point.x < *fold_x {
-                                *point
-                            } else {
-                                let new_x = fold_x - (point.x - fold_x);
-                                Point::new(new_x, point.y)
-                            }
-                        },
-                        Fold::Y(fold_y) => {
-                            if point.y < *fold_y {
-                                *point
-                            } else {
-                                let new_y = fold_y - (point.y - fold_y);
-                                Point::new(point.x, new_y)
-                            }
+                .map(|point| match fold {
+                    Fold::X(fold_x) => {
+                        if point.x < *fold_x {
+                            *point
+                        } else {
+                            let new_x = fold_x - (point.x - fold_x);
+                            Point::new(new_x, point.y)
                         }
                     }
-                })     
-                .unique()           
+                    Fold::Y(fold_y) => {
+                        if point.y < *fold_y {
+                            *point
+                        } else {
+                            let new_y = fold_y - (point.y - fold_y);
+                            Point::new(point.x, new_y)
+                        }
+                    }
+                })
+                .unique()
                 .collect();
         }
 
-        points.len()
-    }
+        if print_grid {
+            let width = points.iter().map(|pt| pt.x).max().unwrap() + 1;
+            let height = points.iter().map(|pt| pt.y).max().unwrap() + 1;
 
-    fn part2(_input: &str) -> usize {
-        0
+            let points_set: std::collections::HashSet<Point> = points.iter().cloned().collect();
+
+            for row in 0..height {
+                let row_str: String = (0..width)
+                    .map(|col| {
+                        if points_set.contains(&Point::new(col, row)) {
+                            '#'
+                        } else {
+                            '.'
+                        }
+                    })
+                    .collect();
+                println!("{}", row_str);
+            }
+        }
+
+        points.len()
     }
 
     #[cfg(test)]
@@ -1641,13 +1676,15 @@ pub mod day13 {
         #[test]
         fn examples() {
             let (points, folds) = parse_input(crate::data::_DAY13_EXAMPLE1);
-            assert_eq!(part1(points.clone(), &folds[0..1]), 17);
+            assert_eq!(solve(points.clone(), &folds[0..1], false), 17);
+            assert_eq!(solve(points.clone(), &folds, false), 16);
         }
 
         #[test]
         fn verify() {
             let (points, folds) = parse_input(crate::data::DAY13);
-            assert_eq!(part1(points.clone(), &folds[0..1]), 745);
+            assert_eq!(solve(points.clone(), &folds[0..1], false), 745);
+            assert_eq!(solve(points.clone(), &folds, false), 99);
         }
     }
 }
