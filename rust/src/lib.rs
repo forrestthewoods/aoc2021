@@ -1694,6 +1694,7 @@ pub mod day14 {
     type Element = u8;
     type Template<'a> = &'a str;
     type Insertion = ((Element, Element), Element);
+    type Counts = [usize; 26];
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
@@ -1729,26 +1730,65 @@ pub mod day14 {
 
     fn recurse(
         pair: (Element, Element),
-        memo: &mut HashMap<((Element, Element), usize), Vec<Element>>,
-        num_loops: usize,
-    ) -> Vec<Element> {
+        rules: &HashMap<(Element, Element), Element>,
+        memo: &mut HashMap<((Element, Element), usize), Counts>,
+        num_loops: usize
+    ) -> Counts {
         let key = (pair, num_loops);
         if let Some(result) = memo.get(&key) {
             result.clone()
         } else {
-            vec![0]
+            // expand
+            let elements = if let Some(inject) = rules.get(&pair) {
+                vec![pair.0, *inject, pair.1]
+            } else {
+                vec![pair.0, pair.1]
+            };
+
+            let init : Counts = Default::default();
+            let result = elements.iter().cloned().tuple_windows()
+                .fold(init, |mut counts, next| {
+                    if num_loops > 1 {
+                        let next_counts = recurse(next, rules, memo, num_loops - 1);
+                        for (idx, count) in next_counts.iter().enumerate() {
+                            counts[idx] += count;
+                        }
+                    } else {
+                        let idx_a = (next.0 - 'A' as u8) as usize;
+                        let idx_b = (next.1 - 'A' as u8) as usize;
+                        counts[idx_a] += 1;
+                        counts[idx_b] += 1;
+                    }
+                    counts
+                });
+            
+            memo.insert(key, result);
+            result
         }
+    }
 
-        /*
-        memo.entry((pair, num_loops))
-            .or_insert_with(|| {
-                let subpolymer = 
+    fn solve(template: Template, insertions: &[Insertion], num_loops: usize) -> usize {
+        let polymer: Vec<Element> = template.chars().map(|c| c as Element).collect();
+        let rules: HashMap<(Element, Element), Element> = insertions.iter().cloned().collect();
+        let mut memo: HashMap<((Element, Element), usize), Counts> = Default::default();
 
-                // let mut result : Vec<Element> =
-                vec![0]
-            })
-            .clone()
-            */
+        let counts : Counts = polymer.iter().cloned().tuple_windows()
+            .fold(Default::default(), |mut counts, next| {
+                let next_counts = recurse(next, &rules, &mut memo, num_loops - 1);
+                for (idx, count) in next_counts.iter().enumerate() {
+                    counts[idx] += count;
+                }
+                counts
+            });
+
+        let (min, max) = counts
+            .iter()
+            .filter(|count| **count > 0)
+            .minmax()
+            .into_option()
+            .unwrap();
+
+        max - min
     }
 
     fn part1(template: Template, insertions: &[Insertion], num_loops: usize) -> usize {
@@ -1811,7 +1851,8 @@ pub mod day14 {
         fn examples() {
             let (template, insertions) = parse_input(crate::data::_DAY14_EXAMPLE1);
             assert_eq!(part1(template, &insertions, 10), 1588);
-            assert_eq!(part1(template, &insertions, 40), 2188189693529);
+            assert_eq!(solve(template, &insertions, 1), 1);
+            //assert_eq!(part1(template, &insertions, 40), 2188189693529);
         }
 
         #[test]
