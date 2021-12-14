@@ -1732,28 +1732,32 @@ pub mod day14 {
 
         // Initialize buckets
         type Buckets = HashMap<(Element, Element), usize>;
-        let mut buckets : Buckets = template.chars().map(|c| c as Element).tuple_windows()
-            .fold(Default::default(), |mut pairs, pair| { 
+        let mut buckets: Buckets = template.chars().map(|c| c as Element).tuple_windows().fold(
+            Default::default(),
+            |mut pairs, pair| {
                 *pairs.entry(pair).or_default() += 1;
                 pairs
-            });
-        
+            },
+        );
+
         // Run each step across buckets
         for _ in 0..num_steps {
-            buckets = buckets.iter().fold(Default::default(),
-                |mut buckets : Buckets, (pair, count)| {
+            buckets = buckets.iter().fold(
+                Buckets::with_capacity(buckets.len()),
+                |mut buckets: Buckets, (pair, count)| {
                     if let Some(inject) = rules.get(pair) {
-                        *buckets.entry((pair.0,*inject)).or_default() += count;
-                        *buckets.entry((*inject,pair.1)).or_default() += count;
+                        *buckets.entry((pair.0, *inject)).or_default() += count;
+                        *buckets.entry((*inject, pair.1)).or_default() += count;
                     }
                     buckets
-                });
+                },
+            );
         }
 
         // Count the first element of each pair
         let mut counts: [usize; 26] = Default::default();
-        for ((a,_), count) in buckets {
-            counts[ (a - 'A' as u8) as usize] += count;
+        for ((a, _), count) in buckets {
+            counts[(a - 'A' as u8) as usize] += count;
         }
 
         // Increment last element
@@ -1761,7 +1765,12 @@ pub mod day14 {
         counts[last_idx] += 1;
 
         // Compute min-max
-        let (min,max) = counts.iter().filter(|count| **count > 0).minmax().into_option().unwrap();
+        let (min, max) = counts
+            .iter()
+            .filter(|count| **count > 0)
+            .minmax()
+            .into_option()
+            .unwrap();
 
         max - min
     }
