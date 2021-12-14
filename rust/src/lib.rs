@@ -1727,32 +1727,61 @@ pub mod day14 {
         (template_chunk, insertions)
     }
 
-    fn part1(template: Template, insertions: &[Insertion], num_loops: usize) -> usize {
+    fn recurse(
+        pair: (Element, Element),
+        memo: &mut HashMap<((Element, Element), usize), Vec<Element>>,
+        num_loops: usize,
+    ) -> Vec<Element> {
+        let key = (pair, num_loops);
+        if let Some(result) = memo.get(&key) {
+            result.clone()
+        } else {
+            vec![0]
+        }
 
-        let mut polymer : Vec<Element> = template.chars().map(|c| c as Element).collect();
-        let rules : HashMap<(Element, Element), Element> = insertions.iter().cloned().collect();
+        /*
+        memo.entry((pair, num_loops))
+            .or_insert_with(|| {
+                let subpolymer = 
+
+                // let mut result : Vec<Element> =
+                vec![0]
+            })
+            .clone()
+            */
+    }
+
+    fn part1(template: Template, insertions: &[Insertion], num_loops: usize) -> usize {
+        let mut polymer: Vec<Element> = template.chars().map(|c| c as Element).collect();
+        let rules: HashMap<(Element, Element), Element> = insertions.iter().cloned().collect();
+        let mut memo: HashMap<((Element, Element), usize), Vec<Element>> = insertions
+            .iter()
+            .map(|(ab, c)| ((*ab, 1), vec![*c]))
+            .collect();
 
         let print = |elements: &[Element]| {
-            let s : String = elements.iter().map(|e| *e as char).collect();
+            let s: String = elements.iter().map(|e| *e as char).collect();
             println!("{}: {}", s.len(), s);
         };
         //print(&polymer);
 
         for _ in 0..num_loops {
-            let mut new_polymer : Vec<Element> = polymer.iter().tuple_windows()
-                .fold(Vec::with_capacity(polymer.len()), |mut acc, (a,b)| {
+            let mut new_polymer: Vec<Element> = polymer.iter().tuple_windows().fold(
+                Vec::with_capacity(polymer.len()),
+                |mut acc, (a, b)| {
                     acc.push(*a);
-                    if let Some(inject) = rules.get(&(*a,*b)) {
+                    if let Some(inject) = rules.get(&(*a, *b)) {
                         acc.push(*inject);
                     }
                     acc
-                });
+                },
+            );
             new_polymer.push(*polymer.last().unwrap());
             polymer = new_polymer;
             //print(&polymer);
         }
 
-        let mut counts : Vec<usize> = Default::default();
+        let mut counts: Vec<usize> = Default::default();
         counts.resize(26, 0);
 
         for element in polymer {
@@ -1760,7 +1789,12 @@ pub mod day14 {
             counts[idx] += 1;
         }
 
-        let (min,max) = counts.iter().filter(|count| **count > 0).minmax().into_option().unwrap();
+        let (min, max) = counts
+            .iter()
+            .filter(|count| **count > 0)
+            .minmax()
+            .into_option()
+            .unwrap();
 
         max - min
     }
@@ -1777,6 +1811,7 @@ pub mod day14 {
         fn examples() {
             let (template, insertions) = parse_input(crate::data::_DAY14_EXAMPLE1);
             assert_eq!(part1(template, &insertions, 10), 1588);
+            assert_eq!(part1(template, &insertions, 40), 2188189693529);
         }
 
         #[test]
