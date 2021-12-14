@@ -1704,10 +1704,9 @@ pub mod day14 {
         let answer_part1 = part1(template, &insertions, 10);
         writeln!(&mut result, "Day 14, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY14);
+        let answer_part2 = solve2(template, &insertions, 40);
         writeln!(&mut result, "Day 14, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -1791,6 +1790,41 @@ pub mod day14 {
         max - min
     }
 
+    fn solve2(template: Template, insertions: &[Insertion], num_steps: usize) -> usize {
+        let rules: HashMap<(Element, Element), Element> = insertions.iter().cloned().collect();
+
+        type Buckets = HashMap<(Element, Element), usize>;
+        let mut buckets : Buckets = template.chars().map(|c| c as Element).tuple_windows()
+            .fold(Default::default(), |mut pairs, pair| { 
+                *pairs.entry(pair).or_default() += 1;
+                pairs
+            });
+
+        for _ in 0..num_steps {
+            buckets = buckets.iter().fold(Default::default(),
+                |mut buckets : Buckets, (pair, count)| {
+                    if let Some(inject) = rules.get(pair) {
+                        *buckets.entry((pair.0,*inject)).or_default() += count;
+                        *buckets.entry((*inject,pair.1)).or_default() += count;
+                    }
+                    buckets
+                });
+        }
+
+        let to_idx = |v: u8| (v - 'A' as u8) as usize;
+
+        let mut counts: [usize; 26] = Default::default();
+        for ((a,_), count) in buckets {
+            counts[to_idx(a)] += count;
+        }
+        let last_idx = template.chars().last().unwrap() as usize - 'A' as usize;
+        counts[last_idx] += 1;
+
+        let (min,max) = counts.iter().filter(|count| **count > 0).minmax().into_option().unwrap();
+
+        max - min
+    }
+
     fn part1(template: Template, insertions: &[Insertion], num_loops: usize) -> usize {
         let mut polymer: Vec<Element> = template.chars().map(|c| c as Element).collect();
         let rules: HashMap<(Element, Element), Element> = insertions.iter().cloned().collect();
@@ -1851,14 +1885,15 @@ pub mod day14 {
         fn examples() {
             let (template, insertions) = parse_input(crate::data::_DAY14_EXAMPLE1);
             assert_eq!(part1(template, &insertions, 10), 1588);
-            assert_eq!(solve(template, &insertions, 1), 1);
-            //assert_eq!(part1(template, &insertions, 40), 2188189693529);
+            assert_eq!(solve2(template, &insertions, 10), 1588);
+            assert_eq!(solve2(template, &insertions, 40), 2188189693529);
         }
 
         #[test]
         fn verify() {
             let (template, insertions) = parse_input(crate::data::DAY14);
             assert_eq!(part1(template, &insertions, 10), 4517);
+            assert_eq!(solve2(template, &insertions, 40), 4704817645083);
         }
     }
 }
