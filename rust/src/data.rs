@@ -33,3 +33,6 @@ pub const _DAY12_EXAMPLE2: &'static str = include_str!("../../data/day12_example
 
 pub const DAY13: &'static str = include_str!("../../data/day13.txt");
 pub const _DAY13_EXAMPLE1: &'static str = include_str!("../../data/day13_example1.txt");
+
+pub const DAY14: &'static str = include_str!("../../data/day14.txt");
+pub const _DAY14_EXAMPLE1: &'static str = include_str!("../../data/day14_example1.txt");

@@ -1620,10 +1620,6 @@ pub mod day13 {
         for fold in folds {
             points = points
                 .iter()
-                .filter(|point| match fold {
-                    Fold::X(x) => point.x != *x,
-                    Fold::Y(y) => point.y != *y,
-                })
                 .map(|point| match fold {
                     Fold::X(fold_x) => {
                         if point.x < *fold_x {
@@ -1685,6 +1681,108 @@ pub mod day13 {
             let (points, folds) = parse_input(crate::data::DAY13);
             assert_eq!(solve(points.clone(), &folds[0..1], false), 745);
             assert_eq!(solve(points.clone(), &folds, false), 99);
+        }
+    }
+}
+
+pub mod day14 {
+    use std::collections::HashMap;
+    use std::fmt::Write;
+
+    use itertools::Itertools;
+
+    type Element = u8;
+    type Template<'a> = &'a str;
+    type Insertion = ((Element, Element), Element);
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let (template, insertions) = parse_input(crate::data::DAY14);
+
+        let answer_part1 = part1(template, &insertions, 10);
+        writeln!(&mut result, "Day 14, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY14);
+        writeln!(&mut result, "Day 14, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> (Template, Vec<Insertion>) {
+        let (template_chunk, insertions_chunk) = input.split("\r\n\r\n").collect_tuple().unwrap();
+
+        let insertions: Vec<Insertion> = insertions_chunk
+            .lines()
+            .map(|line| {
+                let (left, right) = line.split(" -> ").collect_tuple().unwrap();
+                (
+                    left.chars().map(|c| c as Element).collect_tuple().unwrap(),
+                    right.chars().map(|c| c as Element).next().unwrap(),
+                )
+            })
+            .collect();
+
+        (template_chunk, insertions)
+    }
+
+    fn part1(template: Template, insertions: &[Insertion], num_loops: usize) -> usize {
+
+        let mut polymer : Vec<Element> = template.chars().map(|c| c as Element).collect();
+        let rules : HashMap<(Element, Element), Element> = insertions.iter().cloned().collect();
+
+        let print = |elements: &[Element]| {
+            let s : String = elements.iter().map(|e| *e as char).collect();
+            println!("{}: {}", s.len(), s);
+        };
+        //print(&polymer);
+
+        for _ in 0..num_loops {
+            let mut new_polymer : Vec<Element> = polymer.iter().tuple_windows()
+                .fold(Vec::with_capacity(polymer.len()), |mut acc, (a,b)| {
+                    acc.push(*a);
+                    if let Some(inject) = rules.get(&(*a,*b)) {
+                        acc.push(*inject);
+                    }
+                    acc
+                });
+            new_polymer.push(*polymer.last().unwrap());
+            polymer = new_polymer;
+            //print(&polymer);
+        }
+
+        let mut counts : Vec<usize> = Default::default();
+        counts.resize(26, 0);
+
+        for element in polymer {
+            let idx = (element - 'A' as u8) as usize;
+            counts[idx] += 1;
+        }
+
+        let (min,max) = counts.iter().filter(|count| **count > 0).minmax().into_option().unwrap();
+
+        max - min
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (template, insertions) = parse_input(crate::data::_DAY14_EXAMPLE1);
+            assert_eq!(part1(template, &insertions, 10), 1588);
+        }
+
+        #[test]
+        fn verify() {
+            let (template, insertions) = parse_input(crate::data::DAY14);
+            assert_eq!(part1(template, &insertions, 10), 4517);
         }
     }
 }
