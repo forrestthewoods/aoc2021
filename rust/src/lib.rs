@@ -1802,8 +1802,8 @@ pub mod day15 {
     use std::cmp::Reverse;
     use std::fmt::Write;
 
-    type Point = fts_vecmath::point2::Point2<i8>;
-    type Offset = fts_vecmath::vector2::Vector2<i8>;
+    type Point = fts_vecmath::point2::Point2<i16>;
+    type Offset = fts_vecmath::vector2::Vector2<i16>;
     type Entry = (Point, Vec<Point>);
 
     pub fn run() -> String {
@@ -1846,9 +1846,9 @@ pub mod day15 {
 
         // Initialize data
         let height = tiles.len() / width;
-        let w = width as i8;
-        let h = height as i8;
-        let goal = Point::new(width as i8 - 1, height as i8 - 1);
+        let w = width as i16;
+        let h = height as i16;
+        let goal = Point::new(width as i16 - 1, height as i16 - 1);
         let mut open_list = PriorityQueue::<Entry, Reverse<usize>>::new();
         let mut visited: HashSet<Point> = Default::default();
 
@@ -1895,7 +1895,44 @@ pub mod day15 {
         }
     }
 
-    fn part2(_input: &str) -> usize {
+    fn part2(tiles: &[u8], width: usize) -> usize {
+        let mut big_tiles : Vec<u8> = Default::default();
+        big_tiles.resize(tiles.len() * 25, 0);
+
+        let height = tiles.len() / width;
+        let big_width = width * 5;
+        let big_height = height * 5;
+
+        for row in 0..big_height {
+            for col in 0..big_width {
+                let r = row % height;
+                let c = col % width;
+
+                if row == 10 && col == 10 {
+                    let mut x = 5;
+                    x += 3;
+                }
+
+                let inc = (row / height) + (col / width);
+                let mut v = tiles[r*width + c] + inc as u8;
+                if v >= 10 {
+                    v -= 9;
+                }
+
+                big_tiles[row*big_width + col] = v;
+            }
+        }
+
+        // print big table
+        for row in 0..big_height {
+            let mut row_str = String::with_capacity(big_width);
+            for col in 0..big_width {
+                let v = big_tiles[row*big_width + col];
+                row_str.push(char::from_digit(v as u32, 10).unwrap());
+            }
+            println!("{}", row_str);
+        }
+
         0
     }
 
@@ -1907,6 +1944,7 @@ pub mod day15 {
         fn examples() {
             let (tiles, width) = parse_input(crate::data::_DAY15_EXAMPLE1);
             assert_eq!(part1(&tiles, width), 40);
+            assert_eq!(part2(&tiles, width), 0);
         }
 
         #[test]
