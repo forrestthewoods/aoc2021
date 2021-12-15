@@ -1814,10 +1814,9 @@ pub mod day15 {
         let answer_part1 = part1(&tiles, width);
         writeln!(&mut result, "Day 15, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY15);
+        let answer_part2 = part2(&tiles, width);
         writeln!(&mut result, "Day 15, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -1859,15 +1858,8 @@ pub mod day15 {
             let ((pt, path), cost) = open_list.pop().unwrap();
             let cost = cost.0;
 
+            // Check for goal
             if pt == goal {
-                println!("Goal found!");
-                for pp in &path {
-                    println!("  ({}, {})", pp.x, pp.y);
-                }
-
-                let cost2 = path.iter().skip(1).map(|pt| tiles[point_to_idx(*pt)] as usize).sum::<usize>();
-                println!("Cost: {}   {}", cost, cost2);
-
                 return cost;
             }
             
@@ -1876,6 +1868,7 @@ pub mod day15 {
                 continue;
             }
 
+            // Add neighbors to open list
             let neighbors = offsets.iter().map(|offset| pt + *offset).filter(|p| {
                 p.x >= 0
                     && p.x < w
@@ -1908,11 +1901,6 @@ pub mod day15 {
                 let r = row % height;
                 let c = col % width;
 
-                if row == 10 && col == 10 {
-                    let mut x = 5;
-                    x += 3;
-                }
-
                 let inc = (row / height) + (col / width);
                 let mut v = tiles[r*width + c] + inc as u8;
                 if v >= 10 {
@@ -1923,17 +1911,7 @@ pub mod day15 {
             }
         }
 
-        // print big table
-        for row in 0..big_height {
-            let mut row_str = String::with_capacity(big_width);
-            for col in 0..big_width {
-                let v = big_tiles[row*big_width + col];
-                row_str.push(char::from_digit(v as u32, 10).unwrap());
-            }
-            println!("{}", row_str);
-        }
-
-        0
+        part1(&big_tiles, big_width)
     }
 
     #[cfg(test)]
@@ -1944,13 +1922,14 @@ pub mod day15 {
         fn examples() {
             let (tiles, width) = parse_input(crate::data::_DAY15_EXAMPLE1);
             assert_eq!(part1(&tiles, width), 40);
-            assert_eq!(part2(&tiles, width), 0);
+            assert_eq!(part2(&tiles, width), 315);
         }
 
         #[test]
         fn verify() {
             let (tiles, width) = parse_input(crate::data::DAY15);
             assert_eq!(part1(&tiles, width), 696);
+            assert_eq!(part2(&tiles, width), 2952);
         }
     }
 }
