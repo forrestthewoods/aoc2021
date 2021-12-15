@@ -1798,13 +1798,12 @@ pub mod day14 {
 
 pub mod day15 {
     use priority_queue::PriorityQueue;
-    use std::collections::HashSet;
     use std::cmp::Reverse;
+    use std::collections::HashSet;
     use std::fmt::Write;
 
     type Point = fts_vecmath::point2::Point2<i16>;
     type Offset = fts_vecmath::vector2::Vector2<i16>;
-    type Entry = (Point, Vec<Point>);
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
@@ -1848,48 +1847,43 @@ pub mod day15 {
         let w = width as i16;
         let h = height as i16;
         let goal = Point::new(width as i16 - 1, height as i16 - 1);
-        let mut open_list = PriorityQueue::<Entry, Reverse<usize>>::new();
+        let mut open_list = PriorityQueue::<Point, Reverse<usize>>::new();
         let mut visited: HashSet<Point> = Default::default();
 
         let start = Point::zero();
-        open_list.push((start, vec![start]), Reverse(0));
+        open_list.push(start, Reverse(0));
 
         loop {
-            let ((pt, path), cost) = open_list.pop().unwrap();
+            let (pt, cost) = open_list.pop().unwrap();
             let cost = cost.0;
 
             // Check for goal
             if pt == goal {
                 return cost;
             }
-            
+
             // Skip if we've already been here
             if !visited.insert(pt) {
                 continue;
             }
 
             // Add neighbors to open list
-            let neighbors = offsets.iter().map(|offset| pt + *offset).filter(|p| {
-                p.x >= 0
-                    && p.x < w
-                    && p.y >= 0
-                    && p.y < h
-                    && !visited.contains(p)
-            });
+            let neighbors = offsets
+                .iter()
+                .map(|offset| pt + *offset)
+                .filter(|p| p.x >= 0 && p.x < w && p.y >= 0 && p.y < h && !visited.contains(p));
 
             for neighbor in neighbors {
                 let neighbor_idx = point_to_idx(neighbor);
-                let neighbor_cost = tiles[neighbor_idx];
+                let neighbor_cost = tiles[neighbor_idx] as usize;
 
-                let mut new_path = path.clone();
-                new_path.push(neighbor);
-                open_list.push((neighbor, new_path), Reverse(cost + neighbor_cost as usize));
+                open_list.push_increase(neighbor, Reverse(cost + neighbor_cost));
             }
         }
     }
 
     fn part2(tiles: &[u8], width: usize) -> usize {
-        let mut big_tiles : Vec<u8> = Default::default();
+        let mut big_tiles: Vec<u8> = Default::default();
         big_tiles.resize(tiles.len() * 25, 0);
 
         let height = tiles.len() / width;
@@ -1902,12 +1896,12 @@ pub mod day15 {
                 let c = col % width;
 
                 let inc = (row / height) + (col / width);
-                let mut v = tiles[r*width + c] + inc as u8;
+                let mut v = tiles[r * width + c] + inc as u8;
                 if v >= 10 {
                     v -= 9;
                 }
 
-                big_tiles[row*big_width + col] = v;
+                big_tiles[row * big_width + col] = v;
             }
         }
 
