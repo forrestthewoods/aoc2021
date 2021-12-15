@@ -1795,3 +1795,124 @@ pub mod day14 {
         }
     }
 }
+
+pub mod day15 {
+    use priority_queue::PriorityQueue;
+    use std::collections::HashSet;
+    use std::cmp::Reverse;
+    use std::fmt::Write;
+
+    type Point = fts_vecmath::point2::Point2<i8>;
+    type Offset = fts_vecmath::vector2::Vector2<i8>;
+    type Entry = (Point, Vec<Point>);
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let (tiles, width) = parse_input(crate::data::DAY15);
+
+        let answer_part1 = part1(&tiles, width);
+        writeln!(&mut result, "Day 15, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2(crate::data::DAY15);
+        writeln!(&mut result, "Day 15, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> (Vec<u8>, usize) {
+        let width = input.lines().next().unwrap().len();
+
+        let tiles = input
+            .lines()
+            .flat_map(|line| line.chars().map(|c| c.to_digit(10).unwrap() as u8))
+            .collect();
+
+        (tiles, width)
+    }
+
+    fn part1(tiles: &[u8], width: usize) -> usize {
+        // Constants
+        let offsets = [
+            Offset::new(-1, 0),
+            Offset::new(1, 0),
+            Offset::new(0, -1),
+            Offset::new(0, 1),
+        ];
+
+        // Utilities
+        let point_to_idx = |pt: Point| pt.y as usize * width + pt.x as usize;
+
+        // Initialize data
+        let height = tiles.len() / width;
+        let w = width as i8;
+        let h = height as i8;
+        let goal = Point::new(width as i8 - 1, height as i8 - 1);
+        let mut open_list = PriorityQueue::<Entry, Reverse<usize>>::new();
+        let mut visited: HashSet<Point> = Default::default();
+
+        let start = Point::zero();
+        open_list.push((start, vec![start]), Reverse(0));
+
+        loop {
+            let ((pt, path), cost) = open_list.pop().unwrap();
+            let cost = cost.0;
+
+            if pt == goal {
+                println!("Goal found!");
+                for pp in &path {
+                    println!("  ({}, {})", pp.x, pp.y);
+                }
+
+                let cost2 = path.iter().skip(1).map(|pt| tiles[point_to_idx(*pt)] as usize).sum::<usize>();
+                println!("Cost: {}   {}", cost, cost2);
+
+                return cost;
+            }
+            
+            // Skip if we've already been here
+            if !visited.insert(pt) {
+                continue;
+            }
+
+            let neighbors = offsets.iter().map(|offset| pt + *offset).filter(|p| {
+                p.x >= 0
+                    && p.x < w
+                    && p.y >= 0
+                    && p.y < h
+                    && !visited.contains(p)
+            });
+
+            for neighbor in neighbors {
+                let neighbor_idx = point_to_idx(neighbor);
+                let neighbor_cost = tiles[neighbor_idx];
+
+                let mut new_path = path.clone();
+                new_path.push(neighbor);
+                open_list.push((neighbor, new_path), Reverse(cost + neighbor_cost as usize));
+            }
+        }
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (tiles, width) = parse_input(crate::data::_DAY15_EXAMPLE1);
+            assert_eq!(part1(&tiles, width), 40);
+        }
+
+        #[test]
+        fn verify() {
+            let (tiles, width) = parse_input(crate::data::DAY15);
+            assert_eq!(part1(&tiles, width), 696);
+        }
+    }
+}

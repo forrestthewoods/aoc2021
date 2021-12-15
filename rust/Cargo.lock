@@ -28,6 +28,7 @@ dependencies = [
  "itertools",
  "lazy_static",
  "petgraph",
+ "priority-queue",
  "regex",
  "structopt",
 ]
@@ -179,6 +180,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "467d164a6de56270bd7c4d070df81d07beace25012d5103ced4e9ff08d6afdb7"
 dependencies = [
  "fixedbitset",
+ "indexmap",
+]
+
+[[package]]
+name = "priority-queue"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00ba480ac08d3cfc40dea10fd466fd2c14dee3ea6fc7873bc4079eda2727caf0"
+dependencies = [
+ "autocfg",
  "indexmap",
 ]
 
