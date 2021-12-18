@@ -1947,12 +1947,15 @@ pub mod day16 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        /*
-        let answer_part1 = part1(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
 
+        let packet = parse_input(crate::data::DAY16);
+
+        let answer_part1 = part1(&packet);
+        writeln!(&mut result, "Day 16, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
         let answer_part2 = part2(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
+        writeln!(&mut result, "Day 16, Problem 2 - [{}]", answer_part2).unwrap();
         */
         result
     }
@@ -2004,12 +2007,18 @@ pub mod day16 {
                 let sub_packets : Vec<Packet> = (0..num_packets).map(|_| parse_packet(reader)).collect();
                 Payload::Operator(sub_packets)
             } else {
-                // 15 bits is subpacket length
+                // 15 bits is subpackets length
                 let sub_packet_len = read_usize(reader, 15);
-                let mut sub_packet_bits = &reader[0..sub_packet_len];
-                let sub_packet = parse_packet(&mut sub_packet_bits);
+
+                // bits representing N subpackets
+                let mut sub_packets_bits = &reader[0..sub_packet_len];
+                let mut sub_packets : Vec<Packet> = Default::default();
+                while sub_packets_bits.len() > 4 {
+                    let sub_packet = parse_packet(&mut sub_packets_bits);
+                    sub_packets.push(sub_packet);
+                }
                 *reader = &reader[sub_packet_len..];
-                Payload::Operator(vec![sub_packet])
+                Payload::Operator(sub_packets)
             }
         };
 
@@ -2032,6 +2041,9 @@ pub mod day16 {
             bits.push((v & 0b0001) > 0);
         }
 
+        let bits_str : String = bits.iter().map(|bit| if *bit { "1" } else { "0" }).collect();
+        println!("{} => {}", input, bits_str);
+
         // recursively parse
         parse_packet(&mut bits.as_slice())
     }
@@ -2049,6 +2061,7 @@ pub mod day16 {
     }
 
     fn part1(packet: &Packet) -> usize {
+        println!("Packet: [{:?}]", packet);
         sum_packet_version(packet)
     }
 
@@ -2069,12 +2082,19 @@ pub mod day16 {
             assert_eq!(packet.payload, Payload::Literal(2021));
             */
 
+            // passes
             //assert_eq!(part1(&parse_input("8A004A801A8002F478")), 16);
+            //assert_eq!(part1(&parse_input("620080001611562C8802118E34")), 12);
+            assert_eq!(part1(&parse_input("C0015000016115A2E0802F182340")), 23);
             
-            assert_eq!(part1(&parse_input("620080001611562C8802118E34")), 12);
+            // fails
+            assert_eq!(part1(&parse_input("A0016C880162017C3686B18A3D4780")), 31);
         }
 
         #[test]
-        fn verify() {}
+        fn verify() {
+            let packet = parse_input(crate::data::DAY16);
+            assert_eq!(part1(&packet), 974);
+        }
     }
 }
