@@ -1980,7 +1980,7 @@ pub mod day16 {
         };
 
         let read_varint = |reader: &mut &[bool]| -> usize {
-            let mut result : usize = 0;
+            let mut result: usize = 0;
             loop {
                 let last = read_bit(reader) == false;
                 let v = read_usize(reader, 4);
@@ -1998,14 +1998,14 @@ pub mod day16 {
         let payload = if type_id == 4 {
             // read literal
             Payload::Literal(read_varint(reader))
-
         } else {
             // operation
             let op_type = read_bit(reader);
             if op_type {
                 // 11 bits is number of packets
                 let num_packets = read_usize(reader, 11);
-                let sub_packets : Vec<Packet> = (0..num_packets).map(|_| parse_packet(reader)).collect();
+                let sub_packets: Vec<Packet> =
+                    (0..num_packets).map(|_| parse_packet(reader)).collect();
                 Payload::Operator(sub_packets)
             } else {
                 // 15 bits is subpackets length
@@ -2013,7 +2013,7 @@ pub mod day16 {
 
                 // bits representing N subpackets
                 let mut sub_packets_bits = &reader[0..sub_packet_len];
-                let mut sub_packets : Vec<Packet> = Default::default();
+                let mut sub_packets: Vec<Packet> = Default::default();
                 while sub_packets_bits.len() > 4 {
                     let sub_packet = parse_packet(&mut sub_packets_bits);
                     sub_packets.push(sub_packet);
@@ -2052,7 +2052,7 @@ pub mod day16 {
 
         result += match &packet.payload {
             Payload::Literal(_) => 0,
-            Payload::Operator(op) => op.iter().map(|p| sum_packet_version(p)).sum::<usize>()
+            Payload::Operator(op) => op.iter().map(|p| sum_packet_version(p)).sum::<usize>(),
         };
 
         result
@@ -2068,14 +2068,57 @@ pub mod day16 {
             Payload::Operator(subpackets) => {
                 let values = subpackets.iter().map(packet_value);
                 match packet.type_id {
-                    0 => /* sum */ values.sum(), 
-                    1 => /* product */ values.product(), 
-                    2 => /* minimum */ values.min().unwrap(), 
-                    3 => /* maximum */ values.max().unwrap(), 
-                    5 => /* greater than */ { let (a,b) = values.collect_tuple().unwrap(); if a > b { 1 } else { 0 } }, 
-                    6 => /* less than */ { let (a,b) = values.collect_tuple().unwrap(); if a < b { 1 } else { 0 } },  
-                    7 => /* equal to */ { let (a,b) = values.collect_tuple().unwrap(); if a == b { 1 } else { 0 } },  
-                    _ => unreachable!(&format!("Unexpected packet type [{}]", packet.type_id))
+                    0 =>
+                    /* sum */
+                    {
+                        values.sum()
+                    }
+                    1 =>
+                    /* product */
+                    {
+                        values.product()
+                    }
+                    2 =>
+                    /* minimum */
+                    {
+                        values.min().unwrap()
+                    }
+                    3 =>
+                    /* maximum */
+                    {
+                        values.max().unwrap()
+                    }
+                    5 =>
+                    /* greater than */
+                    {
+                        let (a, b) = values.collect_tuple().unwrap();
+                        if a > b {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    6 =>
+                    /* less than */
+                    {
+                        let (a, b) = values.collect_tuple().unwrap();
+                        if a < b {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    7 =>
+                    /* equal to */
+                    {
+                        let (a, b) = values.collect_tuple().unwrap();
+                        if a == b {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    _ => unreachable!(&format!("Unexpected packet type [{}]", packet.type_id)),
                 }
             }
         }
@@ -2101,7 +2144,7 @@ pub mod day16 {
             assert_eq!(part1(&parse_input("620080001611562C8802118E34")), 12);
             assert_eq!(part1(&parse_input("C0015000016115A2E0802F182340")), 23);
             assert_eq!(part1(&parse_input("A0016C880162017C3686B18A3D4780")), 31);
-            
+
             // part2
             assert_eq!(part2(&parse_input("C200B40A82")), 3);
             assert_eq!(part2(&parse_input("04005AC33890")), 54);
@@ -2118,6 +2161,242 @@ pub mod day16 {
             let packet = parse_input(crate::data::DAY16);
             assert_eq!(part1(&packet), 974);
             assert_eq!(part2(&packet), 180616437720);
+        }
+    }
+}
+
+pub mod day17 {
+    use std::fmt::Write;
+
+    type Point = fts_vecmath::point2::Point2<i32>;
+    type Vector = fts_vecmath::vector2::Vector2<i32>;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let (answer_part1, answer_part2) = solve(Point::new(257, -101), Point::new(286, -57));
+
+        writeln!(&mut result, "Day 17, Problem 1 - [{}]", answer_part1).unwrap();
+        writeln!(&mut result, "Day 17, Problem 2 - [{}]", answer_part2).unwrap();
+
+        result
+    }
+
+    fn simulate_1d(mut vel: i32, start: i32, end: i32, is_x: bool) -> Option<i32> {
+        let mut pos = 0;
+        let mut max_pos = 0;
+
+        loop {
+            pos += vel;
+            vel -= 1;
+            if is_x {
+                vel = vel.max(0);
+            }
+            max_pos = max_pos.max(pos);
+
+            if pos >= start && pos <= end {
+                // Inside target
+                return Some(max_pos);
+            } else if is_x && pos > end {
+                // Past right edge
+                return None;
+            } else if !is_x && pos < start {
+                // Below bottom edge
+                return None;
+            } else if is_x && vel == 0 {
+                // No more forward progress
+                return None;
+            }
+        }
+    }
+
+    fn simulate(mut vel: Vector, target_start: Point, target_end: Point) -> Option<i32> {
+        let mut pos = Point::zero();
+        let mut peak = 0;
+
+        let drag = Vector::new(1,1);
+
+        loop {
+            // Integrate
+            pos += vel;
+            vel -= drag;
+            vel.x = vel.x.max(0);
+
+            peak = peak.max(pos.y);
+
+
+            if pos.x >= target_start.x && pos.x <= target_end.x && pos.y >= target_start.y && pos.y <= target_end.y {
+                // In target
+                return Some(peak);
+            } else if pos.x > target_end.x {
+                // Past right edge
+                return None;
+            } else if pos.y < target_start.y {
+                // Below bottom edge
+                return None;
+            }
+        }
+    }
+
+    fn solve(target_start: Point, target_end: Point) -> (usize, usize) {
+        let max_x_vel = target_end.x;
+
+        let mut highest_peak = 0;
+        let mut num_solutions = 0;
+
+        let mut answers : std::collections::HashSet<Vector> = Default::default();
+
+        for x_vel in 0..=max_x_vel {
+            for y_vel in target_start.y..target_start.y.abs() {
+        //for x_vel in 0..30 {
+        //    for y_vel in -10..10 {
+                if let Some(peak) = simulate(Vector::new(x_vel, y_vel), target_start, target_end) {
+                    highest_peak = highest_peak.max(peak as usize);
+                    num_solutions += 1;
+
+                    answers.insert(Vector::new(x_vel, y_vel));
+                    println!("{},{}", x_vel, y_vel);
+                }
+            }
+        }
+
+        let expected_answers : std::collections::HashSet<Vector> = [
+            Vector::new(23,-10),
+            Vector::new(25,-7),
+            Vector::new(8,0),
+            Vector::new(26,-10),
+            Vector::new(20,-8),
+            Vector::new(25,-6),
+            Vector::new(25,-10),
+            Vector::new(8,1),
+            Vector::new(24,-10),
+            Vector::new(7,5),
+            Vector::new(23,-5),
+            Vector::new(27,-10),
+            Vector::new(8,-2),
+            Vector::new(25,-9),
+            Vector::new(26,-6),
+            Vector::new(30,-6),
+            Vector::new(7,-1),
+            Vector::new(13,-2),
+            Vector::new(15,-4),
+            Vector::new(7,8),
+            Vector::new(22,-8),
+            Vector::new(23,-8),
+            Vector::new(23,-6),
+            Vector::new(24,-8),
+            Vector::new(7,2),
+            Vector::new(27,-8),
+            Vector::new(27,-5),
+            Vector::new(25,-5),
+            Vector::new(29,-8),
+            Vector::new(7,7),
+            Vector::new(7,3),
+            Vector::new(9,-2),
+            Vector::new(11,-3),
+            Vector::new(13,-4),
+            Vector::new(30,-8),
+            Vector::new(28,-10),
+            Vector::new(27,-9),
+            Vector::new(30,-9),
+            Vector::new(30,-5),
+            Vector::new(29,-6),
+            Vector::new(6,8),
+            Vector::new(20,-10),
+            Vector::new(8,-1),
+            Vector::new(28,-8),
+            Vector::new(15,-2),
+            Vector::new(26,-7),
+            Vector::new(7,6),
+            Vector::new(7,0),
+            Vector::new(10,-2),
+            Vector::new(30,-7),
+            Vector::new(21,-8),
+            Vector::new(24,-7),
+            Vector::new(22,-6),
+            Vector::new(11,-2),
+            Vector::new(6,7),
+            Vector::new(21,-9),
+            Vector::new(29,-9),
+            Vector::new(12,-2),
+            Vector::new(7,1),
+            Vector::new(28,-6),
+            Vector::new(9,-1),
+            Vector::new(11,-1),
+            Vector::new(28,-5),
+            Vector::new(22,-7),
+            Vector::new(21,-7),
+            Vector::new(20,-5),
+            Vector::new(6,4),
+            Vector::new(6,2),
+            Vector::new(15,-3),
+            Vector::new(28,-9),
+            Vector::new(23,-9),
+            Vector::new(11,-4),
+            Vector::new(10,-1),
+            Vector::new(20,-9),
+            Vector::new(21,-10),
+            Vector::new(24,-9),
+            Vector::new(9,0),
+            Vector::new(29,-10),
+            Vector::new(6,1),
+            Vector::new(20,-7),
+            Vector::new(22,-5),
+            Vector::new(12,-3),
+            Vector::new(6,0),
+            Vector::new(12,-4),
+            Vector::new(26,-5),
+            Vector::new(14,-2),
+            Vector::new(7,9),
+            Vector::new(20,-6),
+            Vector::new(27,-7),
+            Vector::new(6,3),
+            Vector::new(14,-4),
+            Vector::new(30,-10),
+            Vector::new(26,-8),
+            Vector::new(24,-6),
+            Vector::new(22,-10),
+            Vector::new(26,-9),
+            Vector::new(22,-9),
+            Vector::new(29,-7),
+            Vector::new(6,6),
+            Vector::new(6,9),
+            Vector::new(24,-5),
+            Vector::new(28,-7),
+            Vector::new(21,-6),
+            Vector::new(14,-3),
+            Vector::new(25,-8),
+            Vector::new(23,-7),
+            Vector::new(27,-6),
+            Vector::new(7,4),
+            Vector::new(6,5),
+            Vector::new(13,-3),
+            Vector::new(21,-5),
+            Vector::new(29,-5),
+        ].iter().cloned().collect();
+
+        let missing = expected_answers.difference(&answers);
+        println!("Missing: [{:?}]", missing);
+
+        (highest_peak, num_solutions)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (highest_peak, num_solutions) = solve(Point::new(20, -10), Point::new(30, -5));
+            assert_eq!(highest_peak, 45);
+            assert_eq!(num_solutions, 112);
+        }
+
+        #[test]
+        fn verify() {
+            let (highest_peak, num_solutions) = solve(Point::new(257, -101), Point::new(286, -57));
+            assert_eq!(highest_peak, 5050);
+            assert_eq!(num_solutions, 2223);
         }
     }
 }
