@@ -2182,34 +2182,6 @@ pub mod day17 {
         result
     }
 
-    fn simulate_1d(mut vel: i32, start: i32, end: i32, is_x: bool) -> Option<i32> {
-        let mut pos = 0;
-        let mut max_pos = 0;
-
-        loop {
-            pos += vel;
-            vel -= 1;
-            if is_x {
-                vel = vel.max(0);
-            }
-            max_pos = max_pos.max(pos);
-
-            if pos >= start && pos <= end {
-                // Inside target
-                return Some(max_pos);
-            } else if is_x && pos > end {
-                // Past right edge
-                return None;
-            } else if !is_x && pos < start {
-                // Below bottom edge
-                return None;
-            } else if is_x && vel == 0 {
-                // No more forward progress
-                return None;
-            }
-        }
-    }
-
     fn simulate(mut vel: Vector, target_start: Point, target_end: Point) -> Option<i32> {
         let mut pos = Point::zero();
         let mut peak = 0;
@@ -2244,139 +2216,14 @@ pub mod day17 {
         let mut highest_peak = 0;
         let mut num_solutions = 0;
 
-        let mut answers : std::collections::HashSet<Vector> = Default::default();
-
         for x_vel in 0..=max_x_vel {
             for y_vel in target_start.y..target_start.y.abs() {
-        //for x_vel in 0..30 {
-        //    for y_vel in -10..10 {
                 if let Some(peak) = simulate(Vector::new(x_vel, y_vel), target_start, target_end) {
                     highest_peak = highest_peak.max(peak as usize);
                     num_solutions += 1;
-
-                    answers.insert(Vector::new(x_vel, y_vel));
-                    println!("{},{}", x_vel, y_vel);
                 }
             }
         }
-
-        let expected_answers : std::collections::HashSet<Vector> = [
-            Vector::new(23,-10),
-            Vector::new(25,-7),
-            Vector::new(8,0),
-            Vector::new(26,-10),
-            Vector::new(20,-8),
-            Vector::new(25,-6),
-            Vector::new(25,-10),
-            Vector::new(8,1),
-            Vector::new(24,-10),
-            Vector::new(7,5),
-            Vector::new(23,-5),
-            Vector::new(27,-10),
-            Vector::new(8,-2),
-            Vector::new(25,-9),
-            Vector::new(26,-6),
-            Vector::new(30,-6),
-            Vector::new(7,-1),
-            Vector::new(13,-2),
-            Vector::new(15,-4),
-            Vector::new(7,8),
-            Vector::new(22,-8),
-            Vector::new(23,-8),
-            Vector::new(23,-6),
-            Vector::new(24,-8),
-            Vector::new(7,2),
-            Vector::new(27,-8),
-            Vector::new(27,-5),
-            Vector::new(25,-5),
-            Vector::new(29,-8),
-            Vector::new(7,7),
-            Vector::new(7,3),
-            Vector::new(9,-2),
-            Vector::new(11,-3),
-            Vector::new(13,-4),
-            Vector::new(30,-8),
-            Vector::new(28,-10),
-            Vector::new(27,-9),
-            Vector::new(30,-9),
-            Vector::new(30,-5),
-            Vector::new(29,-6),
-            Vector::new(6,8),
-            Vector::new(20,-10),
-            Vector::new(8,-1),
-            Vector::new(28,-8),
-            Vector::new(15,-2),
-            Vector::new(26,-7),
-            Vector::new(7,6),
-            Vector::new(7,0),
-            Vector::new(10,-2),
-            Vector::new(30,-7),
-            Vector::new(21,-8),
-            Vector::new(24,-7),
-            Vector::new(22,-6),
-            Vector::new(11,-2),
-            Vector::new(6,7),
-            Vector::new(21,-9),
-            Vector::new(29,-9),
-            Vector::new(12,-2),
-            Vector::new(7,1),
-            Vector::new(28,-6),
-            Vector::new(9,-1),
-            Vector::new(11,-1),
-            Vector::new(28,-5),
-            Vector::new(22,-7),
-            Vector::new(21,-7),
-            Vector::new(20,-5),
-            Vector::new(6,4),
-            Vector::new(6,2),
-            Vector::new(15,-3),
-            Vector::new(28,-9),
-            Vector::new(23,-9),
-            Vector::new(11,-4),
-            Vector::new(10,-1),
-            Vector::new(20,-9),
-            Vector::new(21,-10),
-            Vector::new(24,-9),
-            Vector::new(9,0),
-            Vector::new(29,-10),
-            Vector::new(6,1),
-            Vector::new(20,-7),
-            Vector::new(22,-5),
-            Vector::new(12,-3),
-            Vector::new(6,0),
-            Vector::new(12,-4),
-            Vector::new(26,-5),
-            Vector::new(14,-2),
-            Vector::new(7,9),
-            Vector::new(20,-6),
-            Vector::new(27,-7),
-            Vector::new(6,3),
-            Vector::new(14,-4),
-            Vector::new(30,-10),
-            Vector::new(26,-8),
-            Vector::new(24,-6),
-            Vector::new(22,-10),
-            Vector::new(26,-9),
-            Vector::new(22,-9),
-            Vector::new(29,-7),
-            Vector::new(6,6),
-            Vector::new(6,9),
-            Vector::new(24,-5),
-            Vector::new(28,-7),
-            Vector::new(21,-6),
-            Vector::new(14,-3),
-            Vector::new(25,-8),
-            Vector::new(23,-7),
-            Vector::new(27,-6),
-            Vector::new(7,4),
-            Vector::new(6,5),
-            Vector::new(13,-3),
-            Vector::new(21,-5),
-            Vector::new(29,-5),
-        ].iter().cloned().collect();
-
-        let missing = expected_answers.difference(&answers);
-        println!("Missing: [{:?}]", missing);
 
         (highest_peak, num_solutions)
     }
