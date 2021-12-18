@@ -1931,6 +1931,8 @@ pub mod day15 {
 pub mod day16 {
     use std::fmt::Write;
 
+    use itertools::Itertools;
+
     #[derive(Clone, Debug, Eq, PartialEq)]
     enum Payload {
         Literal(usize),
@@ -1953,10 +1955,9 @@ pub mod day16 {
         let answer_part1 = part1(&packet);
         writeln!(&mut result, "Day 16, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY00);
+        let answer_part2 = part2(&packet);
         writeln!(&mut result, "Day 16, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -2041,9 +2042,6 @@ pub mod day16 {
             bits.push((v & 0b0001) > 0);
         }
 
-        let bits_str : String = bits.iter().map(|bit| if *bit { "1" } else { "0" }).collect();
-        println!("{} => {}", input, bits_str);
-
         // recursively parse
         parse_packet(&mut bits.as_slice())
     }
@@ -2061,12 +2059,30 @@ pub mod day16 {
     }
 
     fn part1(packet: &Packet) -> usize {
-        println!("Packet: [{:?}]", packet);
         sum_packet_version(packet)
     }
 
-    fn part2(_input: &str) -> usize {
-        0
+    fn packet_value(packet: &Packet) -> usize {
+        match &packet.payload {
+            Payload::Literal(v) => *v,
+            Payload::Operator(subpackets) => {
+                let values = subpackets.iter().map(packet_value);
+                match packet.type_id {
+                    0 => /* sum */ values.sum(), 
+                    1 => /* product */ values.product(), 
+                    2 => /* minimum */ values.min().unwrap(), 
+                    3 => /* maximum */ values.max().unwrap(), 
+                    5 => /* greater than */ { let (a,b) = values.collect_tuple().unwrap(); if a > b { 1 } else { 0 } }, 
+                    6 => /* less than */ { let (a,b) = values.collect_tuple().unwrap(); if a < b { 1 } else { 0 } },  
+                    7 => /* equal to */ { let (a,b) = values.collect_tuple().unwrap(); if a == b { 1 } else { 0 } },  
+                    _ => unreachable!(&format!("Unexpected packet type [{}]", packet.type_id))
+                }
+            }
+        }
+    }
+
+    fn part2(packet: &Packet) -> usize {
+        packet_value(packet)
     }
 
     #[cfg(test)]
@@ -2075,26 +2091,33 @@ pub mod day16 {
 
         #[test]
         fn examples() {
-            /*
             let packet = parse_input("D2FE28");
             assert_eq!(packet.version, 6);
             assert_eq!(packet.type_id, 4);
             assert_eq!(packet.payload, Payload::Literal(2021));
-            */
 
-            // passes
-            //assert_eq!(part1(&parse_input("8A004A801A8002F478")), 16);
-            //assert_eq!(part1(&parse_input("620080001611562C8802118E34")), 12);
+            // part 1
+            assert_eq!(part1(&parse_input("8A004A801A8002F478")), 16);
+            assert_eq!(part1(&parse_input("620080001611562C8802118E34")), 12);
             assert_eq!(part1(&parse_input("C0015000016115A2E0802F182340")), 23);
-            
-            // fails
             assert_eq!(part1(&parse_input("A0016C880162017C3686B18A3D4780")), 31);
+            
+            // part2
+            assert_eq!(part2(&parse_input("C200B40A82")), 3);
+            assert_eq!(part2(&parse_input("04005AC33890")), 54);
+            assert_eq!(part2(&parse_input("880086C3E88112")), 7);
+            assert_eq!(part2(&parse_input("CE00C43D881120")), 9);
+            assert_eq!(part2(&parse_input("D8005AC2A8F0")), 1);
+            assert_eq!(part2(&parse_input("F600BC2D8F")), 0);
+            assert_eq!(part2(&parse_input("9C005AC2F8F0")), 0);
+            assert_eq!(part2(&parse_input("9C0141080250320F1802104A08")), 1);
         }
 
         #[test]
         fn verify() {
             let packet = parse_input(crate::data::DAY16);
             assert_eq!(part1(&packet), 974);
+            assert_eq!(part2(&packet), 180616437720);
         }
     }
 }
