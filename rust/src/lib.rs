@@ -1931,16 +1931,18 @@ pub mod day15 {
 pub mod day16 {
     use std::fmt::Write;
 
+    #[derive(Clone, Debug, Eq, PartialEq)]
     enum Payload {
         Literal(usize),
-        Operator(Vec<Packet>)
-    } 
+        Operator(Vec<Packet>),
+    }
 
+    #[derive(Clone, Debug, Eq, PartialEq)]
     struct Packet {
         version: u8,
         type_id: u8,
 
-        payload: Payload
+        payload: Payload,
     }
 
     pub fn run() -> String {
@@ -1953,6 +1955,75 @@ pub mod day16 {
         writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
         */
         result
+    }
+
+    fn parse_packet(bits: &[bool]) -> Packet {
+        let read_bit = |reader: &mut &[bool]| -> bool {
+            let bit = reader[0];
+            *reader = &reader[1..];
+            bit
+        };
+
+        // read N bits into a u8 and advance reader
+        let read_u8 = |reader: &mut &[bool], num_bits: usize| -> u8 {
+            assert!(num_bits <= 8);
+            assert!(num_bits <= bits.len());
+            let value = reader
+                .iter()
+                .take(num_bits)
+                .fold(0, |acc, next| (acc << 1) | (*next as u8));
+            *reader = &reader[num_bits..];
+            value
+        };
+
+        let read_varint = |reader: &mut &[bool]| -> usize {
+            let mut result : usize = 0;
+            loop {
+                let last = read_bit(reader) == false;
+                let v = read_u8(reader, 4);
+                result = (result << 4) | (v as usize);
+
+                if last {
+                    return result;
+                }
+            }
+        };
+
+        let mut reader = bits;
+        let reader = &mut reader;
+
+        let version = read_u8(reader, 3);
+        let type_id = read_u8(reader, 3);
+
+        let payload = if type_id == 4 {
+            // read literal
+            Payload::Literal(read_varint(reader))
+
+        } else {
+            // operation
+            Payload::Literal(0)
+        };
+
+        Packet {
+            version,
+            type_id,
+            payload,
+        }
+    }
+
+    fn parse_input(input: &str) -> Packet {
+        // convert string to vec of bools
+        let mut bits: Vec<bool> = Default::default();
+        for char in input.chars() {
+            let s = char.to_string();
+            let v = u8::from_str_radix(&s, 16).unwrap();
+            bits.push((v & 0b1000) > 0);
+            bits.push((v & 0b0100) > 0);
+            bits.push((v & 0b0010) > 0);
+            bits.push((v & 0b0001) > 0);
+        }
+
+        parse_packet(&bits)
     }
 
     fn part1(_input: &str) -> usize {
@@ -1969,10 +2040,13 @@ pub mod day16 {
 
         #[test]
         fn examples() {
+            let packet = parse_input("D2FE28");
+            assert_eq!(packet.version, 6);
+            assert_eq!(packet.type_id, 4);
+            assert_eq!(packet.payload, Payload::Literal(2021));
         }
 
         #[test]
-        fn verify() {
-        }
+        fn verify() {}
     }
 }
