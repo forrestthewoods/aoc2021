@@ -1957,21 +1957,20 @@ pub mod day16 {
         result
     }
 
-    fn parse_packet(bits: &[bool]) -> Packet {
+    fn parse_packet(reader: &mut &[bool]) -> Packet {
         let read_bit = |reader: &mut &[bool]| -> bool {
             let bit = reader[0];
             *reader = &reader[1..];
             bit
         };
 
-        // read N bits into a u8 and advance reader
-        let read_u8 = |reader: &mut &[bool], num_bits: usize| -> u8 {
-            assert!(num_bits <= 8);
-            assert!(num_bits <= bits.len());
+        // read N bits into a usize and advance reader
+        let read_usize = |reader: &mut &[bool], num_bits: usize| -> usize {
+            assert!(num_bits <= reader.len());
             let value = reader
                 .iter()
                 .take(num_bits)
-                .fold(0, |acc, next| (acc << 1) | (*next as u8));
+                .fold(0, |acc, next| (acc << 1) | (*next as usize));
             *reader = &reader[num_bits..];
             value
         };
@@ -1980,8 +1979,8 @@ pub mod day16 {
             let mut result : usize = 0;
             loop {
                 let last = read_bit(reader) == false;
-                let v = read_u8(reader, 4);
-                result = (result << 4) | (v as usize);
+                let v = read_usize(reader, 4);
+                result = (result << 4) | v;
 
                 if last {
                     return result;
@@ -1989,11 +1988,8 @@ pub mod day16 {
             }
         };
 
-        let mut reader = bits;
-        let reader = &mut reader;
-
-        let version = read_u8(reader, 3);
-        let type_id = read_u8(reader, 3);
+        let version = read_usize(reader, 3) as u8;
+        let type_id = read_usize(reader, 3) as u8;
 
         let payload = if type_id == 4 {
             // read literal
@@ -2001,7 +1997,20 @@ pub mod day16 {
 
         } else {
             // operation
-            Payload::Literal(0)
+            let op_type = read_bit(reader);
+            if op_type {
+                // 11 bits is number of packets
+                let num_packets = read_usize(reader, 11);
+                let sub_packets : Vec<Packet> = (0..num_packets).map(|_| parse_packet(reader)).collect();
+                Payload::Operator(sub_packets)
+            } else {
+                // 15 bits is subpacket length
+                let sub_packet_len = read_usize(reader, 15);
+                let mut sub_packet_bits = &reader[0..sub_packet_len];
+                let sub_packet = parse_packet(&mut sub_packet_bits);
+                *reader = &reader[sub_packet_len..];
+                Payload::Operator(vec![sub_packet])
+            }
         };
 
         Packet {
@@ -2023,11 +2032,24 @@ pub mod day16 {
             bits.push((v & 0b0001) > 0);
         }
 
-        parse_packet(&bits)
+        // recursively parse
+        parse_packet(&mut bits.as_slice())
     }
 
-    fn part1(_input: &str) -> usize {
-        0
+    fn sum_packet_version(packet: &Packet) -> usize {
+        let mut result = 0;
+        result += packet.version as usize;
+
+        result += match &packet.payload {
+            Payload::Literal(_) => 0,
+            Payload::Operator(op) => op.iter().map(|p| sum_packet_version(p)).sum::<usize>()
+        };
+
+        result
+    }
+
+    fn part1(packet: &Packet) -> usize {
+        sum_packet_version(packet)
     }
 
     fn part2(_input: &str) -> usize {
@@ -2040,10 +2062,16 @@ pub mod day16 {
 
         #[test]
         fn examples() {
+            /*
             let packet = parse_input("D2FE28");
             assert_eq!(packet.version, 6);
             assert_eq!(packet.type_id, 4);
             assert_eq!(packet.payload, Payload::Literal(2021));
+            */
+
+            //assert_eq!(part1(&parse_input("8A004A801A8002F478")), 16);
+            
+            assert_eq!(part1(&parse_input("620080001611562C8802118E34")), 12);
         }
 
         #[test]
