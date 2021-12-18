@@ -1927,3 +1927,52 @@ pub mod day15 {
         }
     }
 }
+
+pub mod day16 {
+    use std::fmt::Write;
+
+    enum Payload {
+        Literal(usize),
+        Operator(Vec<Packet>)
+    } 
+
+    struct Packet {
+        version: u8,
+        type_id: u8,
+
+        payload: Payload
+    }
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+        /*
+        let answer_part1 = part1(crate::data::DAY00);
+        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(crate::data::DAY00);
+        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn part1(_input: &str) -> usize {
+        0
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+        }
+
+        #[test]
+        fn verify() {
+        }
+    }
+}
