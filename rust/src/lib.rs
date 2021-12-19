@@ -2242,10 +2242,13 @@ pub mod day18 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        /*
-        let answer_part1 = part1(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
 
+        let snailfishies = parse_input(crate::data::DAY18);
+
+        let answer_part1 = part1(&snailfishies);
+        writeln!(&mut result, "Day 18, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
         let answer_part2 = part2(crate::data::DAY00);
         writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
         */
@@ -2364,13 +2367,15 @@ pub mod day18 {
     fn magnitude(mut snailfish: Snailfish) -> usize {
         assert!(snailfish.iter().all(|n| n.depth <= 3));
 
+        println!("Collapsing: [{:?}]", snailfish);
+
         let collapse = |snailfish: &mut Snailfish, depth: i8| {
             let mut left_idx = 0;
             while left_idx < snailfish.len() - 1 {
                 if snailfish[left_idx].depth == depth {
                     assert!(left_idx < snailfish.len() - 1);
                     let right_idx = left_idx + 1;
-                    assert_eq!(snailfish[right_idx].depth, 3);
+                    assert_eq!(snailfish[right_idx].depth, depth);
 
                     let left_value = snailfish[left_idx].value;
                     let right_value = snailfish[right_idx].value;
@@ -2386,23 +2391,26 @@ pub mod day18 {
 
         for depth in (0..=3).rev() {
             collapse(&mut snailfish, depth);
+            println!("  Collapsed depth [{}]: [{:?}]", depth, snailfish);
         }
 
         assert_eq!(snailfish.len(), 1);
-        assert_eq!(snailfish[0].depth, -1);
         snailfish[0].value
     }
 
     fn part1(snailfishies: &[Snailfish]) -> usize {
+        println!("Part1 Input: [{:?}]", snailfishies);
 
-        let snailfish = snailfishies.into_iter().fold(
-            Snailfish::default(),
+        let snailfish = snailfishies.into_iter().skip(1).fold(
+            snailfishies[0].clone(),
             |mut acc, next| {
                 acc = add(&acc, next);
                 reduce(&mut acc);
                 acc
             });
         
+        println!("    Added and Reduced: [{:?}]", snailfish);
+
         magnitude(snailfish)
     }
 
@@ -2416,12 +2424,17 @@ pub mod day18 {
 
         #[test]
         fn examples() {
-            let sf = parse_input("[9,[8,7]]");
-            println!("{:?}", sf);
+            // passes
+            //assert_eq!(part1(&parse_input("[[1,2],[[3,4],5]]")), 143);
+            assert_eq!(part1(&parse_input("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]")), 1384);
+            
+            // fails
+            assert_eq!(part1(&parse_input(crate::data::_DAY18_EXAMPLE1)), 4140);
         }
 
         #[test]
         fn verify() {
+            assert_eq!(part1(&parse_input(crate::data::DAY18)), 3486);
         }
     }
 }
