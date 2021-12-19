@@ -2068,29 +2068,11 @@ pub mod day16 {
             Payload::Operator(subpackets) => {
                 let values = subpackets.iter().map(packet_value);
                 match packet.type_id {
-                    0 =>
-                    /* sum */
-                    {
-                        values.sum()
-                    }
-                    1 =>
-                    /* product */
-                    {
-                        values.product()
-                    }
-                    2 =>
-                    /* minimum */
-                    {
-                        values.min().unwrap()
-                    }
-                    3 =>
-                    /* maximum */
-                    {
-                        values.max().unwrap()
-                    }
-                    5 =>
-                    /* greater than */
-                    {
+                    0 => values.sum(),
+                    1 => values.product(),
+                    2 => values.min().unwrap(),
+                    3 => values.max().unwrap(),
+                    5 => {
                         let (a, b) = values.collect_tuple().unwrap();
                         if a > b {
                             1
@@ -2098,9 +2080,7 @@ pub mod day16 {
                             0
                         }
                     }
-                    6 =>
-                    /* less than */
-                    {
+                    6 => {
                         let (a, b) = values.collect_tuple().unwrap();
                         if a < b {
                             1
@@ -2108,9 +2088,7 @@ pub mod day16 {
                             0
                         }
                     }
-                    7 =>
-                    /* equal to */
-                    {
+                    7 => {
                         let (a, b) = values.collect_tuple().unwrap();
                         if a == b {
                             1
@@ -2186,7 +2164,7 @@ pub mod day17 {
         let mut pos = Point::zero();
         let mut peak = 0;
 
-        let drag = Vector::new(1,1);
+        let drag = Vector::new(1, 1);
 
         loop {
             // Integrate
@@ -2196,8 +2174,11 @@ pub mod day17 {
 
             peak = peak.max(pos.y);
 
-
-            if pos.x >= target_start.x && pos.x <= target_end.x && pos.y >= target_start.y && pos.y <= target_end.y {
+            if pos.x >= target_start.x
+                && pos.x <= target_end.x
+                && pos.y >= target_start.y
+                && pos.y <= target_end.y
+            {
                 // In target
                 return Some(peak);
             } else if pos.x > target_end.x {
@@ -2244,6 +2225,203 @@ pub mod day17 {
             let (highest_peak, num_solutions) = solve(Point::new(257, -101), Point::new(286, -57));
             assert_eq!(highest_peak, 5050);
             assert_eq!(num_solutions, 2223);
+        }
+    }
+}
+
+pub mod day18 {
+    use std::fmt::Write;
+
+#[derive(Copy, Clone, Debug)]
+    struct Number {
+        value: usize,
+        depth: i8
+    }
+
+    type Snailfish = Vec<Number>;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+        /*
+        let answer_part1 = part1(crate::data::DAY00);
+        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(crate::data::DAY00);
+        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> Vec<Snailfish> {
+        input.lines()
+            .map(parse_snailfish)
+            .collect()
+    }
+
+    fn parse_snailfish(line: &str) -> Snailfish {
+        let bytes = line.as_bytes();
+
+        let mut idx = 0;
+        let mut depth : i8 = -1;
+
+        let mut snailfish : Snailfish = Default::default();
+
+        while idx < bytes.len() {
+            let c = bytes[idx] as char;
+            match c {
+                '[' => depth += 1,
+                ']' => depth -= 1,
+                ',' => (),
+                _ => {
+                    assert!(depth < 4);
+                    let value = usize::from_str_radix(&line[idx..=idx], 10).unwrap();
+                    snailfish.push(Number { value, depth: depth });
+                }
+            }
+
+            idx += 1;
+        }
+
+        snailfish
+    }
+
+    fn add(a: &Snailfish, b: &Snailfish) -> Snailfish {
+        let mut result : Snailfish = a.clone();
+
+        result.extend(b.iter());
+        for number in &mut result {
+            number.depth += 1;
+        }
+       
+        result
+    }
+
+    fn explode(snailfish: &mut Snailfish) -> bool {
+        // Try explode
+        for left_idx in 0..snailfish.len() - 1 {
+            let left_depth = snailfish[left_idx].depth;
+            if left_depth >= 4 {
+                assert_eq!(left_depth, 4);
+
+                // Explode!
+                let right_idx = left_idx + 1;
+                assert_eq!(left_depth, snailfish[right_idx].depth);
+
+                // Explode values to left and right
+                if left_idx > 0 {
+                    snailfish[left_idx-1].value += snailfish[left_idx].value;
+                }
+                if right_idx < snailfish.len() -1 {
+                    snailfish[right_idx+1].value += snailfish[right_idx].value;
+                }
+
+                // Replace exploded pair
+                snailfish.remove(right_idx);
+                snailfish[left_idx] = Number { value: 0, depth: 3 };
+
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn split(snailfish: &mut Snailfish) -> bool {
+        for idx in 0..snailfish.len() {
+            let value = snailfish[idx].value;
+            
+            if snailfish[idx].value >= 10 {
+                // Compute new values
+                let left = value / 2;
+                let right = value - left;
+                assert_eq!(left+right, value);
+
+                // Replace idx with new left value
+                let depth = snailfish[idx].depth + 1;
+                snailfish[idx] = Number { value: left, depth };
+
+                // Insert new right value
+                snailfish.insert(idx+1, Number{value: right, depth});
+
+                return true;
+            }
+        }
+        false
+    }
+
+    fn reduce(snailfish: &mut Snailfish) {
+        loop {
+            if explode(snailfish) {
+                continue;
+            } 
+            else if split(snailfish) {
+                continue;
+            }
+            break;
+        }
+    }
+
+    fn magnitude(mut snailfish: Snailfish) -> usize {
+        assert!(snailfish.iter().all(|n| n.depth <= 3));
+
+        let collapse = |snailfish: &mut Snailfish, depth: i8| {
+            let mut left_idx = 0;
+            while left_idx < snailfish.len() - 1 {
+                if snailfish[left_idx].depth == depth {
+                    assert!(left_idx < snailfish.len() - 1);
+                    let right_idx = left_idx + 1;
+                    assert_eq!(snailfish[right_idx].depth, 3);
+
+                    let left_value = snailfish[left_idx].value;
+                    let right_value = snailfish[right_idx].value;
+                    let value = 3*left_value + 2*right_value;
+
+                    snailfish[left_idx] = Number { value, depth: depth - 1};
+                    snailfish.remove(right_idx);
+                }
+
+                left_idx += 1;
+            }
+        };
+
+        for depth in (0..=3).rev() {
+            collapse(&mut snailfish, depth);
+        }
+
+        assert_eq!(snailfish.len(), 1);
+        assert_eq!(snailfish[0].depth, -1);
+        snailfish[0].value
+    }
+
+    fn part1(snailfishies: &[Snailfish]) -> usize {
+
+        let snailfish = snailfishies.into_iter().fold(
+            Snailfish::default(),
+            |mut acc, next| {
+                acc = add(&acc, next);
+                reduce(&mut acc);
+                acc
+            });
+        
+        magnitude(snailfish)
+    }
+
+    fn part2(_input: &str) -> usize {
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let sf = parse_input("[9,[8,7]]");
+            println!("{:?}", sf);
+        }
+
+        #[test]
+        fn verify() {
         }
     }
 }
