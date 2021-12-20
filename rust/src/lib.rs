@@ -2233,10 +2233,10 @@ pub mod day18 {
     use itertools::Itertools;
     use std::fmt::Write;
 
-#[derive(Copy, Clone, Debug)]
+    #[derive(Copy, Clone, Debug)]
     struct Number {
         value: usize,
-        depth: i8
+        depth: i8,
     }
 
     type Snailfish = Vec<Number>;
@@ -2256,18 +2256,16 @@ pub mod day18 {
     }
 
     fn parse_input(input: &str) -> Vec<Snailfish> {
-        input.lines()
-            .map(parse_snailfish)
-            .collect()
+        input.lines().map(parse_snailfish).collect()
     }
 
     fn parse_snailfish(line: &str) -> Snailfish {
         let bytes = line.as_bytes();
 
         let mut idx = 0;
-        let mut depth : i8 = -1;
+        let mut depth: i8 = -1;
 
-        let mut snailfish : Snailfish = Default::default();
+        let mut snailfish: Snailfish = Default::default();
 
         while idx < bytes.len() {
             let c = bytes[idx] as char;
@@ -2278,7 +2276,10 @@ pub mod day18 {
                 _ => {
                     assert!(depth < 4);
                     let value = usize::from_str_radix(&line[idx..=idx], 10).unwrap();
-                    snailfish.push(Number { value, depth: depth });
+                    snailfish.push(Number {
+                        value,
+                        depth: depth,
+                    });
                 }
             }
 
@@ -2289,13 +2290,13 @@ pub mod day18 {
     }
 
     fn add(a: &Snailfish, b: &Snailfish) -> Snailfish {
-        let mut result : Snailfish = a.clone();
+        let mut result: Snailfish = a.clone();
 
         result.extend(b.iter());
         for number in &mut result {
             number.depth += 1;
         }
-       
+
         result
     }
 
@@ -2312,10 +2313,10 @@ pub mod day18 {
 
                 // Explode values to left and right
                 if left_idx > 0 {
-                    snailfish[left_idx-1].value += snailfish[left_idx].value;
+                    snailfish[left_idx - 1].value += snailfish[left_idx].value;
                 }
-                if right_idx < snailfish.len() -1 {
-                    snailfish[right_idx+1].value += snailfish[right_idx].value;
+                if right_idx < snailfish.len() - 1 {
+                    snailfish[right_idx + 1].value += snailfish[right_idx].value;
                 }
 
                 // Replace exploded pair
@@ -2332,19 +2333,25 @@ pub mod day18 {
     fn split(snailfish: &mut Snailfish) -> bool {
         for idx in 0..snailfish.len() {
             let value = snailfish[idx].value;
-            
+
             if snailfish[idx].value >= 10 {
                 // Compute new values
                 let left = value / 2;
                 let right = value - left;
-                assert_eq!(left+right, value);
+                assert_eq!(left + right, value);
 
                 // Replace idx with new left value
                 let depth = snailfish[idx].depth + 1;
                 snailfish[idx] = Number { value: left, depth };
 
                 // Insert new right value
-                snailfish.insert(idx+1, Number{value: right, depth});
+                snailfish.insert(
+                    idx + 1,
+                    Number {
+                        value: right,
+                        depth,
+                    },
+                );
 
                 return true;
             }
@@ -2356,8 +2363,7 @@ pub mod day18 {
         loop {
             if explode(snailfish) {
                 continue;
-            } 
-            else if split(snailfish) {
+            } else if split(snailfish) {
                 continue;
             }
             break;
@@ -2377,9 +2383,12 @@ pub mod day18 {
 
                     let left_value = snailfish[left_idx].value;
                     let right_value = snailfish[right_idx].value;
-                    let value = 3*left_value + 2*right_value;
+                    let value = 3 * left_value + 2 * right_value;
 
-                    snailfish[left_idx] = Number { value, depth: depth - 1};
+                    snailfish[left_idx] = Number {
+                        value,
+                        depth: depth - 1,
+                    };
                     snailfish.remove(right_idx);
                 }
 
@@ -2396,22 +2405,24 @@ pub mod day18 {
     }
 
     fn part1(snailfishies: &[Snailfish]) -> usize {
-        let snailfish = snailfishies.into_iter().skip(1).fold(
-            snailfishies[0].clone(),
-            |mut acc, next| {
-                acc = add(&acc, next);
-                reduce(&mut acc);
-                acc
-            });
-        
+        let snailfish =
+            snailfishies
+                .into_iter()
+                .skip(1)
+                .fold(snailfishies[0].clone(), |mut acc, next| {
+                    acc = add(&acc, next);
+                    reduce(&mut acc);
+                    acc
+                });
+
         magnitude(snailfish)
     }
 
     fn part2(snailfishies: &[Snailfish]) -> usize {
-        snailfishies.iter().permutations(2)
-            .map(|combo| {
-                part1(&vec![combo[0].clone(), combo[1].clone()])
-            })
+        snailfishies
+            .iter()
+            .permutations(2)
+            .map(|combo| part1(&vec![combo[0].clone(), combo[1].clone()]))
             .max()
             .unwrap()
     }
@@ -2423,7 +2434,10 @@ pub mod day18 {
         #[test]
         fn examples() {
             assert_eq!(part1(&parse_input("[[1,2],[[3,4],5]]")), 143);
-            assert_eq!(part1(&parse_input("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]")), 1384);
+            assert_eq!(
+                part1(&parse_input("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]")),
+                1384
+            );
 
             let snailfishies = parse_input(crate::data::_DAY18_EXAMPLE1);
             assert_eq!(part1(&snailfishies), 4140);
@@ -2442,6 +2456,11 @@ pub mod day18 {
 pub mod day19 {
     use std::fmt::Write;
 
+    use itertools::Itertools;
+
+    type Point = fts_vecmath::point3::Point3<i16>;
+    type Vector = fts_vecmath::vector3::Vector3<i16>;
+
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
         /*
@@ -2452,6 +2471,28 @@ pub mod day19 {
         writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
         */
         result
+    }
+
+    fn parse_input(input: &str) -> Vec<Vec<Point>> {
+        //input.split("\r\n\r\n");
+
+        input
+            .split("\r\n\r\n")
+            .map(|chunk| {
+                chunk
+                    .lines()
+                    .skip(1)
+                    .map(|line| {
+                        let (x, y, z) = line
+                            .split(",")
+                            .map(|s| s.parse::<i16>().unwrap())
+                            .collect_tuple()
+                            .unwrap();
+                        Point::new(x, y, z)
+                    })
+                    .collect()
+            })
+            .collect()
     }
 
     fn part1(_input: &str) -> usize {
@@ -2468,10 +2509,11 @@ pub mod day19 {
 
         #[test]
         fn examples() {
+            let scanners = parse_input(crate::data::_DAY19_EXAMPLE1);
+            assert_eq!(scanners.len(), 5);
         }
 
         #[test]
-        fn verify() {
-        }
+        fn verify() {}
     }
 }
