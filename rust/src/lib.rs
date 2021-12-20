@@ -2597,7 +2597,6 @@ pub mod day19 {
         let mut solved_diffs: Vec<Vec<HashSet<Vector>>> = Default::default();
         solved_diffs.resize(num_scanners, Default::default());
         solved_diffs[0] = diffs_set(&scanners[0]);
-        
 
         // Loop pairs of scanners until all scanners solved
         while solved_scanners.len() < num_scanners {
@@ -2660,23 +2659,25 @@ pub mod day19 {
                             let mut num_aligned = 0;
                             let mut aligned_indices: Option<(usize, usize)> = None;
 
-                            for (unsolved_point_idx, point_diffs) in unsolved_orient_diffs.iter().enumerate() {
-
+                            for (unsolved_point_idx, point_diffs) in
+                                unsolved_orient_diffs.iter().enumerate()
+                            {
                                 // TODO: delete
                                 if point_diffs.contains(&Vector::new(4, -1, 0)) {
                                     let mut x = 5;
                                     x += 3;
                                 }
 
-                                for (solved_point_idx, solved_diffs_set) in solved_scanner_diffs.iter().enumerate() {
+                                for (solved_point_idx, solved_diffs_set) in
+                                    solved_scanner_diffs.iter().enumerate()
+                                {
                                     let num_similar_diffs =
-                                    point_diffs.intersection(solved_diffs_set).count();
+                                        point_diffs.intersection(solved_diffs_set).count();
                                     if num_similar_diffs == num_shared_points - 1 {
                                         num_aligned += 1;
                                         if aligned_indices.is_none() {
-                                            aligned_indices = Some(
-                                                (unsolved_point_idx, solved_point_idx)
-                                            );
+                                            aligned_indices =
+                                                Some((unsolved_point_idx, solved_point_idx));
                                         }
                                     }
                                 }
@@ -2688,13 +2689,16 @@ pub mod day19 {
                                 solved_diffs[unsolved_idx] = unsolved_orient_diffs.clone();
 
                                 // solve scanner pos
-                                let (unsolved_point_idx, solved_point_idx) = aligned_indices.unwrap();
+                                let (unsolved_point_idx, solved_point_idx) =
+                                    aligned_indices.unwrap();
                                 let beacon_pos = scanners[solved_idx][solved_point_idx];
                                 let scanner_inv_offset = unsolved_orient[unsolved_point_idx];
                                 let unsolved_scanner_pos = beacon_pos - scanner_inv_offset;
 
                                 // compute beacon locs
-                                let beacon_positions = scanners[unsolved_idx].iter().map(|offset| unsolved_scanner_pos + *offset);
+                                let beacon_positions = scanners[unsolved_idx]
+                                    .iter()
+                                    .map(|offset| unsolved_scanner_pos + *offset);
 
                                 solved_beacons.extend(beacon_positions);
                                 break;
@@ -2723,7 +2727,7 @@ pub mod day19 {
 
         #[test]
         fn examples() {
-            assert_eq!(part1(&parse_input(crate::data::_DAY19_EXAMPLE0), 3), 3);
+            //assert_eq!(part1(&parse_input(crate::data::_DAY19_EXAMPLE0), 3), 3);
             assert_eq!(part1(&parse_input(crate::data::_DAY19_EXAMPLE1), 12), 79);
         }
 
