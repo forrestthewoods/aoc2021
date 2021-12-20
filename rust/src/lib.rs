@@ -134,7 +134,7 @@ pub mod day02 {
         input
             .lines()
             .map(|line| {
-                let parts = line.split(" ").collect::<Vec<_>>();
+                let parts = line.split(' ').collect::<Vec<_>>();
                 let dir = parts[0];
                 let amount = parts[1].parse::<i32>().unwrap();
 
@@ -363,7 +363,7 @@ pub mod day04 {
                 // If tile found, check for win
                 if found_tile {
                     // If board wins, remove it from list
-                    if let Some(_) = check_board(*move_value, board) {
+                    if check_board(*move_value, board).is_some() {
                         // Return answer if it's the last board
                         if boards.len() == 1 {
                             return boards[0]
@@ -386,7 +386,7 @@ pub mod day04 {
         unreachable!("Failed to find a solution");
     }
 
-    fn check_board(last_value: u8, board: &Board) -> Option<usize> {
+    fn check_board(last_value: u8, board: &[Tile]) -> Option<usize> {
         // Overly clever way to generate row and col indices
         lazy_static::lazy_static! {
             static ref ROWCOLS: Vec<Vec<u8>> =
@@ -561,7 +561,7 @@ pub mod day06 {
     }
 
     fn parse_input(input: &str) -> Vec<u8> {
-        input.split(",").map(|s| s.parse::<u8>().unwrap()).collect()
+        input.split(',').map(|s| s.parse::<u8>().unwrap()).collect()
     }
 
     fn solve(fishies: &[u8], num_days: usize) -> usize {
@@ -623,14 +623,12 @@ pub mod day07 {
 
     fn parse_input(input: &str) -> Vec<i32> {
         input
-            .split(",")
+            .split(',')
             .map(|s| s.parse::<i32>().unwrap())
             .collect()
     }
 
-    fn part1(crabs: Vec<i32>) -> usize {
-        let mut crabs: Vec<i32> = crabs.iter().cloned().collect();
-
+    fn part1(mut crabs: Vec<i32>) -> usize {
         let idx = crabs.len() / 2;
         crabs.select_nth_unstable(idx);
         let target = crabs[idx];
@@ -705,8 +703,8 @@ pub mod day08 {
             .map(|line| {
                 let halves: Vec<_> = line.split(" | ").collect();
                 (
-                    halves[0].split(" ").collect(),
-                    halves[1].split(" ").collect(),
+                    halves[0].split(' ').collect(),
+                    halves[1].split(' ').collect(),
                 )
             })
             .collect()
@@ -754,13 +752,13 @@ pub mod day08 {
     fn decode_entry(entry: &Entry) -> usize {
         // Helpers
         let char_to_mask: [u8; 7] = [
-            0b_000_0001,
-            0b_000_0010,
-            0b_000_0100,
-            0b_000_1000,
-            0b_001_0000,
-            0b_010_0000,
-            0b_100_0000,
+            0b0000_0001,
+            0b0000_0010,
+            0b0000_0100,
+            0b0000_1000,
+            0b0001_0000,
+            0b0010_0000,
+            0b0100_0000,
         ];
         let signal_to_mask = |signal: Digit| -> u8 {
             signal
@@ -797,7 +795,7 @@ pub mod day08 {
         };
 
         // Initialize segment bits
-        let all_bits = 0b_111_1111;
+        let all_bits = 0b111_1111;
         let mut segment_bits: [u8; 7] = [
             all_bits, all_bits, all_bits, all_bits, all_bits, all_bits, all_bits,
         ];
@@ -898,7 +896,7 @@ pub mod day08 {
     }
 
     fn part2(entries: &[Entry]) -> usize {
-        entries.iter().map(|entry| decode_entry(entry)).sum()
+        entries.iter().map(decode_entry).sum()
     }
 
     #[cfg(test)]
@@ -932,7 +930,7 @@ pub mod day09 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let (tiles, width) = parse_input(&crate::data::DAY09);
+        let (tiles, width) = parse_input(crate::data::DAY09);
 
         let answer_part1 = part1(&tiles, width);
         writeln!(&mut result, "Day 09, Problem 1 - [{}]", answer_part1).unwrap();
@@ -957,7 +955,7 @@ pub mod day09 {
         for line in lines {
             tiles.push(pad_value);
             for c in line.chars() {
-                tiles.push(c as u8 - '0' as u8);
+                tiles.push(c as u8 - b'0');
             }
             tiles.push(pad_value);
         }
@@ -992,7 +990,7 @@ pub mod day09 {
     }
 
     fn part1(tiles: &[u8], width: usize) -> usize {
-        find_low_points(&tiles, width)
+        find_low_points(tiles, width)
             .iter()
             .map(|idx| tiles[*idx] as usize + 1)
             .sum()
@@ -1058,7 +1056,7 @@ pub mod day09 {
         }
 
         // Get three largest
-        basin_sizes.sort();
+        basin_sizes.sort_unstable();
         let len = basin_sizes.len();
         let a = basin_sizes[len - 3];
         let b = basin_sizes[len - 2];
@@ -1422,7 +1420,7 @@ pub mod day12 {
         let mut vert_map: std::collections::HashMap<&str, usize> = Default::default();
 
         for line in input.lines() {
-            let (a, b) = line.split("-").collect_tuple().unwrap();
+            let (a, b) = line.split('-').collect_tuple().unwrap();
 
             let idx_a = *vert_map.entry(a).or_insert_with(|| {
                 verts.push(a);
@@ -1593,7 +1591,7 @@ pub mod day13 {
         let points: Vec<Point> = points_chunk
             .lines()
             .map(|line| {
-                let (x, y) = line.split(",").collect_tuple().unwrap();
+                let (x, y) = line.split(',').collect_tuple().unwrap();
                 Point::new(x.parse::<i16>().unwrap(), y.parse::<i16>().unwrap())
             })
             .collect();
@@ -1602,7 +1600,7 @@ pub mod day13 {
             .lines()
             .map(|line| {
                 let prefix = "fold along ";
-                let (axis, value) = line[prefix.len()..].split("=").collect_tuple().unwrap();
+                let (axis, value) = line[prefix.len()..].split('=').collect_tuple().unwrap();
                 let value = value.parse::<i16>().unwrap();
 
                 match axis {
@@ -2275,10 +2273,10 @@ pub mod day18 {
                 ',' => (),
                 _ => {
                     assert!(depth < 4);
-                    let value = usize::from_str_radix(&line[idx..=idx], 10).unwrap();
+                    let value = (&line[idx..=idx]).parse::<usize>().unwrap();
                     snailfish.push(Number {
                         value,
-                        depth: depth,
+                        depth,
                     });
                 }
             }
