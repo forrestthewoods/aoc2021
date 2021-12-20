@@ -2694,11 +2694,20 @@ pub mod day19 {
                                 let beacon_pos = scanners[solved_idx][solved_point_idx];
                                 let scanner_inv_offset = unsolved_orient[unsolved_point_idx];
                                 let unsolved_scanner_pos = beacon_pos - scanner_inv_offset;
+                                println!("Scanner [{}] located at: [{:?}]", unsolved_idx, unsolved_scanner_pos);
 
                                 // compute beacon locs
-                                let beacon_positions = scanners[unsolved_idx]
+                                let beacon_positions = unsolved_orient
                                     .iter()
                                     .map(|offset| unsolved_scanner_pos + *offset);
+                                
+                                for p in beacon_positions.clone() {
+                                    if solved_beacons.contains(&p) {
+                                        println!("    Overlapping: {},{},{}", p.x, p.y, p.z);
+                                    } else {
+                                        println!("    NOT overlapping: {},{},{}", p.x, p.y, p.z);
+                                    }
+                                }
 
                                 solved_beacons.extend(beacon_positions);
                                 break;
