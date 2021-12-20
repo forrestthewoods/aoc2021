@@ -2468,12 +2468,10 @@ pub mod day19 {
   
         let scanners = parse_input(crate::data::DAY19);
 
-        let answer_part1 = part1(&scanners, 12);
-        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
-/*
-        let answer_part2 = part2(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+        let (answer_part1, answer_part2) = solve(&scanners, 12);
+        writeln!(&mut result, "Day 19, Problem 1 - [{}]", answer_part1).unwrap();
+        writeln!(&mut result, "Day 19, Problem 2 - [{}]", answer_part2).unwrap();
+
         result
     }
 
@@ -2571,7 +2569,7 @@ pub mod day19 {
         result
     }
 
-    fn part1(scanners: &[Vec<Vector>], num_required: usize) -> usize {
+    fn solve(scanners: &[Vec<Vector>], num_required: usize) -> (usize, usize) {
         let num_scanners = scanners.len();
 
         // Precompute n^2 distances between beacons for each scanner
@@ -2602,6 +2600,9 @@ pub mod day19 {
         let mut solved_diffs: Vec<Vec<HashSet<Vector>>> = Default::default();
         solved_diffs.resize(num_scanners, Default::default());
         solved_diffs[0] = diffs_set(&scanners[0]);
+
+        let mut scanner_positions : Vec<Vector> = Default::default();
+        scanner_positions.resize(num_scanners, Vector::new(0,0,0));
 
         // Loop pairs of scanners until all scanners solved
         while solved_scanners.len() < num_scanners {
@@ -2693,7 +2694,7 @@ pub mod day19 {
                                 let beacon_pos = solved_beacons[solved_idx][solved_point_idx];
                                 let scanner_inv_offset = unsolved_orient[unsolved_point_idx];
                                 let unsolved_scanner_pos = beacon_pos - scanner_inv_offset;
-                                println!("    Scanner [{}] located at: [{:?}]", unsolved_idx, unsolved_scanner_pos);
+                                //println!("    Scanner [{}] located at: [{:?}]", unsolved_idx, unsolved_scanner_pos);
 
                                 // Scanner [4] located at: [Vector3 { x: -1020, y: 113, z: -518 }]
                                 // So, scanner 4 is at -20,-1133,1061 (relative to scanner 0).
@@ -2708,6 +2709,8 @@ pub mod day19 {
                                 
                                 solved_beacons[unsolved_idx] = beacon_positions;
 
+                                scanner_positions[unsolved_idx] = unsolved_scanner_pos;
+
                                 break;
                             }
                         }
@@ -2721,12 +2724,19 @@ pub mod day19 {
             }
         }
 
-        solved_beacons.iter().flat_map(|positions| positions.iter()).unique().count()
+        let part1 = solved_beacons.iter().flat_map(|positions| positions.iter()).unique().count();
+        let part2 = scanner_positions.iter().combinations(2)
+            .map(|pair| { 
+                let diff = *pair[1] - *pair[0];
+                (diff.x.abs() + diff.y.abs() + diff.z.abs()) as usize
+            })
+            .max().unwrap();
+
+        println!("{}, {}", part1, part2);
+
+        (part1, part2)
     }
 
-    fn part2(_input: &str) -> usize {
-        0
-    }
 
     #[cfg(test)]
     mod tests {
@@ -2734,14 +2744,18 @@ pub mod day19 {
 
         #[test]
         fn examples() {
-            //assert_eq!(part1(&parse_input(crate::data::_DAY19_EXAMPLE0), 3), 3);
-            assert_eq!(part1(&parse_input(crate::data::_DAY19_EXAMPLE1), 12), 79);
+            let scanners = parse_input(crate::data::_DAY19_EXAMPLE1);
+            let (answer_part1, answer_part2) = solve(&scanners, 12);
+            assert_eq!(answer_part1, 79);
+            assert_eq!(answer_part2, 3621);
         }
 
         #[test]
         fn verify() {
             let scanners = parse_input(crate::data::DAY19);
-            assert_eq!(part1(&scanners, 12), 335);
+            let (answer_part1, answer_part2) = solve(&scanners, 12);
+            assert_eq!(answer_part1, 335);
+            assert_eq!(answer_part2, 10864);
         }
     }
 }
