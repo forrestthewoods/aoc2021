@@ -2454,7 +2454,6 @@ pub mod day18 {
 }
 
 pub mod day19 {
-    use core::num;
     use std::collections::HashSet;
     use std::fmt::Write;
 
@@ -2465,7 +2464,7 @@ pub mod day19 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-  
+
         let scanners = parse_input(crate::data::DAY19);
 
         let (answer_part1, answer_part2) = solve(&scanners, 12);
@@ -2518,23 +2517,6 @@ pub mod day19 {
         extend(-z, y, x); // z-left, y-forward, x-up
 
         result
-    }
-
-    fn diffs(points: &[Vector]) -> Vec<Vec<Vector>> {
-        let len = points.len();
-        (0..len)
-            .map(|a| {
-                (0..len)
-                    .filter_map(|b| {
-                        if a != b {
-                            Some(points[b] - points[a])
-                        } else {
-                            None
-                        }
-                    })
-                    .collect()
-            })
-            .collect()
     }
 
     fn diffs_set(points: &[Vector]) -> Vec<HashSet<Vector>> {
@@ -2591,7 +2573,7 @@ pub mod day19 {
 
         // Solve everything relative to 0-index scanner
         let mut solved_scanners: HashSet<usize> = [0].iter().cloned().collect();
-        
+
         let mut solved_beacons: Vec<Vec<Vector>> = Default::default();
         solved_beacons.resize(num_scanners, Default::default());
         solved_beacons[0] = scanners[0].clone();
@@ -2601,8 +2583,8 @@ pub mod day19 {
         solved_diffs.resize(num_scanners, Default::default());
         solved_diffs[0] = diffs_set(&scanners[0]);
 
-        let mut scanner_positions : Vec<Vector> = Default::default();
-        scanner_positions.resize(num_scanners, Vector::new(0,0,0));
+        let mut scanner_positions: Vec<Vector> = Default::default();
+        scanner_positions.resize(num_scanners, Vector::new(0, 0, 0));
 
         // Loop pairs of scanners until all scanners solved
         while solved_scanners.len() < num_scanners {
@@ -2639,11 +2621,6 @@ pub mod day19 {
                             (scanner_b_idx, scanner_a_idx)
                         };
 
-                        println!(
-                            "Region {} and {} overlap. Shared: {}",
-                            solved_idx, unsolved_idx, num_shared_points
-                        );
-
                         // We know that scanner_solved and scanner_unsolved overlap
                         // We do not know which of the 24 orientations of scanner_unsolved is correct
                         // for orientation in orientations
@@ -2668,7 +2645,6 @@ pub mod day19 {
                             for (unsolved_point_idx, point_diffs) in
                                 unsolved_orient_diffs.iter().enumerate()
                             {
-
                                 for (solved_point_idx, solved_diffs_set) in
                                     solved_scanner_diffs.iter().enumerate()
                                 {
@@ -2694,19 +2670,13 @@ pub mod day19 {
                                 let beacon_pos = solved_beacons[solved_idx][solved_point_idx];
                                 let scanner_inv_offset = unsolved_orient[unsolved_point_idx];
                                 let unsolved_scanner_pos = beacon_pos - scanner_inv_offset;
-                                //println!("    Scanner [{}] located at: [{:?}]", unsolved_idx, unsolved_scanner_pos);
-
-                                // Scanner [4] located at: [Vector3 { x: -1020, y: 113, z: -518 }]
-                                // So, scanner 4 is at -20,-1133,1061 (relative to scanner 0).
 
                                 // compute beacon locs
-                                let beacon_positions : Vec<Vector> = unsolved_orient
+                                let beacon_positions: Vec<Vector> = unsolved_orient
                                     .iter()
                                     .map(|offset| unsolved_scanner_pos + *offset)
-                                    //.inspect(|pos| println!("  Testing point: [{:?}]", pos))
-                                    //.filter(|pos| solved_beacons[solved_idx].contains(&pos))
                                     .collect();
-                                
+
                                 solved_beacons[unsolved_idx] = beacon_positions;
 
                                 scanner_positions[unsolved_idx] = unsolved_scanner_pos;
@@ -2714,29 +2684,28 @@ pub mod day19 {
                                 break;
                             }
                         }
-                    } else {
-                        println!(
-                            "Region {} and {} do NOT overlap. Shared: {}",
-                            scanner_a_idx, scanner_b_idx, num_shared_points
-                        );
                     }
                 }
             }
         }
 
-        let part1 = solved_beacons.iter().flat_map(|positions| positions.iter()).unique().count();
-        let part2 = scanner_positions.iter().combinations(2)
-            .map(|pair| { 
+        let part1 = solved_beacons
+            .iter()
+            .flat_map(|positions| positions.iter())
+            .unique()
+            .count();
+        let part2 = scanner_positions
+            .iter()
+            .combinations(2)
+            .map(|pair| {
                 let diff = *pair[1] - *pair[0];
                 (diff.x.abs() + diff.y.abs() + diff.z.abs()) as usize
             })
-            .max().unwrap();
-
-        println!("{}, {}", part1, part2);
+            .max()
+            .unwrap();
 
         (part1, part2)
     }
-
 
     #[cfg(test)]
     mod tests {
