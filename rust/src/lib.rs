@@ -2735,7 +2735,6 @@ pub mod day20 {
     use std::fmt::Write;
 
     type Point = fts_vecmath::point2::Point2<i16>;
-    type Vector = fts_vecmath::vector2::Vector2<i16>;
     type Filter = Vec<bool>;
     type Image = HashSet<Point>;
 
@@ -2744,16 +2743,13 @@ pub mod day20 {
         
         let (image, filter) = parse_input(crate::data::DAY20);
 
-        let answer_part1 = part1(image.clone(), &filter, 2);
+        let answer_part1 = solve(image.clone(), &filter, 2);
         writeln!(&mut result, "Day 20, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part1 = part1(image.clone(), &filter, 50);
+        let answer_part1 = solve(image.clone(), &filter, 50);
         writeln!(&mut result, "Day 20, Problem 2 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY20);
-        writeln!(&mut result, "Day 20, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+
         result
     }
 
@@ -2788,28 +2784,7 @@ pub mod day20 {
         (image, filter)
     }
 
-    fn print_image(image: &Image, title: &str) {
-        println!("\n{}", title);
-
-        let (min, max) = bounds(image);
-
-        for row in min.y..=max.y {
-            let mut row_str = String::default();
-            for col in min.x..=max.x {
-                let p = Point::from_row_col(row, col);
-                if image.contains(&p) {
-                    row_str.push('#');
-                } else {
-                    row_str.push('.');
-                }
-            }
-            println!("  {}", row_str);
-        }
-
-        println!("\n");
-    }
-
-    fn part1(mut image: Image, filter: &Filter, num_steps: usize) -> usize {
+    fn solve(mut image: Image, filter: &Filter, num_steps: usize) -> usize {
         // Init kernel
         let mut kernel : Vec<bool> = Default::default();
         kernel.reserve(9);
@@ -2817,8 +2792,6 @@ pub mod day20 {
         // Init output image
         let mut output : Image = Default::default();
         output.reserve(image.len());
-
-        //print_image(&image, "Initial");
 
         let inverts : bool = filter[0];
         let mut image_inverted = false;
@@ -2864,8 +2837,6 @@ pub mod day20 {
             if inverts {
                 image_inverted = output_inverted;
             }
-
-            //print_image(&image, &format!("After step {}", _step+1));
         }
 
         image.len()
@@ -2879,14 +2850,14 @@ pub mod day20 {
         #[test]
         fn examples() {
             let (image, filter) = parse_input(crate::data::_DAY20_EXAMPLE1);
-            assert_eq!(part1(image.clone(), &filter, 2), 35);
+            assert_eq!(solve(image.clone(), &filter, 2), 35);
         }
 
         #[test]
         fn verify() {
             let (image, filter) = parse_input(crate::data::DAY20);
-            assert_eq!(part1(image.clone(), &filter, 2), 5268);
-            assert_eq!(part1(image.clone(), &filter, 50), 16875);
+            assert_eq!(solve(image.clone(), &filter, 2), 5268);
+            assert_eq!(solve(image.clone(), &filter, 50), 16875);
         }
     }
 }
