@@ -2465,10 +2465,12 @@ pub mod day19 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        /*
-        let answer_part1 = part1(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
+  
+        let scanners = parse_input(crate::data::DAY19);
 
+        let answer_part1 = part1(&scanners, 12);
+        writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
+/*
         let answer_part2 = part2(crate::data::DAY00);
         writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
         */
@@ -2592,9 +2594,9 @@ pub mod day19 {
         // Solve everything relative to 0-index scanner
         let mut solved_scanners: HashSet<usize> = [0].iter().cloned().collect();
         
-        let mut solved_beacons: Vec<HashSet<Vector>> = Default::default();
+        let mut solved_beacons: Vec<Vec<Vector>> = Default::default();
         solved_beacons.resize(num_scanners, Default::default());
-        solved_beacons[0] = scanners[0].iter().cloned().collect();
+        solved_beacons[0] = scanners[0].clone();
 
         // Scanner[Point[Diffs]]
         let mut solved_diffs: Vec<Vec<HashSet<Vector>>> = Default::default();
@@ -2688,13 +2690,16 @@ pub mod day19 {
                                 // solve scanner pos
                                 let (unsolved_point_idx, solved_point_idx) =
                                     aligned_indices.unwrap();
-                                let beacon_pos = scanners[solved_idx][solved_point_idx];
+                                let beacon_pos = solved_beacons[solved_idx][solved_point_idx];
                                 let scanner_inv_offset = unsolved_orient[unsolved_point_idx];
                                 let unsolved_scanner_pos = beacon_pos - scanner_inv_offset;
                                 println!("    Scanner [{}] located at: [{:?}]", unsolved_idx, unsolved_scanner_pos);
 
+                                // Scanner [4] located at: [Vector3 { x: -1020, y: 113, z: -518 }]
+                                // So, scanner 4 is at -20,-1133,1061 (relative to scanner 0).
+
                                 // compute beacon locs
-                                let beacon_positions : HashSet<Vector> = unsolved_orient
+                                let beacon_positions : Vec<Vector> = unsolved_orient
                                     .iter()
                                     .map(|offset| unsolved_scanner_pos + *offset)
                                     //.inspect(|pos| println!("  Testing point: [{:?}]", pos))
@@ -2734,6 +2739,9 @@ pub mod day19 {
         }
 
         #[test]
-        fn verify() {}
+        fn verify() {
+            let scanners = parse_input(crate::data::DAY19);
+            assert_eq!(part1(&scanners, 12), 335);
+        }
     }
 }
