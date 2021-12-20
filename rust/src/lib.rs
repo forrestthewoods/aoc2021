@@ -2591,7 +2591,10 @@ pub mod day19 {
 
         // Solve everything relative to 0-index scanner
         let mut solved_scanners: HashSet<usize> = [0].iter().cloned().collect();
-        let mut solved_beacons: HashSet<Vector> = scanners[0].iter().cloned().collect();
+        
+        let mut solved_beacons: Vec<HashSet<Vector>> = Default::default();
+        solved_beacons.resize(num_scanners, Default::default());
+        solved_beacons[0] = scanners[0].iter().cloned().collect();
 
         // Scanner[Point[Diffs]]
         let mut solved_diffs: Vec<Vec<HashSet<Vector>>> = Default::default();
@@ -2662,11 +2665,6 @@ pub mod day19 {
                             for (unsolved_point_idx, point_diffs) in
                                 unsolved_orient_diffs.iter().enumerate()
                             {
-                                // TODO: delete
-                                if point_diffs.contains(&Vector::new(4, -1, 0)) {
-                                    let mut x = 5;
-                                    x += 3;
-                                }
 
                                 for (solved_point_idx, solved_diffs_set) in
                                     solved_scanner_diffs.iter().enumerate()
@@ -2684,7 +2682,6 @@ pub mod day19 {
                             }
 
                             if num_aligned == num_shared_points {
-                                println!("Found alignment!!");
                                 solved_scanners.insert(unsolved_idx);
                                 solved_diffs[unsolved_idx] = unsolved_orient_diffs.clone();
 
@@ -2694,22 +2691,18 @@ pub mod day19 {
                                 let beacon_pos = scanners[solved_idx][solved_point_idx];
                                 let scanner_inv_offset = unsolved_orient[unsolved_point_idx];
                                 let unsolved_scanner_pos = beacon_pos - scanner_inv_offset;
-                                println!("Scanner [{}] located at: [{:?}]", unsolved_idx, unsolved_scanner_pos);
+                                println!("    Scanner [{}] located at: [{:?}]", unsolved_idx, unsolved_scanner_pos);
 
                                 // compute beacon locs
-                                let beacon_positions = unsolved_orient
+                                let beacon_positions : HashSet<Vector> = unsolved_orient
                                     .iter()
-                                    .map(|offset| unsolved_scanner_pos + *offset);
+                                    .map(|offset| unsolved_scanner_pos + *offset)
+                                    //.inspect(|pos| println!("  Testing point: [{:?}]", pos))
+                                    //.filter(|pos| solved_beacons[solved_idx].contains(&pos))
+                                    .collect();
                                 
-                                for p in beacon_positions.clone() {
-                                    if solved_beacons.contains(&p) {
-                                        println!("    Overlapping: {},{},{}", p.x, p.y, p.z);
-                                    } else {
-                                        println!("    NOT overlapping: {},{},{}", p.x, p.y, p.z);
-                                    }
-                                }
+                                solved_beacons[unsolved_idx] = beacon_positions;
 
-                                solved_beacons.extend(beacon_positions);
                                 break;
                             }
                         }
@@ -2723,7 +2716,7 @@ pub mod day19 {
             }
         }
 
-        solved_beacons.len()
+        solved_beacons.iter().flat_map(|positions| positions.iter()).unique().count()
     }
 
     fn part2(_input: &str) -> usize {
