@@ -858,7 +858,7 @@ pub mod day08 {
         assert_eq!(segment_bits[6].count_ones(), 1);
 
         // All bits solved!
-        assert_eq!(segment_bits.iter().all(|bits| bits.count_ones() == 1), true);
+        assert!(segment_bits.iter().all(|bits| bits.count_ones() == 1));
 
         // Helper to compute result
         let mask_to_digit: std::collections::HashMap<u8, usize> = [
@@ -1262,7 +1262,7 @@ pub mod day11 {
     fn solve(tiles: &[u8], width: usize, num_steps: usize) -> (usize, usize) {
         let height = tiles.len() / width;
 
-        let mut board: Vec<u8> = tiles.iter().cloned().collect();
+        let mut board: Vec<u8> = tiles.to_vec();
         let mut flashed: Vec<bool> = Default::default();
         flashed.resize(tiles.len(), false);
         let mut to_flash: Vec<usize> = Default::default();
@@ -1351,7 +1351,7 @@ pub mod day11 {
 
             // Reset 10s
             for tile in &mut board {
-                assert_eq!(*tile <= 10, true);
+                assert!(*tile <= 10);
                 if *tile == 10 {
                     *tile = 0;
                 }
@@ -1579,7 +1579,7 @@ pub mod day13 {
         let answer_part1 = solve(points.clone(), &folds[..1], false);
         writeln!(&mut result, "Day 13, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part2 = solve(points.clone(), &folds, false);
+        let answer_part2 = solve(points, &folds, false);
         writeln!(&mut result, "Day 13, Problem 2 - [{}]", answer_part2).unwrap();
 
         result
@@ -1755,7 +1755,7 @@ pub mod day14 {
         // Count the first element of each pair
         let mut counts: [usize; 26] = Default::default();
         for ((a, _), count) in buckets {
-            counts[(a - 'A' as u8) as usize] += count;
+            counts[(a - b'A') as usize] += count;
         }
 
         // Increment last element
@@ -1980,7 +1980,7 @@ pub mod day16 {
         let read_varint = |reader: &mut &[bool]| -> usize {
             let mut result: usize = 0;
             loop {
-                let last = read_bit(reader) == false;
+                let last = !read_bit(reader);
                 let v = read_usize(reader, 4);
                 result = (result << 4) | v;
 
@@ -2050,7 +2050,7 @@ pub mod day16 {
 
         result += match &packet.payload {
             Payload::Literal(_) => 0,
-            Payload::Operator(op) => op.iter().map(|p| sum_packet_version(p)).sum::<usize>(),
+            Payload::Operator(op) => op.iter().map(sum_packet_version).sum::<usize>(),
         };
 
         result
@@ -2179,11 +2179,8 @@ pub mod day17 {
             {
                 // In target
                 return Some(peak);
-            } else if pos.x > target_end.x {
-                // Past right edge
-                return None;
-            } else if pos.y < target_start.y {
-                // Below bottom edge
+            } else if pos.x > target_end.x || pos.y < target_start.y {
+                // Past right edge OR below bottom edge
                 return None;
             }
         }
@@ -2287,7 +2284,7 @@ pub mod day18 {
         snailfish
     }
 
-    fn add(a: &Snailfish, b: &Snailfish) -> Snailfish {
+    fn add(a: &[Number], b: &[Number]) -> Snailfish {
         let mut result: Snailfish = a.to_owned();
 
         result.extend(b.iter());
@@ -2585,7 +2582,8 @@ pub mod day19 {
                 let solved_a = solved_scanners.contains(&scanner_a_idx);
 
                 for scanner_b_idx in scanner_a_idx + 1..num_scanners {
-                    let scanner_b = &distances[scanner_b_idx];
+                    let trick_clippy = scanner_b_idx; // bypass annoying lint
+                    let scanner_b = &distances[trick_clippy];
                     let solved_b = solved_scanners.contains(&scanner_b_idx);
 
                     // Compare IFF exactly one is solved
