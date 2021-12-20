@@ -2454,12 +2454,15 @@ pub mod day18 {
 }
 
 pub mod day19 {
+    use core::num;
+    use std::collections::HashSet;
     use std::fmt::Write;
 
+    use fts_vecmath::vector3::Vector3Base;
     use itertools::Itertools;
 
-    type Point = fts_vecmath::point3::Point3<i16>;
-    type Vector = fts_vecmath::vector3::Vector3<i16>;
+    type Point = fts_vecmath::point3::Point3<i32>;
+    type Vector = fts_vecmath::vector3::Vector3<i32>;
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
@@ -2473,7 +2476,7 @@ pub mod day19 {
         result
     }
 
-    fn parse_input(input: &str) -> Vec<Vec<Point>> {
+    fn parse_input(input: &str) -> Vec<Vec<Vector>> {
         //input.split("\r\n\r\n");
 
         input
@@ -2484,19 +2487,123 @@ pub mod day19 {
                     .skip(1)
                     .map(|line| {
                         let (x, y, z) = line
+                            .trim()
                             .split(",")
-                            .map(|s| s.parse::<i16>().unwrap())
+                            .map(|s| s.parse::<i32>().unwrap())
                             .collect_tuple()
                             .unwrap();
-                        Point::new(x, y, z)
+                            Vector::new(x, y, z)
                     })
                     .collect()
             })
             .collect()
     }
 
-    fn part1(_input: &str) -> usize {
-        0
+    fn permutations(offset: Vector) -> Vec<Vector> {
+        let x = offset.x;
+        let y = offset.y;
+        let z = offset.z;
+
+        let mut result = Vec::with_capacity(24);
+
+        let mut extend = |x: i32, y: i32, z: i32| {
+            result.push(Vector::new(x,y,z));
+            result.push(Vector::new(-y,x,z));
+            result.push(Vector::new(-x,-y,z));
+            result.push(Vector::new(y,-x,z));
+        };
+
+        extend(x,y,z); // x-right, y-forward, z-up
+        extend(x,z,-y); // z-forward, y-down, x-right
+        extend(x,-y,-z); // z-down, y-backwards,x-right
+        extend(x,-z,y); // z-backward, y-up, x-right
+        extend(z,y,-x); // z-right, y-forward, x-down
+        extend(-z,y,x); // z-left, y-forward, x-up
+
+        // Make sure no duplicates
+        assert_eq!(result.iter().unique().count(), 24);
+
+        result
+
+        // assume x-right, y-forward, z-up
+        // Z-up * 4
+        // Z-forward * 4
+        // Z-down * 4
+        // Z-backwards * 4
+        // Z-right * 4
+        // Z*left * 4
+        // rotate about X, then rotate about Z*4
+    }
+
+    fn part1(scanners: &[Vec<Vector>]) -> usize {
+        let num_scanners = scanners.len();
+
+        // for each scanner
+            // for each point
+                // compute dist_sq to other points (HashSet?)
+        // Vec<Vec<HashSet>> = Scanner<Points<DistancesSq>>
+        let mut distances : Vec<Vec<HashSet<i32>>> = Default::default();
+        for scanner in scanners.iter() {
+            let mut sets : Vec<HashSet<i32>> = Default::default();
+            for a in scanner {
+                let mut distances : HashSet<i32> = HashSet::with_capacity(scanner.len());
+                for b in scanner {
+                    let len_sq = (*b-*a).length_sq();
+                    if len_sq > 0 {
+                        distances.insert(len_sq);
+                    }
+                }
+                sets.push(distances);
+            }
+            distances.push(sets);
+        }
+
+        let num_required = 12;
+
+
+        // for each pair of scanners (sa,sb)
+            // for each pair of points (pa, pb)
+                // if pa.distances.intersect(pb.distances) >= 12
+                    // overlapping points += 1
+            // if overlapping_points >= 1
+                // overlapping_scanners.insert((sa,sb))
+
+        let mut num_beacons = 0;
+
+        let mut solved_scanners: HashSet<usize> = [0].iter().cloned().collect();
+
+        for scanner_a_idx in 0..num_scanners {
+            let scanner_a = &distances[scanner_a_idx];
+            for scanner_b_idx in scanner_a_idx+1..num_scanners {
+                let scanner_b = &distances[scanner_b_idx];
+
+                let mut num_shared_points = 0;
+                for distances_a in scanner_a {
+                    for distances_b in scanner_b {
+                        let num_shared_distances = distances_a.intersection(distances_b).count();
+                        if num_shared_distances >= num_required - 1 {
+                            num_shared_points += 1;
+                        }
+                    }
+                }
+
+                if num_shared_points >= num_required {
+                    println!("Region {} and {} overlap. Shared: {}", scanner_a_idx, scanner_b_idx, num_shared_points);
+                    num_beacons += num_shared_points;
+                    // how to sovle for scanner pos?
+                } else {
+                    println!("Region {} and {} do NOT overlap. Shared: {}", scanner_a_idx, scanner_b_idx, num_shared_points);
+                }
+            }
+        }
+            
+        // start with sa
+            // for paired
+                // find orientation with matching deltas
+                // compute
+
+
+        num_beacons
     }
 
     fn part2(_input: &str) -> usize {
@@ -2509,8 +2616,7 @@ pub mod day19 {
 
         #[test]
         fn examples() {
-            let scanners = parse_input(crate::data::_DAY19_EXAMPLE1);
-            assert_eq!(scanners.len(), 5);
+            assert_eq!(part1(&parse_input(crate::data::_DAY19_EXAMPLE1)), 79);
         }
 
         #[test]
