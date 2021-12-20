@@ -2730,22 +2730,142 @@ pub mod day19 {
 }
 
 pub mod day20 {
+    use itertools::Itertools;
+    use std::collections::HashSet;
     use std::fmt::Write;
+
+    type Point = fts_vecmath::point2::Point2<i16>;
+    type Vector = fts_vecmath::vector2::Vector2<i16>;
+    type Filter = Vec<bool>;
+    type Image = HashSet<Point>;
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        /*
-        let answer_part1 = part1(crate::data::DAY20);
+        
+        let (image, filter) = parse_input(crate::data::DAY20);
+
+        let answer_part1 = part1(image.clone(), filter, 2);
         writeln!(&mut result, "Day 20, Problem 1 - [{}]", answer_part1).unwrap();
 
+        /*
         let answer_part2 = part2(crate::data::DAY20);
         writeln!(&mut result, "Day 20, Problem 2 - [{}]", answer_part2).unwrap();
         */
         result
     }
 
-    fn part1(_input: &str) -> usize {
-        0
+    fn bounds(image: &Image) -> (Point, Point) {
+        let mut min = Point::zero();
+        let mut max = Point::zero();
+
+        for point in image {
+            min.x = min.x.min(point.x);
+            min.y = min.y.min(point.y);
+            max.x = max.x.max(point.x);
+            max.y = max.y.max(point.y);
+        }
+
+        (min, max)
+    }
+
+    fn parse_input(input: &str) -> (Image, Filter) {
+        let (filter_str, image_str) = input.split("\r\n\r\n").collect_tuple().unwrap();
+
+        let filter: Vec<bool> = filter_str.chars().map(|c| c == '#').collect();
+        
+        let mut image: HashSet<Point> = Default::default();
+        for (row, line) in image_str.lines().enumerate() {
+            for (col, pixel) in line.chars().enumerate() {
+                if pixel == '#' {
+                    image.insert(Point::new(col as i16, row as i16));
+                }
+            }
+        }
+
+        (image, filter)
+    }
+
+    fn print_image(image: &Image, title: &str) {
+        println!("\n{}", title);
+
+        let (min, max) = bounds(image);
+
+        for row in min.y..=max.y {
+            let mut row_str = String::default();
+            for col in min.x..=max.x {
+                let p = Point::from_row_col(row, col);
+                if image.contains(&p) {
+                    row_str.push('#');
+                } else {
+                    row_str.push('.');
+                }
+            }
+            println!("  {}", row_str);
+        }
+
+        println!("\n");
+    }
+
+    fn part1(mut image: Image, filter: Filter, num_steps: usize) -> usize {
+        // Init kernel
+        let mut kernel : Vec<bool> = Default::default();
+        kernel.reserve(9);
+
+        // Init output image
+        let mut output : Image = Default::default();
+        output.reserve(image.len());
+
+        print_image(&image, "Initial");
+
+        let inverts : bool = filter[0];
+        let mut image_inverted = false;
+
+        // For each step
+        for _step in 0..num_steps {
+            output.clear();
+
+            // Calc bounds
+            let (min, max) = bounds(&image);
+            let output_inverted = inverts && !image_inverted;
+
+            // Compute each output pixel
+            for row in min.y-1..=max.y+1 {
+                for col in min.x-1..=max.x+1 {
+
+                    let left = col-1;
+                    let right = col+1;
+                    let top = row-1;
+                    let bottom = row+1;
+
+                    // Walk kernel
+                    kernel.clear();
+                    for kr in top..=bottom {
+                        for kc in left..=right {
+                            let pos = Point::from_row_col(kr, kc);
+                            let contained = image.contains(&pos);
+                            let flag = (!image_inverted && contained) || (image_inverted && !contained);
+                            kernel.push(flag);
+                        }
+                    }
+
+                    // Compute filter_idx
+                    let filter_idx : usize = kernel.iter().fold(0, |acc, next| (acc << 1) | (*next as usize));
+                    let filter_flag = filter[filter_idx];
+                    if (filter_flag && !output_inverted) || (!filter_flag && output_inverted) {
+                        output.insert(Point::from_row_col(row, col));
+                    }
+                }
+            }
+
+            std::mem::swap(&mut image, &mut output);
+            if inverts {
+                image_inverted = output_inverted;
+            }
+
+            print_image(&image, &format!("After step {}", _step+1));
+        }
+
+        image.len()
     }
 
     fn part2(_input: &str) -> usize {
@@ -2758,10 +2878,14 @@ pub mod day20 {
 
         #[test]
         fn examples() {
+            let (image, filter) = parse_input(crate::data::_DAY20_EXAMPLE1);
+            assert_eq!(part1(image.clone(), filter, 2), 35);
         }
 
         #[test]
         fn verify() {
+            let (image, filter) = parse_input(crate::data::DAY20);
+            assert_eq!(part1(image.clone(), filter, 2), 5268);
         }
     }
 }
