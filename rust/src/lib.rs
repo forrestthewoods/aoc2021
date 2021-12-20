@@ -2744,8 +2744,11 @@ pub mod day20 {
         
         let (image, filter) = parse_input(crate::data::DAY20);
 
-        let answer_part1 = part1(image.clone(), filter, 2);
+        let answer_part1 = part1(image.clone(), &filter, 2);
         writeln!(&mut result, "Day 20, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part1 = part1(image.clone(), &filter, 50);
+        writeln!(&mut result, "Day 20, Problem 2 - [{}]", answer_part1).unwrap();
 
         /*
         let answer_part2 = part2(crate::data::DAY20);
@@ -2806,7 +2809,7 @@ pub mod day20 {
         println!("\n");
     }
 
-    fn part1(mut image: Image, filter: Filter, num_steps: usize) -> usize {
+    fn part1(mut image: Image, filter: &Filter, num_steps: usize) -> usize {
         // Init kernel
         let mut kernel : Vec<bool> = Default::default();
         kernel.reserve(9);
@@ -2815,7 +2818,7 @@ pub mod day20 {
         let mut output : Image = Default::default();
         output.reserve(image.len());
 
-        print_image(&image, "Initial");
+        //print_image(&image, "Initial");
 
         let inverts : bool = filter[0];
         let mut image_inverted = false;
@@ -2862,15 +2865,12 @@ pub mod day20 {
                 image_inverted = output_inverted;
             }
 
-            print_image(&image, &format!("After step {}", _step+1));
+            //print_image(&image, &format!("After step {}", _step+1));
         }
 
         image.len()
     }
 
-    fn part2(_input: &str) -> usize {
-        0
-    }
 
     #[cfg(test)]
     mod tests {
@@ -2879,13 +2879,14 @@ pub mod day20 {
         #[test]
         fn examples() {
             let (image, filter) = parse_input(crate::data::_DAY20_EXAMPLE1);
-            assert_eq!(part1(image.clone(), filter, 2), 35);
+            assert_eq!(part1(image.clone(), &filter, 2), 35);
         }
 
         #[test]
         fn verify() {
             let (image, filter) = parse_input(crate::data::DAY20);
-            assert_eq!(part1(image.clone(), filter, 2), 5268);
+            assert_eq!(part1(image.clone(), &filter, 2), 5268);
+            assert_eq!(part1(image.clone(), &filter, 50), 16875);
         }
     }
 }
