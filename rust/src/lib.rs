@@ -2290,7 +2290,7 @@ pub mod day18 {
     }
 
     fn add(a: &Snailfish, b: &Snailfish) -> Snailfish {
-        let mut result: Snailfish = a.clone();
+        let mut result: Snailfish = a.to_owned();
 
         result.extend(b.iter());
         for number in &mut result {
@@ -2360,13 +2360,7 @@ pub mod day18 {
     }
 
     fn reduce(snailfish: &mut Snailfish) {
-        loop {
-            if explode(snailfish) {
-                continue;
-            } else if split(snailfish) {
-                continue;
-            }
-            break;
+        while explode(snailfish) || split(snailfish){
         }
     }
 
@@ -2407,7 +2401,7 @@ pub mod day18 {
     fn part1(snailfishies: &[Snailfish]) -> usize {
         let snailfish =
             snailfishies
-                .into_iter()
+                .iter()
                 .skip(1)
                 .fold(snailfishies[0].clone(), |mut acc, next| {
                     acc = add(&acc, next);
@@ -2422,7 +2416,7 @@ pub mod day18 {
         snailfishies
             .iter()
             .permutations(2)
-            .map(|combo| part1(&vec![combo[0].clone(), combo[1].clone()]))
+            .map(|combo| part1(&[combo[0].clone(), combo[1].clone()]))
             .max()
             .unwrap()
     }
@@ -2484,7 +2478,7 @@ pub mod day19 {
                     .map(|line| {
                         let (x, y, z) = line
                             .trim()
-                            .split(",")
+                            .split(',')
                             .map(|s| s.parse::<i32>().unwrap())
                             .collect_tuple()
                             .unwrap();
@@ -2597,7 +2591,7 @@ pub mod day19 {
                     let solved_b = solved_scanners.contains(&scanner_b_idx);
 
                     // Compare IFF exactly one is solved
-                    if (solved_a ^ solved_b) == false {
+                    if !(solved_a ^ solved_b) {
                         continue;
                     }
 
@@ -2635,7 +2629,7 @@ pub mod day19 {
                         let solved_scanner_diffs = &solved_diffs[solved_idx];
 
                         let unsolved_points = &scanners[unsolved_idx];
-                        let unsolved_orients = vectors_permutations(&unsolved_points);
+                        let unsolved_orients = vectors_permutations(unsolved_points);
                         for unsolved_orient in &unsolved_orients {
                             let unsolved_orient_diffs = diffs_set(unsolved_orient);
 
@@ -2746,9 +2740,8 @@ pub mod day20 {
         let answer_part1 = solve(image.clone(), &filter, 2);
         writeln!(&mut result, "Day 20, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part1 = solve(image.clone(), &filter, 50);
+        let answer_part1 = solve(image, &filter, 50);
         writeln!(&mut result, "Day 20, Problem 2 - [{}]", answer_part1).unwrap();
-
 
         result
     }
@@ -2784,7 +2777,7 @@ pub mod day20 {
         (image, filter)
     }
 
-    fn solve(mut image: Image, filter: &Filter, num_steps: usize) -> usize {
+    fn solve(mut image: Image, filter: &[bool], num_steps: usize) -> usize {
         // Init kernel
         let mut kernel : Vec<bool> = Default::default();
         kernel.reserve(9);
