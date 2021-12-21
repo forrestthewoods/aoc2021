@@ -2850,3 +2850,115 @@ pub mod day20 {
         }
     }
 }
+
+pub mod day21 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let answer_part1 = part1(7, 4);
+        writeln!(&mut result, "Day 21, Problem 1 - [{}]", answer_part1).unwrap();
+
+        let answer_part2 = part2(7, 4);
+        writeln!(&mut result, "Day 21, Problem 2 - [{}]", answer_part2).unwrap();
+
+        result
+    }
+
+    fn part1(pos_a: usize, pos_b: usize) -> usize {
+        let mut scores : [usize; 2] = [0,0];
+        let mut positions : [usize; 2] = [pos_a - 1, pos_b - 1]; // convert 1-10 to 0-9
+        let mut cur_turn = 0;
+        let mut die = 0;
+        let mut rolls = 0;
+
+        loop {
+            let mut moves = die+1;
+            die = (die + 1) % 100;
+            moves += die + 1;
+            die = (die + 1) % 100;
+            moves += die + 1;
+            die = (die + 1) % 100;
+            rolls += 3;
+
+            let new_pos = (positions[cur_turn] + moves) % 10;
+            positions[cur_turn] = new_pos;
+            let value = new_pos + 1;
+            scores[cur_turn] += value;
+
+            let next_turn = (cur_turn + 1) % 2;
+            if scores[cur_turn] >= 1000 {
+                return scores[next_turn] * rolls;
+            }
+
+            cur_turn = next_turn;
+        }    
+    }
+
+    fn part2(_pos_a: usize, _pos_b: usize) -> usize {
+
+        /*
+            1 1 1 = 3
+            1 1 2 = 4
+            1 1 3 = 5
+
+            1 2 1 = 4
+            1 2 2 = 5
+            1 2 3 = 6
+
+            1 3 1 = 5
+            1 3 2 = 6
+            1 3 3 = 7
+
+            2 1 1 = 4
+            2 1 2 = 5
+            2 1 3 = 6
+
+            2 2 1 = 5
+            2 2 2 = 6
+            2 2 3 = 7
+
+            2 3 1 = 6
+            2 3 2 = 7
+            2 3 3 = 8
+
+            3 1 1 = 5
+            3 1 2 = 6
+            3 1 3 = 7
+
+            3 2 1 = 6
+            3 2 2 = 7
+            3 2 3 = 8
+
+            3 3 1 = 7
+            3 3 2 = 8
+            3 3 3 = 9
+
+        */
+        // 3: 1
+        // 4: 3
+        // 5: 6
+        // 6: 7
+        // 7: 6
+        // 8: 3
+        // 9: 1
+        0
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            assert_eq!(part1(4, 8), 739785);
+            assert_eq!(part2(4, 8), 444356092776315);
+        }
+
+        #[test]
+        fn verify() {
+            assert_eq!(part1(7, 4), 675024);
+        }
+    }
+}
