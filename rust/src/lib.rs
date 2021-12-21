@@ -2968,12 +2968,14 @@ pub mod day21 {
                 }
             }
 
-            let num_universes = next_states.iter().map(|(_,v)| v).sum::<usize>();
+            let living_universes = next_states.iter().map(|(_,v)| v).sum::<usize>();
+            let dead_universes = wins.iter().sum::<usize>();
 
-            println!("after turn {} there are {} states and {} living universes", 
+            println!("after turn {} there are {} states, {} living universes, and {} dead universes", 
                 turn + 1, 
                 next_states.len(),
-                num_universes);
+                living_universes,
+                dead_universes);
 
             // Next game state
             std::mem::swap(&mut states, &mut next_states);
