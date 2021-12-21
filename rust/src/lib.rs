@@ -2271,10 +2271,7 @@ pub mod day18 {
                 _ => {
                     assert!(depth < 4);
                     let value = (&line[idx..=idx]).parse::<usize>().unwrap();
-                    snailfish.push(Number {
-                        value,
-                        depth,
-                    });
+                    snailfish.push(Number { value, depth });
                 }
             }
 
@@ -2355,8 +2352,7 @@ pub mod day18 {
     }
 
     fn reduce(snailfish: &mut Snailfish) {
-        while explode(snailfish) || split(snailfish){
-        }
+        while explode(snailfish) || split(snailfish) {}
     }
 
     fn magnitude(mut snailfish: Snailfish) -> usize {
@@ -2730,7 +2726,7 @@ pub mod day20 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        
+
         let (image, filter) = parse_input(crate::data::DAY20);
 
         let answer_part1 = solve(image.clone(), &filter, 2);
@@ -2760,7 +2756,7 @@ pub mod day20 {
         let (filter_str, image_str) = input.split("\r\n\r\n").collect_tuple().unwrap();
 
         let filter: Vec<bool> = filter_str.chars().map(|c| c == '#').collect();
-        
+
         let mut image: HashSet<Point> = Default::default();
         for (row, line) in image_str.lines().enumerate() {
             for (col, pixel) in line.chars().enumerate() {
@@ -2775,14 +2771,14 @@ pub mod day20 {
 
     fn solve(mut image: Image, filter: &[bool], num_steps: usize) -> usize {
         // Init kernel
-        let mut kernel : Vec<bool> = Default::default();
+        let mut kernel: Vec<bool> = Default::default();
         kernel.reserve(9);
 
         // Init output image
-        let mut output : Image = Default::default();
+        let mut output: Image = Default::default();
         output.reserve(image.len());
 
-        let inverts : bool = filter[0];
+        let inverts: bool = filter[0];
         let mut image_inverted = false;
 
         // For each step
@@ -2794,13 +2790,12 @@ pub mod day20 {
             let output_inverted = inverts && !image_inverted;
 
             // Compute each output pixel
-            for row in min.y-1..=max.y+1 {
-                for col in min.x-1..=max.x+1 {
-
-                    let left = col-1;
-                    let right = col+1;
-                    let top = row-1;
-                    let bottom = row+1;
+            for row in min.y - 1..=max.y + 1 {
+                for col in min.x - 1..=max.x + 1 {
+                    let left = col - 1;
+                    let right = col + 1;
+                    let top = row - 1;
+                    let bottom = row + 1;
 
                     // Walk kernel
                     kernel.clear();
@@ -2808,13 +2803,16 @@ pub mod day20 {
                         for kc in left..=right {
                             let pos = Point::from_row_col(kr, kc);
                             let contained = image.contains(&pos);
-                            let flag = (!image_inverted && contained) || (image_inverted && !contained);
+                            let flag =
+                                (!image_inverted && contained) || (image_inverted && !contained);
                             kernel.push(flag);
                         }
                     }
 
                     // Compute filter_idx
-                    let filter_idx : usize = kernel.iter().fold(0, |acc, next| (acc << 1) | (*next as usize));
+                    let filter_idx: usize = kernel
+                        .iter()
+                        .fold(0, |acc, next| (acc << 1) | (*next as usize));
                     let filter_flag = filter[filter_idx];
                     if (filter_flag && !output_inverted) || (!filter_flag && output_inverted) {
                         output.insert(Point::from_row_col(row, col));
@@ -2830,7 +2828,6 @@ pub mod day20 {
 
         image.len()
     }
-
 
     #[cfg(test)]
     mod tests {
@@ -2852,6 +2849,7 @@ pub mod day20 {
 }
 
 pub mod day21 {
+    use std::collections::HashMap;
     use std::fmt::Write;
 
     pub fn run() -> String {
@@ -2867,19 +2865,19 @@ pub mod day21 {
     }
 
     fn part1(pos_a: usize, pos_b: usize) -> usize {
-        let mut scores : [usize; 2] = [0,0];
-        let mut positions : [usize; 2] = [pos_a - 1, pos_b - 1]; // convert 1-10 to 0-9
+        let mut scores: [usize; 2] = [0, 0];
+        let mut positions: [usize; 2] = [pos_a - 1, pos_b - 1]; // convert 1-10 to 0-9
         let mut cur_turn = 0;
         let mut die = 0;
         let mut rolls = 0;
 
         loop {
-            let mut moves = die+1;
-            die = (die + 1) % 100;
+            let mut moves = die + 1;
+            die = (die % 100) + 1;
             moves += die + 1;
-            die = (die + 1) % 100;
+            die = (die % 100) + 1;
             moves += die + 1;
-            die = (die + 1) % 100;
+            die = (die % 100) + 1;
             rolls += 3;
 
             let new_pos = (positions[cur_turn] + moves) % 10;
@@ -2893,58 +2891,193 @@ pub mod day21 {
             }
 
             cur_turn = next_turn;
-        }    
+        }
     }
 
-    fn part2(_pos_a: usize, _pos_b: usize) -> usize {
-
-        /*
-            1 1 1 = 3
-            1 1 2 = 4
-            1 1 3 = 5
-
-            1 2 1 = 4
-            1 2 2 = 5
-            1 2 3 = 6
-
-            1 3 1 = 5
-            1 3 2 = 6
-            1 3 3 = 7
-
-            2 1 1 = 4
-            2 1 2 = 5
-            2 1 3 = 6
-
-            2 2 1 = 5
-            2 2 2 = 6
-            2 2 3 = 7
-
-            2 3 1 = 6
-            2 3 2 = 7
-            2 3 3 = 8
-
-            3 1 1 = 5
-            3 1 2 = 6
-            3 1 3 = 7
-
-            3 2 1 = 6
-            3 2 2 = 7
-            3 2 3 = 8
-
-            3 3 1 = 7
-            3 3 2 = 8
-            3 3 3 = 9
-
-        */
-        // 3: 1
-        // 4: 3
-        // 5: 6
-        // 6: 7
-        // 7: 6
-        // 8: 3
-        // 9: 1
-        0
+    #[derive(Copy, Clone, Eq, PartialEq, Hash)]
+    struct GameState {
+        player_states: [PlayerState; 2],
     }
+
+    #[derive(Copy, Clone, Eq, PartialEq, Hash)]
+    struct PlayerState {
+        pos: u8,
+        score: u8,
+    }
+
+    fn part2(pos_a: u8, pos_b: u8) -> usize {
+        // how many states
+        // 1 player states
+        //  20 scores * 10 tiles = 200 states (per turn)
+        // 2 player states
+        //  200 states per player
+        //  200^2 = 40,000 states
+        // that's actually not too bad
+
+        // type State = (tile_a, score_a, tile_b, score_b)
+        // type States = HashMap<State, usize>
+
+        let rolls = [3, 4, 5, 6, 7, 8, 9];
+        let counts = [1, 3, 6, 7, 6, 3, 1];
+
+        type GameStates = HashMap<GameState, usize>;
+        let mut states = GameStates::default();
+        let mut next_states = GameStates::default();
+
+        states.insert(
+            GameState {
+                player_states: [
+                    PlayerState {
+                        pos: pos_a - 1,
+                        score: 0,
+                    },
+                    PlayerState {
+                        pos: pos_b - 1,
+                        score: 0,
+                    },
+                ],
+            },
+            1, // initial count
+        );
+
+        let mut wins: [usize; 2] = [0, 0];
+
+        let mut cur_player = 0;
+        let mut turn = 0;
+        while states.len() > 0 {
+            next_states.clear();
+
+            for (game_state, cur_count) in &states {
+                let player_state = &game_state.player_states[cur_player];
+                for (roll, roll_count) in rolls.iter().zip(counts.iter()) {
+                    let new_pos = (player_state.pos + roll) % 10;
+                    let new_score = player_state.score + new_pos + 1;
+                    let new_count = cur_count * roll_count;
+
+                    if new_score >= 21 {
+                        wins[cur_player] += new_count;
+                    } else {
+                        let mut new_game_state = game_state.clone();
+                        new_game_state.player_states[cur_player] = PlayerState {
+                            pos: new_pos,
+                            score: new_score,
+                        };
+
+                        next_states.insert(new_game_state, new_count);
+                    }
+                }
+            }
+
+            // Next game state
+            std::mem::swap(&mut states, &mut next_states);
+            cur_player = (cur_player + 1) % 2;
+            turn += 1;
+        }
+
+        println!("Total Turns: {}", turn);
+        println!("Wins: {:?}", wins);
+
+        wins[0].max(wins[1])
+    }
+
+    // bucket: position, score
+    // max turns: 21
+    // num buckets: 10*21*21 = 4410 buckets. that's fine.
+
+    // for a single player
+    //      (position, score) -> count =
+
+    // max turns: 11
+    // dice roll permutations: 27
+    // unique dice rolls: 7
+
+    // paths to 21
+    // (3^3)^(11^2)
+    //
+
+    // total permutations to 21 for one player
+    // (3^3)^11
+
+    // alternate thinking:
+    // max steps is 22
+    // 27 dice permutations
+    // 27^22 = 30 nonillion
+    // 27 rolls, but only 7 unique values
+    // 7^22 = 3 quintillion paths
+    //
+
+    // how many unique nodes on path?
+    // 10 tiles ^ 2 players ^ 20 scores =
+
+    // how many unique states
+    // 20 * 20 = unique scores
+    // 10 * 10 = unique tiles
+    // (20^2) ^ (10^2) = 1.6 * 10^260 lol
+
+    // simulate just one player
+    // 7 unique rolls
+    // 11 max turns
+    // 7^11 = 2 billion
+    // but maybe small enough in practice?
+
+    // how many states
+    // 1 player states
+    //  20 scores * 10 tiles = 200 states (per turn)
+    // 2 player states
+    //  200 states per player
+    //  200^2 = 40,000 states
+    // that's actually not too bad
+
+    // test: 27^22 = 30 903 154 382 632 612 361 920 641 803 529
+    // num universes =                      786 316 482 957 123
+    //
+    // 7^22 =                         39 09 821 048 582 988 049
+
+    /*
+        1 1 1 = 3
+        1 1 2 = 4
+        1 1 3 = 5
+
+        1 2 1 = 4
+        1 2 2 = 5
+        1 2 3 = 6
+
+        1 3 1 = 5
+        1 3 2 = 6
+        1 3 3 = 7
+
+        2 1 1 = 4
+        2 1 2 = 5
+        2 1 3 = 6
+
+        2 2 1 = 5
+        2 2 2 = 6
+        2 2 3 = 7
+
+        2 3 1 = 6
+        2 3 2 = 7
+        2 3 3 = 8
+
+        3 1 1 = 5
+        3 1 2 = 6
+        3 1 3 = 7
+
+        3 2 1 = 6
+        3 2 2 = 7
+        3 2 3 = 8
+
+        3 3 1 = 7
+        3 3 2 = 8
+        3 3 3 = 9
+
+    */
+    // 3: 1
+    // 4: 3
+    // 5: 6
+    // 6: 7
+    // 7: 6
+    // 8: 3
+    // 9: 1
 
     #[cfg(test)]
     mod tests {
@@ -2952,7 +3085,7 @@ pub mod day21 {
 
         #[test]
         fn examples() {
-            assert_eq!(part1(4, 8), 739785);
+            //assert_eq!(part1(4, 8), 739785);
             assert_eq!(part2(4, 8), 444356092776315);
         }
 
