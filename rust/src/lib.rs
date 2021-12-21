@@ -2968,6 +2968,13 @@ pub mod day21 {
                 }
             }
 
+            let num_universes = next_states.iter().map(|(k,v)| v).sum::<usize>();
+
+            println!("after turn {} there are {} states and {} living universes", 
+                turn, 
+                next_states.len(),
+                num_universes);
+
             // Next game state
             std::mem::swap(&mut states, &mut next_states);
             cur_player = (cur_player + 1) % 2;
@@ -2979,6 +2986,24 @@ pub mod day21 {
 
         wins[0].max(wins[1])
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            //assert_eq!(part1(4, 8), 739785);
+            assert_eq!(part2(4, 8), 444356092776315);
+        }
+
+        #[test]
+        fn verify() {
+            assert_eq!(part1(7, 4), 675024);
+        }
+    }
+}
+
 
     // bucket: position, score
     // max turns: 21
@@ -3078,20 +3103,3 @@ pub mod day21 {
     // 7: 6
     // 8: 3
     // 9: 1
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn examples() {
-            //assert_eq!(part1(4, 8), 739785);
-            assert_eq!(part2(4, 8), 444356092776315);
-        }
-
-        #[test]
-        fn verify() {
-            assert_eq!(part1(7, 4), 675024);
-        }
-    }
-}
