@@ -2968,10 +2968,10 @@ pub mod day21 {
                 }
             }
 
-            let num_universes = next_states.iter().map(|(k,v)| v).sum::<usize>();
+            let num_universes = next_states.iter().map(|(_,v)| v).sum::<usize>();
 
             println!("after turn {} there are {} states and {} living universes", 
-                turn, 
+                turn + 1, 
                 next_states.len(),
                 num_universes);
 
@@ -2981,7 +2981,6 @@ pub mod day21 {
             turn += 1;
         }
 
-        println!("Total Turns: {}", turn);
         println!("Wins: {:?}", wins);
 
         wins[0].max(wins[1])
