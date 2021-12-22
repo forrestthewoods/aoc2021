@@ -2983,102 +2983,107 @@ pub mod day21 {
     }
 }
 
+pub mod day22 {
+    use std::collections::HashSet;
+    use std::fmt::Write;
 
-    // bucket: position, score
-    // max turns: 21
-    // num buckets: 10*21*21 = 4410 buckets. that's fine.
+    use itertools::Itertools;
 
-    // for a single player
-    //      (position, score) -> count =
+    type Point = fts_vecmath::point3::Point3<i32>;
 
-    // max turns: 11
-    // dice roll permutations: 27
-    // unique dice rolls: 7
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+    struct AABB {
+        min: Point,
+        max: Point,
+    }
 
-    // paths to 21
-    // (3^3)^(11^2)
-    //
+    type Op = (bool, AABB);
 
-    // total permutations to 21 for one player
-    // (3^3)^11
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
 
-    // alternate thinking:
-    // max steps is 22
-    // 27 dice permutations
-    // 27^22 = 30 nonillion
-    // 27 rolls, but only 7 unique values
-    // 7^22 = 3 quintillion paths
-    //
+        let ops = parse_input(crate::data::DAY22);
+        let answer_part1 = part1(&ops);
+        writeln!(&mut result, "Day 22, Problem 1 - [{}]", answer_part1).unwrap();
 
-    // how many unique nodes on path?
-    // 10 tiles ^ 2 players ^ 20 scores =
+        /*
+        let answer_part2 = part2(crate::data::DAY00);
+        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
 
-    // how many unique states
-    // 20 * 20 = unique scores
-    // 10 * 10 = unique tiles
-    // (20^2) ^ (10^2) = 1.6 * 10^260 lol
+    fn parse_input(input: &str) -> Vec<Op> {
+        let mut result : Vec<Op> = Default::default();
 
-    // simulate just one player
-    // 7 unique rolls
-    // 11 max turns
-    // 7^11 = 2 billion
-    // but maybe small enough in practice?
+        for line in input.lines() {
+            let on = line.starts_with("on");
 
-    // how many states
-    // 1 player states
-    //  20 scores * 10 tiles = 200 states (per turn)
-    // 2 player states
-    //  200 states per player
-    //  200^2 = 40,000 states
-    // that's actually not too bad
+            let aabb_str = line.split(" ").skip(1).next().unwrap();
+           // let (x,y,z) = aabb_str.split(",").collect_tuple().unwrap();
 
-    // test: 27^22 = 30 903 154 382 632 612 361 920 641 803 529
-    // num universes =                      786 316 482 957 123
-    //
-    // 7^22 =                         39 09 821 048 582 988 049
+           let nums : Vec<i32> = aabb_str.split(",").flat_map(|dim| {
+               dim[2..].split("..").map(|part| part.parse::<i32>().unwrap())
+           }).collect();
+           assert_eq!(nums.len(), 6);
+            
+            let mut aabb : AABB = Default::default();
+            aabb.min.x = nums[0];
+            aabb.max.x = nums[1];
+            aabb.min.y = nums[2];
+            aabb.max.y = nums[3];
+            aabb.min.z = nums[4];
+            aabb.max.z = nums[5];
 
-    /*
-        1 1 1 = 3
-        1 1 2 = 4
-        1 1 3 = 5
+            result.push((on, aabb));
+        }
 
-        1 2 1 = 4
-        1 2 2 = 5
-        1 2 3 = 6
+        result
+    }
 
-        1 3 1 = 5
-        1 3 2 = 6
-        1 3 3 = 7
+    fn part1(ops: &[Op]) -> usize {
+        let mut cubes : HashSet<Point> = Default::default();
 
-        2 1 1 = 4
-        2 1 2 = 5
-        2 1 3 = 6
+        for (on, aabb) in ops {
+            let nums = [aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z];
+            if nums.iter().any(|v| *v < -50 || *v > 50) {
+                continue;
+            }
 
-        2 2 1 = 5
-        2 2 2 = 6
-        2 2 3 = 7
+            for x in aabb.min.x..=aabb.max.x {
+                for y in aabb.min.y..=aabb.max.y {
+                    for z in aabb.min.z..=aabb.max.z {
+                        let pt = Point::new(x,y,z);
+                        if *on {
+                            cubes.insert(pt);
+                        } else {
+                            cubes.remove(&pt);
+                        }
+                    }
+                }
+            }
+        }
 
-        2 3 1 = 6
-        2 3 2 = 7
-        2 3 3 = 8
+        cubes.len()
+    }
 
-        3 1 1 = 5
-        3 1 2 = 6
-        3 1 3 = 7
+    fn part2(_input: &str) -> usize {
+        0
+    }
 
-        3 2 1 = 6
-        3 2 2 = 7
-        3 2 3 = 8
+    #[cfg(test)]
+    mod tests {
+        use super::*;
 
-        3 3 1 = 7
-        3 3 2 = 8
-        3 3 3 = 9
+        #[test]
+        fn examples() {
+            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE1)), 39);
+            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE2)), 590784);
+        }
 
-    */
-    // 3: 1
-    // 4: 3
-    // 5: 6
-    // 6: 7
-    // 7: 6
-    // 8: 3
-    // 9: 1
+        #[test]
+        fn verify() {
+            assert_eq!(part1(&parse_input(crate::data::DAY22)), 591365);
+        }
+    }
+}

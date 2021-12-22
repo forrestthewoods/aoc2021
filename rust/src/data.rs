@@ -51,3 +51,7 @@ pub const _DAY19_EXAMPLE1: &str = include_str!("../../data/day19_example1.txt");
 
 pub const DAY20: &str = include_str!("../../data/day20.txt");
 pub const _DAY20_EXAMPLE1: &str = include_str!("../../data/day20_example1.txt");
+
+pub const DAY22: &str = include_str!("../../data/day22.txt");
+pub const _DAY22_EXAMPLE1: &str = include_str!("../../data/day22_example1.txt");
+pub const _DAY22_EXAMPLE2: &str = include_str!("../../data/day22_example2.txt");
