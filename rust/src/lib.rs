@@ -2943,9 +2943,23 @@ pub mod day21 {
         let mut wins: [usize; 2] = [0, 0];
 
         let mut cur_player = 0;
-        let mut turn = 0;
+        let mut turn = 1;
         while states.len() > 0 {
             next_states.clear();
+
+            let mut winning_scores : HashMap<u8, usize> = Default::default();
+
+            // player 1 scores
+            let mut p1_scores : Vec<usize> = Default::default();
+            p1_scores.resize(21, 0);
+            let mut p2_scores = p1_scores.clone();
+            for (game_state, count) in &states {
+                p1_scores[game_state.player_states[0].score as usize] += count;
+                p2_scores[game_state.player_states[1].score as usize] += count;
+            }
+            for (score, (p1_count, p2_count)) in p1_scores.iter().zip(p2_scores).enumerate() {
+                //println!("  Score {}: {} - {}", score, p1_count, p2_count);
+            }
 
             for (game_state, cur_count) in &states {
                 let player_state = &game_state.player_states[cur_player];
@@ -2956,6 +2970,7 @@ pub mod day21 {
 
                     if new_score >= 21 {
                         wins[cur_player] += new_count;
+                        *winning_scores.entry(new_score).or_default() += new_count;
                     } else {
                         let mut new_game_state = game_state.clone();
                         new_game_state.player_states[cur_player] = PlayerState {
@@ -2963,7 +2978,8 @@ pub mod day21 {
                             score: new_score,
                         };
 
-                        next_states.insert(new_game_state, new_count);
+                        *next_states.entry(new_game_state).or_default() += new_count;
+                        //next_states.insert(new_game_state, new_count);
                     }
                 }
             }
@@ -2971,8 +2987,11 @@ pub mod day21 {
             let living_universes = next_states.iter().map(|(_,v)| v).sum::<usize>();
             let dead_universes = wins.iter().sum::<usize>();
 
+            println!("wins during turn {}", turn);
+            println!("{:?}", winning_scores);
+
             println!("after turn {} there are {} states, {} living universes, and {} dead universes", 
-                turn + 1, 
+                turn, 
                 next_states.len(),
                 living_universes,
                 dead_universes);
