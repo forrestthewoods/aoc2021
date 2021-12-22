@@ -3003,7 +3003,7 @@ pub mod day22 {
         let mut result = String::with_capacity(128);
 
         let ops = parse_input(crate::data::DAY22);
-        let answer_part1 = part1(&ops);
+        let answer_part1 = part1(&ops, true);
         writeln!(&mut result, "Day 22, Problem 1 - [{}]", answer_part1).unwrap();
 
         /*
@@ -3041,13 +3041,15 @@ pub mod day22 {
         result
     }
 
-    fn part1(ops: &[Op]) -> usize {
+    fn part1(ops: &[Op], init: bool) -> usize {
         let mut cubes : HashSet<Point> = Default::default();
 
         for (on, aabb) in ops {
-            let nums = [aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z];
-            if nums.iter().any(|v| *v < -50 || *v > 50) {
-                continue;
+            if init {
+                let nums = [aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z];
+                if nums.iter().any(|v| *v < -50 || *v > 50) {
+                    continue;
+                }
             }
 
             for x in aabb.min.x..=aabb.max.x {
@@ -3077,13 +3079,13 @@ pub mod day22 {
 
         #[test]
         fn examples() {
-            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE1)), 39);
-            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE2)), 590784);
+            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
+            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE2), true), 590784);
         }
 
         #[test]
         fn verify() {
-            assert_eq!(part1(&parse_input(crate::data::DAY22)), 591365);
+            assert_eq!(part1(&parse_input(crate::data::DAY22), true), 591365);
         }
     }
 }
