@@ -2987,8 +2987,6 @@ pub mod day22 {
     use std::collections::HashSet;
     use std::fmt::Write;
 
-    use itertools::Itertools;
-
     type Point = fts_vecmath::point3::Point3<i32>;
 
     #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
@@ -3003,7 +3001,7 @@ pub mod day22 {
         let mut result = String::with_capacity(128);
 
         let ops = parse_input(crate::data::DAY22);
-        let answer_part1 = part1(&ops, true);
+        let answer_part1 = solve(&ops, true);
         writeln!(&mut result, "Day 22, Problem 1 - [{}]", answer_part1).unwrap();
 
         /*
@@ -3041,7 +3039,7 @@ pub mod day22 {
         result
     }
 
-    fn part1(ops: &[Op], init: bool) -> usize {
+    fn solve(ops: &[Op], init: bool) -> usize {
         let mut cubes : HashSet<Point> = Default::default();
 
         for (on, aabb) in ops {
@@ -3069,23 +3067,30 @@ pub mod day22 {
         cubes.len()
     }
 
-    fn part2(_input: &str) -> usize {
-        0
-    }
-
     #[cfg(test)]
     mod tests {
         use super::*;
 
         #[test]
         fn examples() {
-            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
-            assert_eq!(part1(&parse_input(crate::data::_DAY22_EXAMPLE2), true), 590784);
+            assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
+            assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE2), true), 590784);
+
+           // assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE3), false), 2758514936282235);
         }
 
         #[test]
         fn verify() {
-            assert_eq!(part1(&parse_input(crate::data::DAY22), true), 591365);
+            assert_eq!(solve(&parse_input(crate::data::DAY22), true), 591365);
         }
     }
 }
+
+/*
+    assert!(a.1 >= a.0);
+    assert!(b.1 >= b.0);
+
+    // Simple but non-obvious.
+    // http://fgiesen.wordpress.com/2011/10/16/checking-for-interval-overlap/
+    a.0 <= b.1 && b.0 <= a.1
+*/
