@@ -3127,6 +3127,22 @@ pub mod day22 {
             }
 
             TODO: handle when new aabb overlaps with multiple.
+            TODO: get set of existing. subtract
+            /*
+            When adding:
+                get set of overlaps
+                    check for total enclosure
+                for partial overlaps
+                    remove all of old
+                    add all of new 
+                    add (old subtract new)
+            When removing
+                get set of overlaps
+                    check for total enclosures
+                for partial overlaps
+                    remove all of old
+                    add (old subtract new)
+            */
             aabbs.append(&mut to_add);
             if !any && *on {
                 aabbs.push(*a);
