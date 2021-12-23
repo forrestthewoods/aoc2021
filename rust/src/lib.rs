@@ -2935,7 +2935,6 @@ pub mod day21 {
         while states.len() > 0 {
             next_states.clear();
 
-
             for (game_state, cur_count) in &states {
                 let player_state = &game_state.player_states[cur_player];
                 for (roll, roll_count) in rolls.iter().zip(counts.iter()) {
@@ -2984,6 +2983,8 @@ pub mod day21 {
 }
 
 pub mod day22 {
+    use itertools::Itertools;
+    use more_asserts::*;
     use std::collections::HashSet;
     use std::fmt::Write;
 
@@ -3004,28 +3005,34 @@ pub mod day22 {
         let answer_part1 = solve(&ops, true);
         writeln!(&mut result, "Day 22, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2(crate::data::DAY00);
-        writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
-        */
+        solve2(&parse_input(crate::data::_DAY22_EXAMPLE3), false);
+
+        //let answer_part2 = solve2(&ops, false);
+        //writeln!(&mut result, "Day 22, Problem 2 - [{}]", answer_part2).unwrap();
+
         result
     }
 
     fn parse_input(input: &str) -> Vec<Op> {
-        let mut result : Vec<Op> = Default::default();
+        let mut result: Vec<Op> = Default::default();
 
         for line in input.lines() {
             let on = line.starts_with("on");
 
             let aabb_str = line.split(" ").skip(1).next().unwrap();
-           // let (x,y,z) = aabb_str.split(",").collect_tuple().unwrap();
+            // let (x,y,z) = aabb_str.split(",").collect_tuple().unwrap();
 
-           let nums : Vec<i32> = aabb_str.split(",").flat_map(|dim| {
-               dim[2..].split("..").map(|part| part.parse::<i32>().unwrap())
-           }).collect();
-           assert_eq!(nums.len(), 6);
-            
-            let mut aabb : AABB = Default::default();
+            let nums: Vec<i32> = aabb_str
+                .split(",")
+                .flat_map(|dim| {
+                    dim[2..]
+                        .split("..")
+                        .map(|part| part.parse::<i32>().unwrap())
+                })
+                .collect();
+            assert_eq!(nums.len(), 6);
+
+            let mut aabb: AABB = Default::default();
             aabb.min.x = nums[0];
             aabb.max.x = nums[1];
             aabb.min.y = nums[2];
@@ -3040,11 +3047,13 @@ pub mod day22 {
     }
 
     fn solve(ops: &[Op], init: bool) -> usize {
-        let mut cubes : HashSet<Point> = Default::default();
+        let mut cubes: HashSet<Point> = Default::default();
 
         for (on, aabb) in ops {
             if init {
-                let nums = [aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z];
+                let nums = [
+                    aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z,
+                ];
                 if nums.iter().any(|v| *v < -50 || *v > 50) {
                     continue;
                 }
@@ -3053,7 +3062,7 @@ pub mod day22 {
             for x in aabb.min.x..=aabb.max.x {
                 for y in aabb.min.y..=aabb.max.y {
                     for z in aabb.min.z..=aabb.max.z {
-                        let pt = Point::new(x,y,z);
+                        let pt = Point::new(x, y, z);
                         if *on {
                             cubes.insert(pt);
                         } else {
@@ -3067,6 +3076,163 @@ pub mod day22 {
         cubes.len()
     }
 
+    fn solve2(ops: &[Op], init: bool) -> usize {
+        let mut aabbs: Vec<AABB> = Default::default();
+        let mut to_add: Vec<AABB> = Default::default();
+
+        let mut op_count = 0;
+        for (on, a) in ops {
+            println!("Op {}. AABBs: [{}]", op_count, aabbs.len());
+            op_count += 1;
+
+            if init {
+                let nums = [a.min.x, a.min.y, a.min.z, a.max.x, a.max.y, a.max.z];
+                if nums.iter().any(|v| *v < -50 || *v > 50) {
+                    continue;
+                }
+            }
+
+            let mut idx = 0;
+            let mut any: bool = false;
+            while idx < aabbs.len() {
+                let base = aabbs[idx];
+                if aabbs_overlap(*a, base) {
+                    any = true;
+                    // TODO: handle A encloses B
+                    if *on {
+                        if aabb_encloses(base, *a) {
+                            // base encloses add, do nothing
+                        } else if aabb_encloses(*a, base) {
+                            // add encloses bases, get rid of base
+                            aabbs.swap_remove(idx);
+                            to_add.push(*a);
+                        } else {
+                            // partial overlap, need to slice
+                            to_add.append(&mut add_cube(base, *a));
+                        }
+                        idx += 1;
+                    } else {
+                        aabbs.swap_remove(idx);
+
+                        if aabb_encloses(*a, base) {
+                            // sub encloses base, remove it and do nothing
+                        } else {
+                            // need to slice
+                            to_add.append(&mut subtract_cube(base, *a));
+                        }
+                    }
+                } else {
+                    idx += 1;
+                }
+            }
+
+            aabbs.append(&mut to_add);
+            if !any && *on {
+                aabbs.push(*a);
+            }
+        }
+
+        aabbs.iter().unique().map(volume).sum()
+    }
+
+    fn interval_overlaps(a0: i32, a1: i32, b0: i32, b1: i32) -> bool {
+        assert_ge!(a1, a0);
+        assert_ge!(b1, b0);
+
+        a0 <= b1 && b0 <= a1
+    }
+
+    fn aabbs_overlap(a: AABB, b: AABB) -> bool {
+        interval_overlaps(a.min.x, a.max.x, b.min.x, b.max.x)
+            && interval_overlaps(a.min.y, a.max.y, b.min.y, b.max.y)
+            && interval_overlaps(a.min.z, a.max.z, b.min.z, b.max.z)
+    }
+
+    // true if a encloses b
+    fn aabb_encloses(a: AABB, b: AABB) -> bool {
+        b.min.x >= a.min.x && b.max.x <= a.max.x
+            && b.min.y >= a.min.y && b.max.y <= a.max.y
+            && b.min.z >= a.min.z && b.max.z <= a.max.z
+    }
+
+    fn overlap_segments(a0: i32, a1: i32, b0: i32, b1: i32) -> Vec<(i32, i32)> {
+        let verts: Vec<i32> = [a0, a1, b0, b1].iter().cloned().sorted().unique().collect();
+
+        // verts may have 1, 2, 3, or 4 values
+        match verts.len() {
+            1 => vec![(verts[0], verts[0])],
+            2 => vec![(verts[0], verts[1])],
+            3 => vec![(verts[0], verts[1] - 1), (verts[1], verts[2])],
+            4 => vec![
+                (verts[0], verts[1] - 1),
+                (verts[1], verts[2]),
+                (verts[2] + 1, verts[3]),
+            ],
+            _ => unreachable!(&format!("Unexpected vert count [{}]", verts.len())),
+        }
+    }
+
+    fn aabb_segments(a: AABB, b: AABB) -> [Vec<(i32, i32)>; 3] {
+        [
+            overlap_segments(a.min.x, a.max.x, b.min.x, b.max.x),
+            overlap_segments(a.min.y, a.max.y, b.min.y, b.max.y),
+            overlap_segments(a.min.z, a.max.z, b.min.z, b.max.z),
+        ]
+    }
+
+    fn sub_aabbs(segments: &[Vec<(i32,i32)>; 3]) -> Vec<AABB> {
+        let x_segments = &segments[0];
+        let y_segments = &segments[1];
+        let z_segments = &segments[2];
+
+        let mut result: Vec<AABB> = Vec::with_capacity(27);
+        for x in x_segments {
+            for y in y_segments {
+                for z in z_segments {
+                    assert_ge!(x.1, x.0);
+                    assert_ge!(y.1, y.0);
+                    assert_ge!(z.1, z.0);
+                    result.push(AABB {
+                        min: Point::new(x.0, y.0, z.0),
+                        max: Point::new(x.1, y.1, z.1),
+                    });
+                }
+            }
+        }
+        result.to_owned()
+    }
+
+    fn subtract_cube(base: AABB, sub: AABB) -> Vec<AABB> {
+        let mut result: Vec<AABB> = Default::default();
+
+        for aabb in sub_aabbs(&aabb_segments(base, sub)) {
+            if aabbs_overlap(aabb, base) && !aabbs_overlap(aabb, sub) {
+                result.push(aabb);
+            }
+        }
+
+        result
+    }
+
+    fn add_cube(base: AABB, add: AABB) -> Vec<AABB> {
+        let mut result: Vec<AABB> = Default::default();
+
+        for aabb in sub_aabbs(&aabb_segments(base, add)) {
+            if !aabbs_overlap(aabb, base) && aabbs_overlap(aabb, add) {
+                result.push(aabb);
+            }
+        }
+
+        result
+    }
+
+    fn volume(v: &AABB) -> usize {
+        let x = (v.max.x - v.min.x + 1) as usize;
+        let y = (v.max.y - v.min.y + 1) as usize;
+        let z = (v.max.z - v.min.z + 1) as usize;
+        x * y * z
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -3074,9 +3240,23 @@ pub mod day22 {
         #[test]
         fn examples() {
             assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
-            assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE2), true), 590784);
+            assert_eq!(solve2(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
+            assert_eq!(
+                solve(&parse_input(crate::data::_DAY22_EXAMPLE2), true),
+                590784
+            );
 
-           // assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE3), false), 2758514936282235);
+            // This is waaaaay too slow. wtf
+            assert_eq!(
+                solve2(&parse_input(crate::data::_DAY22_EXAMPLE2), true),
+                590784
+            );
+/*
+            assert_eq!(
+                solve2(&parse_input(crate::data::_DAY22_EXAMPLE3), false),
+                2758514936282235
+            );
+*/
         }
 
         #[test]
