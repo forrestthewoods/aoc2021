@@ -3126,10 +3126,13 @@ pub mod day22 {
                 }
             }
 
+            TODO: handle when new aabb overlaps with multiple.
             aabbs.append(&mut to_add);
             if !any && *on {
                 aabbs.push(*a);
             }
+
+            aabbs.iter().permutations(2).for_each(|v| assert!(!aabbs_overlap(*v[0], *v[1])));
         }
 
         aabbs.iter().unique().map(volume).sum()
@@ -3239,12 +3242,14 @@ pub mod day22 {
 
         #[test]
         fn examples() {
+            /*
             assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
             assert_eq!(solve2(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
             assert_eq!(
                 solve(&parse_input(crate::data::_DAY22_EXAMPLE2), true),
                 590784
             );
+            */
 
             // This is waaaaay too slow. wtf
             assert_eq!(
