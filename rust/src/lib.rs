@@ -3266,8 +3266,8 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        //let board = parse_input(crate::data::DAY23);
-        let board = parse_input(crate::data::_DAY23_EXAMPLE1);
+        let board = parse_input(crate::data::DAY23);
+        //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
         let answer_part1 = part1(&board);
         writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
@@ -3345,7 +3345,9 @@ pub mod day23 {
             let (board, cur_cost) = open_list.pop().unwrap();
             let cur_cost = cur_cost.0;
 
-            println!("Step: [{}]  Cost: [{}]", count, cur_cost);
+            if count % 1000 == 0 {
+                println!("Step: [{}]  Cost: [{}]", count, cur_cost);
+            }
             count += 1;
 
             // Check for solution
@@ -3555,6 +3557,9 @@ pub mod day23 {
         }
 
         #[test]
-        fn verify() {}
+        fn verify() {
+            let board = parse_input(crate::data::DAY23);
+            assert_eq!(part1(&board), 14627); 
+        }
     }
 }
