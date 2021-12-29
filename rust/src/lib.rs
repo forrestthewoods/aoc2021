@@ -3272,7 +3272,28 @@ pub mod day23 {
         result
     }
 
-    fn parse_input(input: &str) -> (Board, usize) {
+    fn print_board(board: &Board, label: &str) {
+        println!("{}", label);
+        for row in 0..5 {
+            let mut row_str = String::with_capacity(13);
+            for col in 0..13 {
+                let pos = Pos::from_row_col(row, col);
+                let c = match board.get(&pos) {
+                    Some(tile) => {
+                        match tile {
+                            Tile::Empty => '.',
+                            Tile::Amphipod(v) => (b'A' + v) as char
+                        }
+                    },
+                    None => '#'
+                };
+                row_str.push(c);
+            }
+            println!("{}", row_str);
+        }
+    }
+
+    fn parse_input(input: &str) -> Board {
         let mut board = Board::default();
 
         for (row, line) in input.lines().enumerate() {
@@ -3293,7 +3314,7 @@ pub mod day23 {
             }
         }
 
-        (Default::default(), 0)
+        board
     }
 
     fn part1(_input: &str) -> usize {
@@ -3311,7 +3332,10 @@ pub mod day23 {
         use super::*;
 
         #[test]
-        fn examples() {}
+        fn examples() {
+            let board = parse_input(crate::data::_DAY23_EXAMPLE1);
+            print_board(&board, "test");
+        }
 
         #[test]
         fn verify() {}
