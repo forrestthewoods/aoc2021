@@ -3508,15 +3508,16 @@ pub mod day23 {
             return false;
         }
 
-        // Don't leave last row
-        if is_last_row(src) && is_right_room(critter, src) {
+        // Stay if in right slot in room
+        if stay_in_room(critter, src, board, part_one) {
             return false;
         }
 
         // Don't leave solved room
-        if is_room_solved(critter, board, part_one) {
-            return false;
-        }
+        // Superseded by stay_in_room
+        //if is_room_solved(critter, board, part_one) {
+        //    return false;
+        //}
 
         // Make sure rooms are valid
         if !is_hallway(dst) {
@@ -3594,11 +3595,6 @@ pub mod day23 {
         result
     }
 
-    /*
-    fn part2(_input: &str) -> usize {
-        0
-    }
-    */
 
     #[cfg(test)]
     mod tests {
