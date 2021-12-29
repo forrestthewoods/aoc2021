@@ -6,11 +6,12 @@ pub mod day00 {
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
-        /*
-        let answer_part1 = part1(crate::data::DAY00);
+
+        let answer_part1 = part1("");
         writeln!(&mut result, "Day 00, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part2 = part2(crate::data::DAY00);
+        /*
+        let answer_part2 = part2("");
         writeln!(&mut result, "Day 00, Problem 2 - [{}]", answer_part2).unwrap();
         */
         result
@@ -20,9 +21,11 @@ pub mod day00 {
         0
     }
 
+    /*
     fn part2(_input: &str) -> usize {
         0
     }
+    */
 
     #[cfg(test)]
     mod tests {
@@ -2932,7 +2935,7 @@ pub mod day21 {
         let mut wins: [usize; 2] = [0, 0];
 
         let mut cur_player = 0;
-        while states.len() > 0 {
+        while !states.is_empty() {
             next_states.clear();
 
             for (game_state, cur_count) in &states {
@@ -2945,7 +2948,7 @@ pub mod day21 {
                     if new_score >= 21 {
                         wins[cur_player] += new_count;
                     } else {
-                        let mut new_game_state = game_state.clone();
+                        let mut new_game_state = *game_state;
                         new_game_state.player_states[cur_player] = PlayerState {
                             pos: new_pos,
                             score: new_score,
@@ -2982,12 +2985,14 @@ pub mod day21 {
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub mod day22 {
     use more_asserts::*;
     use std::fmt::Write;
 
     type Point = fts_vecmath::point3::Point3<i32>;
 
+    
     #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
     struct AABB {
         min: Point,
@@ -3031,10 +3036,10 @@ pub mod day22 {
         for line in input.lines() {
             let on = line.starts_with("on");
 
-            let aabb_str = line.split(" ").skip(1).next().unwrap();
+            let aabb_str = line.split(' ').nth(1).unwrap();
 
             let nums: Vec<i32> = aabb_str
-                .split(",")
+                .split(',')
                 .flat_map(|dim| {
                     dim[2..]
                         .split("..")
@@ -3093,7 +3098,7 @@ pub mod day22 {
                         let sub_aabbs = sub_aabbs(existing_aabb, *new_aabb);
                         for sub_aabb in sub_aabbs {
                             if existing_aabb.overlaps(sub_aabb) && !new_aabb.overlaps(sub_aabb) {
-                                assert_eq!(existing_aabb.encloses(sub_aabb), true);
+                                assert!(existing_aabb.encloses(sub_aabb));
                                 // keep if it's in existing_aabb and not in new_aabb
                                 // this is true for both add and remove operations
                                 to_add.push(sub_aabb);
@@ -3239,5 +3244,76 @@ pub mod day22 {
                 1211172281877240
             );
         }
+    }
+}
+
+pub mod day23 {
+    use std::collections::HashMap;
+    use std::fmt::Write;
+
+    enum Tile {
+        Empty,
+        Amphipod(u8),
+    }
+
+    type Pos = fts_vecmath::point2::Point2<i8>;
+    type Board = HashMap<Pos, Tile>;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let answer_part1 = part1("");
+        writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2("");
+        writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    fn parse_input(input: &str) -> (Board, usize) {
+        let mut board = Board::default();
+
+        for (row, line) in input.lines().enumerate() {
+            for (col, c) in line.chars().enumerate() {
+                match c {
+                    '.' => {
+                        board.insert(Pos::from_row_col(row as i8, col as i8), Tile::Empty);
+                    }
+                    'A' | 'B' | 'C' | 'D' => {
+                        board.insert(
+                            Pos::from_row_col(row as i8, col as i8),
+                            Tile::Amphipod(c as u8 - b'A'),
+                        );
+                    }
+                    '#' | ' ' => (),
+                    _ => unreachable!(&format!("Unexpected tile piece: [{}]", c)),
+                }
+            }
+        }
+
+        (Default::default(), 0)
+    }
+
+    fn part1(_input: &str) -> usize {
+        0
+    }
+
+    /*
+    fn part2(_input: &str) -> usize {
+        0
+    }
+    */
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {}
+
+        #[test]
+        fn verify() {}
     }
 }
