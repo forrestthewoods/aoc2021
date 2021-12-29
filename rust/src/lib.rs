@@ -3266,8 +3266,8 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        //let board = parse_input(crate::data::DAY23);
-        let board = parse_input(crate::data::_DAY23_EXAMPLE2);
+        let board = parse_input(crate::data::DAY23);
+        //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
         let answer_part1 = solve(&board, true);
         writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
