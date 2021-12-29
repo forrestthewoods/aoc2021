@@ -3266,11 +3266,12 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let board = parse_input(crate::data::DAY23);
-        //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
+        //let board = parse_input(crate::data::DAY23);
+        let board = parse_input(crate::data::_DAY23_EXAMPLE1);
         let answer_part1 = solve(&board, true);
         writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
+        //let board = parse_input(crate::data::_DAY23_EXAMPLE2);
         //let answer_part2 = solve(&board, false);
         //writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
         result
@@ -3543,7 +3544,7 @@ pub mod day23 {
             Tile::Amphipod(v) => v,
             _ => unreachable!(&format!("Unexpected starting tile [{:?}]]", starting_tile)),
         };
-
+/*
         if is_right_room(critter, starting_idx) && is_last_row(starting_idx) {
             // don't leave last row
             return result;
@@ -3553,12 +3554,12 @@ pub mod day23 {
             // don't leave front of room if room is complete
             return result;
         }
+        */
 
         // Don't move if position can be locked
-        //if stay_in_room(critter, starting_idx, board, part_one) {
-        //    return result;
-        //}
-
+        if stay_in_room(critter, starting_idx, board, part_one) {
+            return result;
+        }
 
         // BFS all possible moves
         let mut open_list: Vec<usize> = Default::default();
