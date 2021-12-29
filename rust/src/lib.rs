@@ -2996,6 +2996,18 @@ pub mod day22 {
         max: Point,
     }
 
+    impl AABB {
+        fn encloses(self, other: AABB) -> bool {
+            self.min.x <= other.min.x && self.max.x >= other.max.x
+                && self.min.y <= other.min.y && self.max.y >= other.max.y
+                && self.min.z <= other.min.z && self.max.z >= other.max.z
+        }
+
+        fn overlaps(self, other: AABB) -> bool {
+            aabbs_overlap(self, other)
+        }
+    }
+
     type Op = (bool, AABB);
 
     pub fn run() -> String {
@@ -3005,10 +3017,10 @@ pub mod day22 {
         let answer_part1 = solve(&ops, true);
         writeln!(&mut result, "Day 22, Problem 1 - [{}]", answer_part1).unwrap();
 
-        solve2(&parse_input(crate::data::_DAY22_EXAMPLE3), false);
+        //solve2(&parse_input(crate::data::_DAY22_EXAMPLE3), false);
 
-        //let answer_part2 = solve2(&ops, false);
-        //writeln!(&mut result, "Day 22, Problem 2 - [{}]", answer_part2).unwrap();
+        let answer_part2 = solve2(&ops, false);
+        writeln!(&mut result, "Day 22, Problem 2 - [{}]", answer_part2).unwrap();
 
         result
     }
@@ -3081,11 +3093,12 @@ pub mod day22 {
         let mut to_add: Vec<AABB> = Default::default();
 
         let mut op_count = 0;
-        for (on, a) in ops {
+        for (on, new_aabb) in ops {
             println!("Op {}. AABBs: [{}]", op_count, aabbs.len());
             op_count += 1;
 
             if init {
+                let a = new_aabb;
                 let nums = [a.min.x, a.min.y, a.min.z, a.max.x, a.max.y, a.max.z];
                 if nums.iter().any(|v| *v < -50 || *v > 50) {
                     continue;
@@ -3093,11 +3106,36 @@ pub mod day22 {
             }
 
             let mut idx = 0;
-            let mut any: bool = false;
+            let mut is_enclosed = false;
             while idx < aabbs.len() {
-                let base = aabbs[idx];
-                if aabbs_overlap(*a, base) {
-                    any = true;
+                let existing_aabb = aabbs[idx];
+                if aabbs_overlap(existing_aabb, *new_aabb) {
+                    if new_aabb.encloses(existing_aabb) {
+                        // new_aabb completely encloses old, so just remove old
+                        aabbs.swap_remove(idx);
+                    } else if *on && existing_aabb.encloses(*new_aabb) {
+                        // If on and enclosed then we can just ignore this
+                        is_enclosed = true;
+                        break;
+                    } else {
+                        // Partial overlap
+                        
+                        // Remove the old
+                        aabbs.swap_remove(idx);
+
+                        // Create sub-bounds
+                        let sub_aabbs = sub_aabbs(existing_aabb, *new_aabb);
+                        for sub_aabb in sub_aabbs {
+                            if existing_aabb.overlaps(sub_aabb) && !new_aabb.overlaps(sub_aabb) {
+                                assert_eq!(existing_aabb.encloses(sub_aabb), true);
+                                // keep if it's in existing_aabb and not in new_aabb
+                                // this is true for both add and remove operations
+                                to_add.push(sub_aabb);
+                            }
+                        }
+                    }
+
+                    /*
                     // TODO: handle A encloses B
                     if *on {
                         if aabb_encloses(base, *a) {
@@ -3121,13 +3159,14 @@ pub mod day22 {
                             to_add.append(&mut subtract_cube(base, *a));
                         }
                     }
+                    */
                 } else {
                     idx += 1;
                 }
             }
 
-            TODO: handle when new aabb overlaps with multiple.
-            TODO: get set of existing. subtract
+            //TODO: handle when new aabb overlaps with multiple.
+            //TODO: get set of existing. subtract
             /*
             When adding:
                 get set of overlaps
@@ -3143,15 +3182,28 @@ pub mod day22 {
                     remove all of old
                     add (old subtract new)
             */
+
+            // Add new set off aabbs
             aabbs.append(&mut to_add);
-            if !any && *on {
-                aabbs.push(*a);
+
+            // Always add new aabb if it's on. It is never sliced
+            if *on && !is_enclosed {
+                aabbs.push(*new_aabb);
             }
 
-            aabbs.iter().permutations(2).for_each(|v| assert!(!aabbs_overlap(*v[0], *v[1])));
+            // Make sure no AABBs overlap. If they did we screwed up.
+            //aabbs.iter().permutations(2).for_each(|v| assert!(!aabbs_overlap(*v[0], *v[1])));
         }
 
         aabbs.iter().unique().map(volume).sum()
+    }
+
+    fn interval_contains(interval: (i32, i32), value: i32) -> bool {
+        value >= interval.0 && value <= interval.1
+    }
+
+    fn interval_encloses(a: (i32, i32), b: (i32, i32)) -> bool {
+        interval_contains(a, b.0) && interval_contains(a, b.1)
     }
 
     fn interval_overlaps(a0: i32, a1: i32, b0: i32, b1: i32) -> bool {
@@ -3167,21 +3219,64 @@ pub mod day22 {
             && interval_overlaps(a.min.z, a.max.z, b.min.z, b.max.z)
     }
 
-    // true if a encloses b
-    fn aabb_encloses(a: AABB, b: AABB) -> bool {
-        b.min.x >= a.min.x && b.max.x <= a.max.x
-            && b.min.y >= a.min.y && b.max.y <= a.max.y
-            && b.min.z >= a.min.z && b.max.z <= a.max.z
-    }
-
     fn overlap_segments(a0: i32, a1: i32, b0: i32, b1: i32) -> Vec<(i32, i32)> {
+        assert!(interval_overlaps(a0, a1, b0, b1));
+
+        if interval_encloses((a0, a1), (b0,b1)) {
+            // A fully encloses B
+            if a0 == b0 {
+                // Shared start point
+                vec![(a0, b1), (b1+1, a1)]
+            } else if a1 == b1 {
+                // Shared end point
+                vec![(a0, b0-1), (b0,b1)]
+            } else {
+                vec![(a0, b0-1), (b0, b1), (b1+1, a1)]
+            }
+        } else if interval_encloses((b0, b1), (a0,a1)) {
+            // B fully encloses A
+            if a0 == b0 {
+                // Shared start point
+                vec![(b0, a1), (a1+1, b1)]
+            } else if a1 == b1 {
+                // Shared end point
+                vec![(b0, a0-1), (a0,a1)]
+            } else {
+                vec![(b0, a0-1), (a0, a1), (a1+1, b1)]
+            }
+        } else {
+            // partial overlap
+            if a0 < b0 {
+                vec![(a0, b0-1), (b0, a1), (a1 + 1, b1)]
+            } else {
+                vec![(b0, a0-1), (a0, b1), (b1 + 1, a1)]
+            }
+        }
+
+/*
         let verts: Vec<i32> = [a0, a1, b0, b1].iter().cloned().sorted().unique().collect();
 
         // verts may have 1, 2, 3, or 4 values
         match verts.len() {
             1 => vec![(verts[0], verts[0])],
             2 => vec![(verts[0], verts[1])],
-            3 => vec![(verts[0], verts[1] - 1), (verts[1], verts[2])],
+            3 => {
+                // three cases
+
+                // midpoint is in both segments.
+                // midpoint +/- 1 is only in one
+                let lo = verts[1] - 1;
+                if interval_contains((a0, a1), lo) && interval_contains((b0, b1), lo) {
+                    vec![(verts[0], verts[1]), (verts[1] + 1, verts[2])]
+                } else {
+                    vec![(verts[0], verts[1] - 1), (verts[1], verts[2])]
+                }
+
+                //if interval_contains((a0, a1), verts[1] - 1)
+
+                // middle vert may or may not be in both segments?
+                //vec![(verts[0], verts[1]), (verts[1] + 1, verts[2])]
+            },
             4 => vec![
                 (verts[0], verts[1] - 1),
                 (verts[1], verts[2]),
@@ -3189,6 +3284,7 @@ pub mod day22 {
             ],
             _ => unreachable!(&format!("Unexpected vert count [{}]", verts.len())),
         }
+*/
     }
 
     fn aabb_segments(a: AABB, b: AABB) -> [Vec<(i32, i32)>; 3] {
@@ -3199,7 +3295,9 @@ pub mod day22 {
         ]
     }
 
-    fn sub_aabbs(segments: &[Vec<(i32,i32)>; 3]) -> Vec<AABB> {
+    fn sub_aabbs(a: AABB, b: AABB) -> Vec<AABB> {
+        let segments = aabb_segments(a, b);
+
         let x_segments = &segments[0];
         let y_segments = &segments[1];
         let z_segments = &segments[2];
@@ -3211,38 +3309,24 @@ pub mod day22 {
                     assert_ge!(x.1, x.0);
                     assert_ge!(y.1, y.0);
                     assert_ge!(z.1, z.0);
-                    result.push(AABB {
+                    let new_aabb = AABB {
                         min: Point::new(x.0, y.0, z.0),
                         max: Point::new(x.1, y.1, z.1),
-                    });
+                    };
+
+                    // Make sure new_aabb does not overlap any existing result aabb
+                    //result.iter().for_each(|v| assert!(v.overlaps(new_aabb) == false));
+
+                    // Make sure if aabb intersects with either a or b that it is also enclosed
+                   // assert_eq!(a.overlaps(new_aabb), a.encloses(new_aabb));
+                    //assert_eq!(b.overlaps(new_aabb), b.encloses(new_aabb));
+
+
+                    result.push(new_aabb);
                 }
             }
         }
         result.to_owned()
-    }
-
-    fn subtract_cube(base: AABB, sub: AABB) -> Vec<AABB> {
-        let mut result: Vec<AABB> = Default::default();
-
-        for aabb in sub_aabbs(&aabb_segments(base, sub)) {
-            if aabbs_overlap(aabb, base) && !aabbs_overlap(aabb, sub) {
-                result.push(aabb);
-            }
-        }
-
-        result
-    }
-
-    fn add_cube(base: AABB, add: AABB) -> Vec<AABB> {
-        let mut result: Vec<AABB> = Default::default();
-
-        for aabb in sub_aabbs(&aabb_segments(base, add)) {
-            if !aabbs_overlap(aabb, base) && aabbs_overlap(aabb, add) {
-                result.push(aabb);
-            }
-        }
-
-        result
     }
 
     fn volume(v: &AABB) -> usize {
@@ -3268,21 +3352,22 @@ pub mod day22 {
             */
 
             // This is waaaaay too slow. wtf
+/*
             assert_eq!(
                 solve2(&parse_input(crate::data::_DAY22_EXAMPLE2), true),
                 590784
             );
-/*
+*/
             assert_eq!(
                 solve2(&parse_input(crate::data::_DAY22_EXAMPLE3), false),
                 2758514936282235
             );
-*/
         }
 
         #[test]
         fn verify() {
             assert_eq!(solve(&parse_input(crate::data::DAY22), true), 591365);
+            assert_eq!(solve2(&parse_input(crate::data::DAY22), false), 1211172281877240);
         }
     }
 }
