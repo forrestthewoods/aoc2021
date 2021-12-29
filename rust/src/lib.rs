@@ -3266,15 +3266,13 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let board = parse_input(crate::data::DAY23);
-        //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
-        let answer_part1 = solve(&board, true);
-        writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
+        //let board = parse_input(crate::data::DAY23);
+        let board = parse_input(crate::data::_DAY23_EXAMPLE2);
+        //let answer_part1 = solve(&board, false);
+        //writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
-        /*
-        let answer_part2 = part2("");
+        let answer_part2 = solve(&board, false);
         writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
-        */
         result
     }
 
@@ -3354,7 +3352,7 @@ pub mod day23 {
             let (board, cur_cost) = open_list.pop().unwrap();
             let cur_cost = cur_cost.0;
 
-            if count % 1000 == 0 {
+            if count % 10000 == 0 {
                 println!("Step: [{}]  Cost: [{}]", count, cur_cost);
             }
             count += 1;
@@ -3451,6 +3449,14 @@ pub mod day23 {
             || idx == 44
             || idx == 46
             || idx == 48
+            || idx == 55
+            || idx == 57
+            || idx == 59
+            || idx == 61
+            || idx == 68
+            || idx == 70
+            || idx == 72
+            || idx == 74
     }
 
     fn is_right_room(critter: u8, idx: usize) -> bool {
