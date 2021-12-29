@@ -3268,7 +3268,7 @@ pub mod day23 {
 
         let board = parse_input(crate::data::DAY23);
         //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
-        let answer_part1 = part1(&board);
+        let answer_part1 = solve(&board, true);
         writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
         /*
@@ -3320,7 +3320,7 @@ pub mod day23 {
         board
     }
 
-    fn is_solved(board: &[Tile]) -> bool {
+    fn is_solved(board: &[Tile], part_one: bool) -> bool {
         board[29] == Tile::Amphipod(0)
             && board[42] == Tile::Amphipod(0)
             && board[31] == Tile::Amphipod(1)
@@ -3329,9 +3329,18 @@ pub mod day23 {
             && board[46] == Tile::Amphipod(2)
             && board[35] == Tile::Amphipod(3)
             && board[48] == Tile::Amphipod(3)
+            && (part_one
+                || (board[55] == Tile::Amphipod(0)
+                    && board[68] == Tile::Amphipod(0)
+                    && board[57] == Tile::Amphipod(1)
+                    && board[70] == Tile::Amphipod(1)
+                    && board[59] == Tile::Amphipod(2)
+                    && board[72] == Tile::Amphipod(2)
+                    && board[61] == Tile::Amphipod(3)
+                    && board[74] == Tile::Amphipod(3)))
     }
 
-    fn part1(initial_board: &[Tile]) -> usize {
+    fn solve(initial_board: &[Tile], part_one: bool) -> usize {
         let mut open_list = PriorityQueue::<Board, Reverse<usize>>::new();
         let mut closed_list: HashSet<Board> = Default::default();
 
@@ -3351,7 +3360,7 @@ pub mod day23 {
             count += 1;
 
             // Check for solution
-            if is_solved(&board) {
+            if is_solved(&board, part_one) {
                 return cur_cost;
             }
 
@@ -3366,11 +3375,12 @@ pub mod day23 {
                     match tile {
                         Tile::Wall | Tile::Empty => continue,
                         Tile::Amphipod(a) => {
-                            let moves = explore_moves(&board, idx);
+                            let moves = explore_moves(&board, idx, part_one);
                             for (new_board, num_steps) in moves {
                                 let new_cost = num_steps * step_costs[a as usize];
                                 if !closed_list.contains(&new_board) {
-                                    open_list.push_increase(new_board, Reverse(cur_cost + new_cost));
+                                    open_list
+                                        .push_increase(new_board, Reverse(cur_cost + new_cost));
                                 }
                             }
                         }
@@ -3383,61 +3393,100 @@ pub mod day23 {
     }
 
     fn is_hallway(idx: usize) -> bool {
-        idx < WIDTH*2
+        idx < WIDTH * 2
     }
 
     fn is_last_row(idx: usize) -> bool {
-        idx >= WIDTH*3
+        idx >= WIDTH * 3
+    }
+
+    fn stay_in_room(critter: u8, idx: usize, board: &[Tile], part_one: bool) -> bool {
+        // Don't stay if it's not the right room
+        if !is_right_room(critter, idx) {
+            return false;
+        }
+
+        // Stay if from critter to back is correct critter
+        let room_end = get_room_back(critter, part_one);
+        (idx..=room_end)
+            .step_by(WIDTH)
+            .map(|idx| board[idx])
+            .all(|tile| tile == Tile::Amphipod(critter))
+    }
+
+    fn get_room_front(critter: u8) -> usize {
+        match critter {
+            0 => 29,
+            1 => 31,
+            2 => 33,
+            3 => 35,
+            _ => unreachable!(&format!("Unexpected critter: [{:?}]", critter)),
+        }
+    }
+
+    fn get_room_back(critter: u8, part_one: bool) -> usize {
+        let offset = if part_one { 0 } else { WIDTH * 2 };
+        match critter {
+            0 => 42 + offset,
+            1 => 44 + offset,
+            2 => 46 + offset,
+            3 => 48 + offset,
+            _ => unreachable!(&format!("Unexpected critter: [{:?}]", critter)),
+        }
     }
 
     fn is_stop_pos(idx: usize) -> bool {
-        idx == 14 || idx == 15 || idx == 17 || idx == 19 || idx == 21 || idx == 23 || idx == 24
-            || idx == 29 || idx == 31 || idx == 33 || idx == 35
-            || idx == 42 || idx == 44 || idx == 46 || idx == 48
+        idx == 14
+            || idx == 15
+            || idx == 17
+            || idx == 19
+            || idx == 21
+            || idx == 23
+            || idx == 24
+            || idx == 29
+            || idx == 31
+            || idx == 33
+            || idx == 35
+            || idx == 42
+            || idx == 44
+            || idx == 46
+            || idx == 48
     }
 
     fn is_right_room(critter: u8, idx: usize) -> bool {
         match critter {
-            0 => idx == 29 || idx == 42,
-            1 => idx == 31 || idx == 44,
-            2 => idx == 33 || idx == 46,
-            3 => idx == 35 || idx == 48,
-            _ => unreachable!(&format!("Unexpected critter: [{:?}]", critter))
+            0 => idx == 29 || idx == 42 || idx == 55 || idx == 68,
+            1 => idx == 31 || idx == 44 || idx == 57 || idx == 70,
+            2 => idx == 33 || idx == 46 || idx == 59 || idx == 72,
+            3 => idx == 35 || idx == 48 || idx == 61 || idx == 74,
+            _ => unreachable!(&format!("Unexpected critter: [{:?}]", critter)),
         }
     }
 
-    fn is_room_solved(critter: u8, board: &[Tile]) -> bool {
-        match critter {
-            0 => board[29] == Tile::Amphipod(0) && board[42] == Tile::Amphipod(0),
-            1 => board[31] == Tile::Amphipod(1) && board[44] == Tile::Amphipod(1),
-            2 => board[33] == Tile::Amphipod(2) && board[46] == Tile::Amphipod(2),
-            3 => board[35] == Tile::Amphipod(3) && board[48] == Tile::Amphipod(3),
-            _ => unreachable!(&format!("Unexpected critter: [{}]", critter))
-        }
+    fn is_room_solved(critter: u8, board: &[Tile], part_one: bool) -> bool {
+        let start = get_room_front(critter);
+        let back = get_room_back(critter, part_one);
+
+        (start..=back)
+            .step_by(WIDTH)
+            .map(|idx| board[idx])
+            .all(|tile| tile == Tile::Amphipod(critter))
     }
 
-    fn room_has_enemy(critter: u8, board: &[Tile]) -> bool {
-        let check_one = |idx: usize| {
-            match board[idx] {
+    fn room_has_enemy(critter: u8, board: &[Tile], part_one: bool) -> bool {
+        let start = get_room_front(critter);
+        let back = get_room_back(critter, part_one);
+
+        (start..=back)
+            .step_by(WIDTH)
+            .map(|idx| board[idx])
+            .all(|tile| match tile {
                 Tile::Amphipod(c) => c != critter,
                 _ => false
-            }
-        };
-
-        let check_two = |a: usize, b: usize| -> bool {
-            check_one(a) || check_one(b)
-        };
-
-        match critter {
-            0 => check_two(29, 42),
-            1 => check_two(31, 44),
-            2 => check_two(33, 46),
-            3 => check_two(35, 48),
-            _ => unreachable!(&format!("Unexpected critter: [{}]", critter))
-        }
+            })
     }
 
-    fn is_valid_move(critter: u8, src: usize, dst: usize, board: &[Tile]) -> bool {       
+    fn is_valid_move(critter: u8, src: usize, dst: usize, board: &[Tile], part_one: bool) -> bool {
         // Not actually a move if src == dst
         if src == dst {
             return false;
@@ -3453,13 +3502,13 @@ pub mod day23 {
             return false;
         }
 
-        // Don't leave last row 
+        // Don't leave last row
         if is_last_row(src) && is_right_room(critter, src) {
             return false;
         }
 
         // Don't leave solved room
-        if is_room_solved(critter, board) {
+        if is_room_solved(critter, board, part_one) {
             return false;
         }
 
@@ -3471,7 +3520,7 @@ pub mod day23 {
             }
 
             // Can't enter room with an enemy
-            if room_has_enemy(critter, board) {
+            if room_has_enemy(critter, board, part_one) {
                 return false;
             }
         }
@@ -3479,28 +3528,28 @@ pub mod day23 {
         true
     }
 
-    fn explore_moves(board: &[Tile], starting_idx: usize) -> Vec<(Board, usize)> {
-        let mut result : Vec<(Board, usize)> = Default::default();
-        
+    fn explore_moves(board: &[Tile], starting_idx: usize, part_one: bool) -> Vec<(Board, usize)> {
+        let mut result: Vec<(Board, usize)> = Default::default();
+
         let starting_tile = board[starting_idx];
         let critter = match starting_tile {
             Tile::Amphipod(v) => v,
-            _ => unreachable!(&format!("Unexpected starting tile [{:?}]]", starting_tile))
+            _ => unreachable!(&format!("Unexpected starting tile [{:?}]]", starting_tile)),
         };
-        
+
         if is_right_room(critter, starting_idx) && is_last_row(starting_idx) {
             // don't leave last row
             return result;
-        }   
+        }
 
-        if is_room_solved(critter, board) {
+        if is_room_solved(critter, board, part_one) {
             // don't leave front of room if room is complete
             return result;
         }
 
         // BFS all possible moves
-        let mut open_list : Vec<usize> = Default::default();
-        let mut closed_list : HashSet<usize> = Default::default();
+        let mut open_list: Vec<usize> = Default::default();
+        let mut closed_list: HashSet<usize> = Default::default();
 
         open_list.push(starting_idx);
         closed_list.insert(starting_idx);
@@ -3511,7 +3560,7 @@ pub mod day23 {
             let dst_idx = open_list.pop().unwrap();
 
             // Check if this a valid end state
-            if is_valid_move(critter, starting_idx, dst_idx, board) {
+            if is_valid_move(critter, starting_idx, dst_idx, board, part_one) {
                 // Create new board
                 let mut next_board = board.to_owned();
                 next_board[starting_idx] = Tile::Empty;
@@ -3533,7 +3582,7 @@ pub mod day23 {
                     open_list.push(neighbor_idx);
                     closed_list.insert(neighbor_idx);
                 }
-            }            
+            }
         }
 
         result
@@ -3551,15 +3600,20 @@ pub mod day23 {
 
         #[test]
         fn examples() {
-            let board = parse_input(crate::data::_DAY23_EXAMPLE1);
-            print_board(&board, "test");
-            assert_eq!(part1(&board), 12521); 
+            assert_eq!(
+                solve(&parse_input(crate::data::_DAY23_EXAMPLE1), true),
+                12521
+            );
+            assert_eq!(
+                solve(&parse_input(crate::data::_DAY23_EXAMPLE2), false),
+                44169
+            );
         }
 
         #[test]
         fn verify() {
             let board = parse_input(crate::data::DAY23);
-            assert_eq!(part1(&board), 14627); 
+            assert_eq!(solve(&board, true), 14627);
         }
     }
 }
