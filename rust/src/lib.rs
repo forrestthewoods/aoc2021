@@ -2996,9 +2996,12 @@ pub mod day22 {
 
     impl AABB {
         fn encloses(self, other: AABB) -> bool {
-            self.min.x <= other.min.x && self.max.x >= other.max.x
-                && self.min.y <= other.min.y && self.max.y >= other.max.y
-                && self.min.z <= other.min.z && self.max.z >= other.max.z
+            self.min.x <= other.min.x
+                && self.max.x >= other.max.x
+                && self.min.y <= other.min.y
+                && self.max.y >= other.max.y
+                && self.min.z <= other.min.z
+                && self.max.z >= other.max.z
         }
 
         fn overlaps(self, other: AABB) -> bool {
@@ -3082,7 +3085,7 @@ pub mod day22 {
                         break;
                     } else {
                         // Partial overlap
-                        
+
                         // Remove the old
                         aabbs.swap_remove(idx);
 
@@ -3138,34 +3141,34 @@ pub mod day22 {
     fn overlap_segments(a0: i32, a1: i32, b0: i32, b1: i32) -> Vec<(i32, i32)> {
         assert!(interval_overlaps(a0, a1, b0, b1));
 
-        if interval_encloses((a0, a1), (b0,b1)) {
+        if interval_encloses((a0, a1), (b0, b1)) {
             // A fully encloses B
             if a0 == b0 {
                 // Shared start point
-                vec![(a0, b1), (b1+1, a1)]
+                vec![(a0, b1), (b1 + 1, a1)]
             } else if a1 == b1 {
                 // Shared end point
-                vec![(a0, b0-1), (b0,b1)]
+                vec![(a0, b0 - 1), (b0, b1)]
             } else {
-                vec![(a0, b0-1), (b0, b1), (b1+1, a1)]
+                vec![(a0, b0 - 1), (b0, b1), (b1 + 1, a1)]
             }
-        } else if interval_encloses((b0, b1), (a0,a1)) {
+        } else if interval_encloses((b0, b1), (a0, a1)) {
             // B fully encloses A
             if a0 == b0 {
                 // Shared start point
-                vec![(b0, a1), (a1+1, b1)]
+                vec![(b0, a1), (a1 + 1, b1)]
             } else if a1 == b1 {
                 // Shared end point
-                vec![(b0, a0-1), (a0,a1)]
+                vec![(b0, a0 - 1), (a0, a1)]
             } else {
-                vec![(b0, a0-1), (a0, a1), (a1+1, b1)]
+                vec![(b0, a0 - 1), (a0, a1), (a1 + 1, b1)]
             }
         } else {
             // partial overlap
             if a0 < b0 {
-                vec![(a0, b0-1), (b0, a1), (a1 + 1, b1)]
+                vec![(a0, b0 - 1), (b0, a1), (a1 + 1, b1)]
             } else {
-                vec![(b0, a0-1), (a0, b1), (b1 + 1, a1)]
+                vec![(b0, a0 - 1), (a0, b1), (b1 + 1, a1)]
             }
         }
     }
@@ -3231,8 +3234,10 @@ pub mod day22 {
         #[test]
         fn verify() {
             assert_eq!(solve(&parse_input(crate::data::DAY22), true), 591365);
-            assert_eq!(solve(&parse_input(crate::data::DAY22), false), 1211172281877240);
+            assert_eq!(
+                solve(&parse_input(crate::data::DAY22), false),
+                1211172281877240
+            );
         }
     }
 }
-
