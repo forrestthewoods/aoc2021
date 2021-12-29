@@ -2992,7 +2992,6 @@ pub mod day22 {
 
     type Point = fts_vecmath::point3::Point3<i32>;
 
-    
     #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
     struct AABB {
         min: Point,
@@ -3248,21 +3247,27 @@ pub mod day22 {
 }
 
 pub mod day23 {
-    use std::collections::HashMap;
+    use priority_queue::PriorityQueue;
+    use std::cmp::Reverse;
     use std::fmt::Write;
 
+    #[derive(Copy, Clone, Hash, Eq, PartialEq)]
     enum Tile {
-        Empty,
         Amphipod(u8),
+        Empty,
+        Wall,
     }
 
     type Pos = fts_vecmath::point2::Point2<i8>;
-    type Board = HashMap<Pos, Tile>;
+    type Board = Vec<Tile>;
+
+    const WIDTH: usize = 13; // hardcoded for now
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let answer_part1 = part1("");
+        let board = parse_input(crate::data::DAY23);
+        let answer_part1 = part1(&board);
         writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
         /*
@@ -3276,16 +3281,11 @@ pub mod day23 {
         println!("{}", label);
         for row in 0..5 {
             let mut row_str = String::with_capacity(13);
-            for col in 0..13 {
-                let pos = Pos::from_row_col(row, col);
-                let c = match board.get(&pos) {
-                    Some(tile) => {
-                        match tile {
-                            Tile::Empty => '.',
-                            Tile::Amphipod(v) => (b'A' + v) as char
-                        }
-                    },
-                    None => '#'
+            for col in 0..WIDTH {
+                let c = match board[row * WIDTH + col] {
+                    Tile::Empty => '.',
+                    Tile::Wall => '#',
+                    Tile::Amphipod(v) => (b'A' + v) as char,
                 };
                 row_str.push(c);
             }
@@ -3296,20 +3296,21 @@ pub mod day23 {
     fn parse_input(input: &str) -> Board {
         let mut board = Board::default();
 
-        for (row, line) in input.lines().enumerate() {
-            for (col, c) in line.chars().enumerate() {
-                match c {
-                    '.' => {
-                        board.insert(Pos::from_row_col(row as i8, col as i8), Tile::Empty);
-                    }
-                    'A' | 'B' | 'C' | 'D' => {
-                        board.insert(
-                            Pos::from_row_col(row as i8, col as i8),
-                            Tile::Amphipod(c as u8 - b'A'),
-                        );
-                    }
-                    '#' | ' ' => (),
-                    _ => unreachable!(&format!("Unexpected tile piece: [{}]", c)),
+        for line in input.lines() {
+            let line = line.as_bytes();
+
+            for col in 0..WIDTH {
+                if col >= line.len() {
+                    board.push(Tile::Wall);
+                } else {
+                    let c = line[col];
+                    let tile = match c as char {
+                        '.' => Tile::Empty,
+                        '#' | ' ' => Tile::Wall,
+                        'A' | 'B' | 'C' | 'D' => Tile::Amphipod(c as u8 - b'A'),
+                        _ => unreachable!(&format!("Unexpected tile piece: [{}]", c)),
+                    };
+                    board.push(tile);
                 }
             }
         }
@@ -3317,7 +3318,9 @@ pub mod day23 {
         board
     }
 
-    fn part1(_input: &str) -> usize {
+    fn part1(board: &Board) -> usize {
+        //let mut open_list = PriorityQueue::<BoardState, Reverse<usize>>::new();
+
         0
     }
 
