@@ -3379,6 +3379,10 @@ pub mod day23 {
         idx < WIDTH*2
     }
 
+    fn is_last_row(idx: usize) -> bool {
+        idx >= WIDTH*3
+    }
+
     fn is_stop_pos(idx: usize) -> bool {
         idx == 14 || idx == 15 || idx == 17 || idx == 19 || idx == 21 || idx == 23 || idx == 24
             || idx == 29 || idx == 31 || idx == 33 || idx == 35
@@ -3395,8 +3399,77 @@ pub mod day23 {
         }
     }
 
-    fn is_valid_move(critter: u8, src: usize, dst: usize) -> bool {
-        false
+    fn is_room_solved(critter: u8, board: &[Tile]) -> bool {
+        match critter {
+            0 => board[29] == Tile::Amphipod(0) && board[42] == Tile::Amphipod(0),
+            1 => board[31] == Tile::Amphipod(1) && board[44] == Tile::Amphipod(1),
+            2 => board[33] == Tile::Amphipod(2) && board[46] == Tile::Amphipod(2),
+            3 => board[35] == Tile::Amphipod(3) && board[48] == Tile::Amphipod(3),
+            _ => unreachable!(&format!("Unexpected critter: [{}]", critter))
+        }
+    }
+
+    fn room_has_enemy(critter: u8, board: &[Tile]) -> bool {
+        let check_one = |idx: usize| {
+            match board[idx] {
+                Tile::Amphipod(c) => c != critter,
+                _ => false
+            }
+        };
+
+        let check_two = |a: usize, b: usize| -> bool {
+            check_one(a) || check_one(b)
+        };
+
+        match critter {
+            0 => check_two(29, 42),
+            1 => check_two(31, 44),
+            2 => check_two(33, 46),
+            3 => check_two(35, 48),
+            _ => unreachable!(&format!("Unexpected critter: [{}]", critter))
+        }
+    }
+
+    fn is_valid_move(critter: u8, src: usize, dst: usize, board: &[Tile]) -> bool {       
+        // Not actually a move if src == dst
+        if src == dst {
+            return false;
+        }
+
+        // Can't stop on some tiles
+        if !is_stop_pos(dst) {
+            return false;
+        }
+
+        // Don't move within hallway or within room
+        if is_hallway(src) == is_hallway(dst) {
+            return false;
+        }
+
+        // Don't leave last row 
+        if is_last_row(src) && is_right_room(critter, src) {
+            return false;
+        }
+
+        // Don't leave solved room
+        if is_room_solved(critter, board) {
+            return false;
+        }
+
+        // Make sure rooms are valid
+        if !is_hallway(dst) {
+            // Can only enter correct room
+            if !is_right_room(critter, dst) {
+                return false;
+            }
+
+            // Can't enter room with an enemy
+            if room_has_enemy(critter, board) {
+                return false;
+            }
+        }
+
+        true
     }
 
     fn explore_moves(board: &[Tile], starting_idx: usize) -> Vec<(Board, usize)> {
@@ -3407,50 +3480,50 @@ pub mod day23 {
             Tile::Amphipod(v) => v,
             _ => unreachable!(&format!("Unexpected starting tile [{:?}]]", starting_tile))
         };
+        
+        if is_right_room(critter, starting_idx) && is_right_room(critter, starting_idx) {
+            // don't leave last row
+            return result;
+        }   
 
-        // don't leave last row
-        // don't leave front of room if room is complete
-
-        // create a board for cloning with new tile pos
-        let mut base_board = board.to_vec();
-        base_board[starting_idx] = Tile::Empty;
-        let base_board = base_board; // no more mutation
+        if is_room_solved(critter, board) {
+            // don't leave front of room if room is complete
+            return result;
+        }
 
         // BFS all possible moves
-        let mut open_list : Vec<(usize, usize)> = Default::default();
+        let mut open_list : Vec<usize> = Default::default();
         let mut closed_list : HashSet<usize> = Default::default();
 
-        open_list.push((starting_idx, 0));
+        open_list.push(starting_idx);
         closed_list.insert(starting_idx);
 
         let offsets = [-1, 1, -(WIDTH as isize), WIDTH as isize];
-        let started_hallway = is_hallway(starting_idx);        
 
         while !open_list.is_empty() {
-            let (idx, num_moves) = open_list.pop().unwrap();
-            let idx_is_hallway = is_hallway(idx);
+            let dst_idx = open_list.pop().unwrap();
 
             // Check if this a valid end state
-            if idx != starting_idx && idx_is_hallway != started_hallway && is_stop_pos(idx) {
-                let mut next_board = base_board.clone();
-                next_board[idx] = starting_tile;
-                result.push((next_board, num_moves));
+            if is_valid_move(critter, starting_idx, dst_idx, board) {
+                // Create new board
+                let mut next_board = board.to_owned();
+                next_board[starting_idx] = Tile::Empty;
+                next_board[dst_idx] = starting_tile;
+
+                // Compute manhattan distance
+                let (r0, c0) = (starting_idx / WIDTH, starting_idx % WIDTH);
+                let (r1, c1) = (dst_idx / WIDTH, dst_idx % WIDTH);
+                let dist = (r1 as isize - r0 as isize).abs() + (c1 as isize - c0 as isize).abs();
+
+                // Store board state
+                result.push((next_board, dist as usize));
             }
 
             // Check neighbors
             for offset in offsets {
-                let neighbor_idx = ((idx as isize) + offset) as usize;
+                let neighbor_idx = ((dst_idx as isize) + offset) as usize;
                 if board[neighbor_idx] == Tile::Empty && !closed_list.contains(&neighbor_idx) {
-                    
-
-                    // If it's a room, make sure it's the right room
-                    if !is_hallway(neighbor_idx) && !is_right_room(critter, idx) {
-                        continue;
-                    }
-
-                    // don't enter room if room has wrong amphipod
-
-                    open_list.push((neighbor_idx, num_moves + 1));
+                    open_list.push(neighbor_idx);
                     closed_list.insert(neighbor_idx);
                 }
             }            
