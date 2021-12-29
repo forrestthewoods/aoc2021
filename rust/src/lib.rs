@@ -3321,14 +3321,14 @@ pub mod day23 {
     }
 
     fn is_solved(board: &[Tile]) -> bool {
-        board[2 * WIDTH + 3] == Tile::Amphipod(0)
-            && board[3 * WIDTH + 3] == Tile::Amphipod(0)
-            && board[2 * WIDTH + 5] == Tile::Amphipod(1)
-            && board[3 * WIDTH + 5] == Tile::Amphipod(1)
-            && board[2 * WIDTH + 7] == Tile::Amphipod(2)
-            && board[3 * WIDTH + 7] == Tile::Amphipod(2)
-            && board[2 * WIDTH + 9] == Tile::Amphipod(3)
-            && board[3 * WIDTH + 9] == Tile::Amphipod(3)
+        board[29] == Tile::Amphipod(0)
+            && board[42] == Tile::Amphipod(0)
+            && board[31] == Tile::Amphipod(1)
+            && board[44] == Tile::Amphipod(1)
+            && board[33] == Tile::Amphipod(2)
+            && board[46] == Tile::Amphipod(2)
+            && board[35] == Tile::Amphipod(3)
+            && board[48] == Tile::Amphipod(3)
     }
 
     fn part1(initial_board: &[Tile]) -> usize {
@@ -3481,7 +3481,7 @@ pub mod day23 {
             _ => unreachable!(&format!("Unexpected starting tile [{:?}]]", starting_tile))
         };
         
-        if is_right_room(critter, starting_idx) && is_right_room(critter, starting_idx) {
+        if is_right_room(critter, starting_idx) && is_last_row(starting_idx) {
             // don't leave last row
             return result;
         }   
