@@ -3353,6 +3353,9 @@ pub mod day23 {
                 return cur_cost;
             }
 
+            // Add board to closed list
+            closed_list.insert(board.clone());
+
             // foreach piece
             for row in 0..5 {
                 for col in 0..WIDTH {
@@ -3364,7 +3367,9 @@ pub mod day23 {
                             let moves = explore_moves(&board, idx);
                             for (new_board, num_steps) in moves {
                                 let new_cost = num_steps * step_costs[a as usize];
-                                open_list.push_increase(new_board, Reverse(cur_cost + new_cost));
+                                if !closed_list.contains(&new_board) {
+                                    open_list.push_increase(new_board, Reverse(cur_cost + new_cost));
+                                }
                             }
                         }
                     }
