@@ -2983,9 +2983,7 @@ pub mod day21 {
 }
 
 pub mod day22 {
-    use itertools::Itertools;
     use more_asserts::*;
-    use std::collections::HashSet;
     use std::fmt::Write;
 
     type Point = fts_vecmath::point3::Point3<i32>;
@@ -3014,12 +3012,11 @@ pub mod day22 {
         let mut result = String::with_capacity(128);
 
         let ops = parse_input(crate::data::DAY22);
+
         let answer_part1 = solve(&ops, true);
         writeln!(&mut result, "Day 22, Problem 1 - [{}]", answer_part1).unwrap();
 
-        //solve2(&parse_input(crate::data::_DAY22_EXAMPLE3), false);
-
-        let answer_part2 = solve2(&ops, false);
+        let answer_part2 = solve(&ops, false);
         writeln!(&mut result, "Day 22, Problem 2 - [{}]", answer_part2).unwrap();
 
         result
@@ -3032,7 +3029,6 @@ pub mod day22 {
             let on = line.starts_with("on");
 
             let aabb_str = line.split(" ").skip(1).next().unwrap();
-            // let (x,y,z) = aabb_str.split(",").collect_tuple().unwrap();
 
             let nums: Vec<i32> = aabb_str
                 .split(",")
@@ -3058,46 +3054,13 @@ pub mod day22 {
         result
     }
 
-    fn solve(ops: &[Op], init: bool) -> usize {
-        let mut cubes: HashSet<Point> = Default::default();
-
-        for (on, aabb) in ops {
-            if init {
-                let nums = [
-                    aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z,
-                ];
-                if nums.iter().any(|v| *v < -50 || *v > 50) {
-                    continue;
-                }
-            }
-
-            for x in aabb.min.x..=aabb.max.x {
-                for y in aabb.min.y..=aabb.max.y {
-                    for z in aabb.min.z..=aabb.max.z {
-                        let pt = Point::new(x, y, z);
-                        if *on {
-                            cubes.insert(pt);
-                        } else {
-                            cubes.remove(&pt);
-                        }
-                    }
-                }
-            }
-        }
-
-        cubes.len()
-    }
-
-    fn solve2(ops: &[Op], init: bool) -> usize {
+    fn solve(ops: &[Op], part_one: bool) -> usize {
         let mut aabbs: Vec<AABB> = Default::default();
         let mut to_add: Vec<AABB> = Default::default();
 
-        let mut op_count = 0;
         for (on, new_aabb) in ops {
-            println!("Op {}. AABBs: [{}]", op_count, aabbs.len());
-            op_count += 1;
-
-            if init {
+            // Part one ignores large volumes
+            if part_one {
                 let a = new_aabb;
                 let nums = [a.min.x, a.min.y, a.min.z, a.max.x, a.max.y, a.max.z];
                 if nums.iter().any(|v| *v < -50 || *v > 50) {
@@ -3134,54 +3097,10 @@ pub mod day22 {
                             }
                         }
                     }
-
-                    /*
-                    // TODO: handle A encloses B
-                    if *on {
-                        if aabb_encloses(base, *a) {
-                            // base encloses add, do nothing
-                        } else if aabb_encloses(*a, base) {
-                            // add encloses bases, get rid of base
-                            aabbs.swap_remove(idx);
-                            to_add.push(*a);
-                        } else {
-                            // partial overlap, need to slice
-                            to_add.append(&mut add_cube(base, *a));
-                        }
-                        idx += 1;
-                    } else {
-                        aabbs.swap_remove(idx);
-
-                        if aabb_encloses(*a, base) {
-                            // sub encloses base, remove it and do nothing
-                        } else {
-                            // need to slice
-                            to_add.append(&mut subtract_cube(base, *a));
-                        }
-                    }
-                    */
                 } else {
                     idx += 1;
                 }
             }
-
-            //TODO: handle when new aabb overlaps with multiple.
-            //TODO: get set of existing. subtract
-            /*
-            When adding:
-                get set of overlaps
-                    check for total enclosure
-                for partial overlaps
-                    remove all of old
-                    add all of new 
-                    add (old subtract new)
-            When removing
-                get set of overlaps
-                    check for total enclosures
-                for partial overlaps
-                    remove all of old
-                    add (old subtract new)
-            */
 
             // Add new set off aabbs
             aabbs.append(&mut to_add);
@@ -3190,12 +3109,9 @@ pub mod day22 {
             if *on && !is_enclosed {
                 aabbs.push(*new_aabb);
             }
-
-            // Make sure no AABBs overlap. If they did we screwed up.
-            //aabbs.iter().permutations(2).for_each(|v| assert!(!aabbs_overlap(*v[0], *v[1])));
         }
 
-        aabbs.iter().unique().map(volume).sum()
+        aabbs.iter().map(volume).sum()
     }
 
     fn interval_contains(interval: (i32, i32), value: i32) -> bool {
@@ -3252,39 +3168,6 @@ pub mod day22 {
                 vec![(b0, a0-1), (a0, b1), (b1 + 1, a1)]
             }
         }
-
-/*
-        let verts: Vec<i32> = [a0, a1, b0, b1].iter().cloned().sorted().unique().collect();
-
-        // verts may have 1, 2, 3, or 4 values
-        match verts.len() {
-            1 => vec![(verts[0], verts[0])],
-            2 => vec![(verts[0], verts[1])],
-            3 => {
-                // three cases
-
-                // midpoint is in both segments.
-                // midpoint +/- 1 is only in one
-                let lo = verts[1] - 1;
-                if interval_contains((a0, a1), lo) && interval_contains((b0, b1), lo) {
-                    vec![(verts[0], verts[1]), (verts[1] + 1, verts[2])]
-                } else {
-                    vec![(verts[0], verts[1] - 1), (verts[1], verts[2])]
-                }
-
-                //if interval_contains((a0, a1), verts[1] - 1)
-
-                // middle vert may or may not be in both segments?
-                //vec![(verts[0], verts[1]), (verts[1] + 1, verts[2])]
-            },
-            4 => vec![
-                (verts[0], verts[1] - 1),
-                (verts[1], verts[2]),
-                (verts[2] + 1, verts[3]),
-            ],
-            _ => unreachable!(&format!("Unexpected vert count [{}]", verts.len())),
-        }
-*/
     }
 
     fn aabb_segments(a: AABB, b: AABB) -> [Vec<(i32, i32)>; 3] {
@@ -3306,23 +3189,10 @@ pub mod day22 {
         for x in x_segments {
             for y in y_segments {
                 for z in z_segments {
-                    assert_ge!(x.1, x.0);
-                    assert_ge!(y.1, y.0);
-                    assert_ge!(z.1, z.0);
-                    let new_aabb = AABB {
+                    result.push(AABB {
                         min: Point::new(x.0, y.0, z.0),
                         max: Point::new(x.1, y.1, z.1),
-                    };
-
-                    // Make sure new_aabb does not overlap any existing result aabb
-                    //result.iter().for_each(|v| assert!(v.overlaps(new_aabb) == false));
-
-                    // Make sure if aabb intersects with either a or b that it is also enclosed
-                   // assert_eq!(a.overlaps(new_aabb), a.encloses(new_aabb));
-                    //assert_eq!(b.overlaps(new_aabb), b.encloses(new_aabb));
-
-
-                    result.push(new_aabb);
+                    });
                 }
             }
         }
@@ -3342,24 +3212,18 @@ pub mod day22 {
 
         #[test]
         fn examples() {
-            /*
             assert_eq!(solve(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
-            assert_eq!(solve2(&parse_input(crate::data::_DAY22_EXAMPLE1), true), 39);
             assert_eq!(
                 solve(&parse_input(crate::data::_DAY22_EXAMPLE2), true),
                 590784
             );
-            */
 
-            // This is waaaaay too slow. wtf
-/*
             assert_eq!(
-                solve2(&parse_input(crate::data::_DAY22_EXAMPLE2), true),
+                solve(&parse_input(crate::data::_DAY22_EXAMPLE2), true),
                 590784
             );
-*/
             assert_eq!(
-                solve2(&parse_input(crate::data::_DAY22_EXAMPLE3), false),
+                solve(&parse_input(crate::data::_DAY22_EXAMPLE3), false),
                 2758514936282235
             );
         }
@@ -3367,16 +3231,8 @@ pub mod day22 {
         #[test]
         fn verify() {
             assert_eq!(solve(&parse_input(crate::data::DAY22), true), 591365);
-            assert_eq!(solve2(&parse_input(crate::data::DAY22), false), 1211172281877240);
+            assert_eq!(solve(&parse_input(crate::data::DAY22), false), 1211172281877240);
         }
     }
 }
 
-/*
-    assert!(a.1 >= a.0);
-    assert!(b.1 >= b.0);
-
-    // Simple but non-obvious.
-    // http://fgiesen.wordpress.com/2011/10/16/checking-for-interval-overlap/
-    a.0 <= b.1 && b.0 <= a.1
-*/
