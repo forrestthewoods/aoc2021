@@ -3268,11 +3268,11 @@ pub mod day23 {
 
         //let board = parse_input(crate::data::DAY23);
         let board = parse_input(crate::data::_DAY23_EXAMPLE2);
-        //let answer_part1 = solve(&board, false);
-        //writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
+        let answer_part1 = solve(&board, true);
+        writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
-        let answer_part2 = solve(&board, false);
-        writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
+        //let answer_part2 = solve(&board, false);
+        //writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
         result
     }
 
@@ -3553,6 +3553,12 @@ pub mod day23 {
             // don't leave front of room if room is complete
             return result;
         }
+
+        // Don't move if position can be locked
+        //if stay_in_room(critter, starting_idx, board, part_one) {
+        //    return result;
+        //}
+
 
         // BFS all possible moves
         let mut open_list: Vec<usize> = Default::default();
