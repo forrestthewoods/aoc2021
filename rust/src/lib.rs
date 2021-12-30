@@ -3268,12 +3268,12 @@ pub mod day23 {
 
         let board = parse_input(crate::data::DAY23);
         //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
-        let answer_part1 = solve(&board, true);
-        writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
+        //let answer_part1 = solve(&board, true);
+        //writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
         let board = parse_input(crate::data::_DAY23_EXAMPLE2);
-        //let answer_part2 = solve(&board, false);
-        //writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
+        let answer_part2 = solve(&board, false);
+        writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
         result
     }
 
@@ -3387,8 +3387,7 @@ pub mod day23 {
 
     fn is_same_room(a: usize, b: usize) -> bool {
         // check if same column
-        //!is_hallway(a) && !is_hallway(b) && a % WIDTH == b % WIDTH
-        false
+        !is_hallway(a) && !is_hallway(b) && a % WIDTH == b % WIDTH
     }
 
     fn stay_in_room(critter: u8, idx: usize, board: &[Tile], part_one: bool) -> bool {
@@ -3504,9 +3503,9 @@ pub mod day23 {
         }
 
         // Don't move within room
-        //if is_same_room(src, dst) {
-        //    return false;
-        //}
+        if is_same_room(src, dst) {
+            return false;
+        }
 
         // Stay if in right slot in room
         if stay_in_room(critter, src, board, part_one) {
@@ -3570,6 +3569,10 @@ pub mod day23 {
                 // Compute distance distance
                 let (r0, c0) = (starting_idx / WIDTH, starting_idx % WIDTH);
                 let (r1, c1) = (dst_idx / WIDTH, dst_idx % WIDTH);
+                
+                if c0 == c1 {
+                    print_board(board, "UH OH");
+                }
                 assert_ne!(c0, c1, "({},{}) -> ({},{})", r0, c0, r1, c1); // should never move within column
 
                 // Distance is from r0 to hallway + c0 to c1 + hallway to r1
