@@ -3266,8 +3266,8 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        //let board = parse_input(crate::data::DAY23);
-        let board = parse_input(crate::data::_DAY23_EXAMPLE1);
+        let board = parse_input(crate::data::DAY23);
+        //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
         let answer_part1 = solve(&board, true);
         writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
@@ -3348,6 +3348,8 @@ pub mod day23 {
 
             // Check for solution
             if is_solved(&board, part_one) {
+                print_board(&board, "Solution");
+
                 return cur_cost;
             }
 
@@ -3489,13 +3491,15 @@ pub mod day23 {
             return false;
         }
 
+        assert!(board[dst] == Tile::Empty);
+
         // Can't stop on some tiles
         if !is_stop_pos(dst) {
             return false;
         }
 
         // Don't move hallway to hallway
-        if is_hallway(src) == is_hallway(dst) {
+        if is_hallway(src) && is_hallway(dst) {
             return false;
         }
 
@@ -3563,10 +3567,13 @@ pub mod day23 {
                 next_board[starting_idx] = Tile::Empty;
                 next_board[dst_idx] = starting_tile;
 
-                // Compute manhattan distance
+                // Compute distance distance
                 let (r0, c0) = (starting_idx / WIDTH, starting_idx % WIDTH);
                 let (r1, c1) = (dst_idx / WIDTH, dst_idx % WIDTH);
-                let dist = (r1 as isize - r0 as isize).abs() + (c1 as isize - c0 as isize).abs();
+                assert_ne!(c0, c1, "({},{}) -> ({},{})", r0, c0, r1, c1); // should never move within column
+
+                // Distance is from r0 to hallway + c0 to c1 + hallway to r1
+                let dist = (r0 - 1) + (c1 as isize - c0 as isize).abs() as usize + (r1 - 1);
 
                 // Store board state
                 result.push((next_board, dist as usize));
