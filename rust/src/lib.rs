@@ -3271,7 +3271,7 @@ pub mod day23 {
         let answer_part1 = solve(&board, true);
         writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
-        //let board = parse_input(crate::data::_DAY23_EXAMPLE2);
+        let board = parse_input(crate::data::_DAY23_EXAMPLE2);
         //let answer_part2 = solve(&board, false);
         //writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
         result
@@ -3320,23 +3320,11 @@ pub mod day23 {
     }
 
     fn is_solved(board: &[Tile], part_one: bool) -> bool {
-        board[29] == Tile::Amphipod(0)
-            && board[42] == Tile::Amphipod(0)
-            && board[31] == Tile::Amphipod(1)
-            && board[44] == Tile::Amphipod(1)
-            && board[33] == Tile::Amphipod(2)
-            && board[46] == Tile::Amphipod(2)
-            && board[35] == Tile::Amphipod(3)
-            && board[48] == Tile::Amphipod(3)
-            && (part_one
-                || (board[55] == Tile::Amphipod(0)
-                    && board[68] == Tile::Amphipod(0)
-                    && board[57] == Tile::Amphipod(1)
-                    && board[70] == Tile::Amphipod(1)
-                    && board[59] == Tile::Amphipod(2)
-                    && board[72] == Tile::Amphipod(2)
-                    && board[61] == Tile::Amphipod(3)
-                    && board[74] == Tile::Amphipod(3)))
+        (0..4).all(|c| {
+            (get_room_front(c)..=get_room_back(c, part_one))
+                .step_by(WIDTH)
+                .all(|idx| board[idx] == Tile::Amphipod(c))
+        })
     }
 
     fn solve(initial_board: &[Tile], part_one: bool) -> usize {
@@ -3395,8 +3383,10 @@ pub mod day23 {
         idx < WIDTH * 2
     }
 
-    fn is_last_row(idx: usize) -> bool {
-        idx >= WIDTH * 3
+    fn is_same_room(a: usize, b: usize) -> bool {
+        // check if same column
+        //!is_hallway(a) && !is_hallway(b) && a % WIDTH == b % WIDTH
+        false
     }
 
     fn stay_in_room(critter: u8, idx: usize, board: &[Tile], part_one: bool) -> bool {
@@ -3470,16 +3460,6 @@ pub mod day23 {
         }
     }
 
-    fn is_room_solved(critter: u8, board: &[Tile], part_one: bool) -> bool {
-        let start = get_room_front(critter);
-        let back = get_room_back(critter, part_one);
-
-        (start..=back)
-            .step_by(WIDTH)
-            .map(|idx| board[idx])
-            .all(|tile| tile == Tile::Amphipod(critter))
-    }
-
     fn room_has_enemy(critter: u8, board: &[Tile], part_one: bool) -> bool {
         let start = get_room_front(critter);
         let back = get_room_back(critter, part_one);
@@ -3489,8 +3469,18 @@ pub mod day23 {
             .map(|idx| board[idx])
             .all(|tile| match tile {
                 Tile::Amphipod(c) => c != critter,
-                _ => false
+                _ => false,
             })
+    }
+
+    fn blocks_empty_space(critter: u8, dst: usize, board: &[Tile], part_one: bool) -> bool {
+        assert!(is_right_room(critter, dst));
+
+        let start = dst + WIDTH;
+        let back = get_room_back(critter, part_one);
+        (start..=back)
+            .step_by(WIDTH)
+            .any(|idx| board[idx] == Tile::Empty)
     }
 
     fn is_valid_move(critter: u8, src: usize, dst: usize, board: &[Tile], part_one: bool) -> bool {
@@ -3504,21 +3494,20 @@ pub mod day23 {
             return false;
         }
 
-        // Don't move within hallway or within room
+        // Don't move hallway to hallway
         if is_hallway(src) == is_hallway(dst) {
             return false;
         }
+
+        // Don't move within room
+        //if is_same_room(src, dst) {
+        //    return false;
+        //}
 
         // Stay if in right slot in room
         if stay_in_room(critter, src, board, part_one) {
             return false;
         }
-
-        // Don't leave solved room
-        // Superseded by stay_in_room
-        //if is_room_solved(critter, board, part_one) {
-        //    return false;
-        //}
 
         // Make sure rooms are valid
         if !is_hallway(dst) {
@@ -3529,6 +3518,11 @@ pub mod day23 {
 
             // Can't enter room with an enemy
             if room_has_enemy(critter, board, part_one) {
+                return false;
+            }
+
+            // Always go to back-most empty space
+            if blocks_empty_space(critter, dst, board, part_one) {
                 return false;
             }
         }
@@ -3544,17 +3538,6 @@ pub mod day23 {
             Tile::Amphipod(v) => v,
             _ => unreachable!(&format!("Unexpected starting tile [{:?}]]", starting_tile)),
         };
-/*
-        if is_right_room(critter, starting_idx) && is_last_row(starting_idx) {
-            // don't leave last row
-            return result;
-        }
-
-        if is_room_solved(critter, board, part_one) {
-            // don't leave front of room if room is complete
-            return result;
-        }
-        */
 
         // Don't move if position can be locked
         if stay_in_room(critter, starting_idx, board, part_one) {
@@ -3601,7 +3584,6 @@ pub mod day23 {
 
         result
     }
-
 
     #[cfg(test)]
     mod tests {
