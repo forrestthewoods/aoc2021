@@ -3266,7 +3266,7 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let board = parse_input(crate::data::DAY23);
+        //let board = parse_input(crate::data::DAY23);
         //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
         //let answer_part1 = solve(&board, true);
         //writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
@@ -3280,7 +3280,7 @@ pub mod day23 {
     #[allow(dead_code)]
     fn print_board(board: &[Tile], label: &str) {
         println!("{}", label);
-        for row in 0..5 {
+        for row in 0..board.len() / WIDTH {
             let mut row_str = String::with_capacity(13);
             for col in 0..WIDTH {
                 let c = match board[row * WIDTH + col] {
@@ -3336,7 +3336,11 @@ pub mod day23 {
 
         let step_costs = [1, 10, 100, 1000];
 
+        let debug_state_data = crate::data::_DAY23_EXAMPLE2_STATES;
+        let debug_states : HashSet<_> = debug_state_data.split("\r\n\r\n").map(|chunk| parse_input(chunk)).collect();
+
         let mut count = 0;
+        let mut state = 0;
         while !open_list.is_empty() {
             let (board, cur_cost) = open_list.pop().unwrap();
             let cur_cost = cur_cost.0;
@@ -3345,6 +3349,18 @@ pub mod day23 {
                 println!("Step: [{}]  Cost: [{}]", count, cur_cost);
             }
             count += 1;
+
+            if debug_states.contains(&board) {
+                print_board(&board, &format!("State: {}  Cost: [{}]", state, cur_cost));
+                
+                if state == 20 {
+                    let mut x = 5;
+                    x += 3;
+                    println!("Hacky hack [{}]", x);
+                }
+
+                state += 1;
+            }
 
             // Check for solution
             if is_solved(&board, part_one) {
@@ -3357,7 +3373,8 @@ pub mod day23 {
             closed_list.insert(board.clone());
 
             // foreach piece
-            for row in 0..5 {
+            let height = board.len() / WIDTH;
+            for row in 0..height {
                 for col in 0..WIDTH {
                     let idx = row * WIDTH + col;
                     let tile = board[idx];
