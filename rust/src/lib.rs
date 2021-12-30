@@ -3458,29 +3458,11 @@ pub mod day23 {
     }
 
     fn is_stop_pos(idx: usize) -> bool {
-        idx == 14
-            || idx == 15
-            || idx == 17
-            || idx == 19
-            || idx == 21
-            || idx == 23
-            || idx == 24
-            || idx == 29
-            || idx == 31
-            || idx == 33
-            || idx == 35
-            || idx == 42
-            || idx == 44
-            || idx == 46
-            || idx == 48
-            || idx == 55
-            || idx == 57
-            || idx == 59
-            || idx == 61
-            || idx == 68
-            || idx == 70
-            || idx == 72
-            || idx == 74
+        const STOP_POSITIONS: [usize; 23] = [
+            14, 15, 17, 19, 21, 23, 24, 29, 31, 33, 35, 42, 44, 46, 48, 55, 57, 59, 61, 68, 70, 72,
+            74,
+        ];
+        STOP_POSITIONS.iter().any(|pos| *pos == idx)
     }
 
     fn is_right_room(critter: u8, idx: usize) -> bool {
