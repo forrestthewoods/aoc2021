@@ -3290,18 +3290,12 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        if false {
-            //let board = parse_input(crate::data::DAY23);
-            let board = parse_input(crate::data::_DAY23_EXAMPLE1);
-            let answer_part1 = solve(&board, true);
-            writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
-        }
+        let answer_part1 = solve(&parse_input(crate::data::DAY23), true);
+        writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
-        if true {
-            let board = parse_input(crate::data::_DAY23_EXAMPLE2);
-            let answer_part2 = solve(&board, false);
-            writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
-        }
+        let answer_part2 = solve(&parse_input(crate::data::DAY23_PART2), false);
+        writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
+
         result
     }
 
@@ -3688,18 +3682,16 @@ pub mod day23 {
                 solve(&parse_input(crate::data::_DAY23_EXAMPLE1), true),
                 12521
             );
-            /*
             assert_eq!(
                 solve(&parse_input(crate::data::_DAY23_EXAMPLE2), false),
                 44169
             );
-            */
         }
 
         #[test]
         fn verify() {
-            let board = parse_input(crate::data::DAY23);
-            assert_eq!(solve(&board, true), 14627);
+            assert_eq!(solve(&parse_input(crate::data::DAY23), true), 14627);
+            assert_eq!(solve(&parse_input(crate::data::DAY23_PART2), false), 41591);
         }
     }
 }
