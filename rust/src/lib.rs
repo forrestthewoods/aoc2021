@@ -3361,14 +3361,6 @@ pub mod day23 {
 
         let step_costs = [1, 10, 100, 1000];
 
-        let debug_state_data = crate::data::_DAY23_EXAMPLE2_STATES;
-        let debug_states: HashSet<_> = debug_state_data
-            .split("\r\n\r\n")
-            .map(|chunk| parse_input(chunk))
-            .collect();
-
-        let mut count = 0;
-        let mut state = 0;
         while !open_list.is_empty() {
             let entry = open_list.pop().unwrap();
             let board = entry.state.as_slice();
@@ -3381,31 +3373,8 @@ pub mod day23 {
                 closed_list.insert(board.to_owned());
             }
 
-            if count % 10000 == 0 {
-                println!("Step: [{}]  Cost: [{}]", count, cur_cost);
-            }
-            count += 1;
-
-            if debug_states.contains(board) {
-                print_board(&board, &format!("State: {}  Cost: [{}]", state, cur_cost));
-
-                if state == 20 {
-                    let mut x = 5;
-                    x += 3;
-                    println!("Hacky hack [{}]", x);
-                }
-
-                state += 1;
-            }
-
             // Check for solution
             if is_solved(&board, part_one) {
-                for (step, state) in entry.path.iter().enumerate() {
-                    print_board(&state.0, &format!("\nStep {}  Cost {}", step, state.1));
-                }
-
-                print_board(&board, "\nSolution");
-
                 return cur_cost;
             }
 
@@ -3590,23 +3559,6 @@ pub mod day23 {
             }
         }
 
-        /*
-        if src == 17
-            && dst == 31
-            && board[src] == Tile::Amphipod(1)
-            && !part_one
-            && board[70] == Tile::Amphipod(3)
-        {
-            println!("\n\nWeird scenario");
-            print_board(board, "\n\nWeird scenario");
-            println!(
-                "\nEnemy in room: {}",
-                room_has_enemy(critter, board, part_one)
-            );
-            println!("End weird scenario\n\n");
-        }
-        */
-
         true
     }
 
@@ -3643,16 +3595,9 @@ pub mod day23 {
                 next_board[starting_idx] = Tile::Empty;
                 next_board[dst_idx] = starting_tile;
 
-                // Compute distance distance
+                // Distance is from r0 to hallway + c0 to c1 + hallway to r1
                 let (r0, c0) = (starting_idx / WIDTH, starting_idx % WIDTH);
                 let (r1, c1) = (dst_idx / WIDTH, dst_idx % WIDTH);
-
-                if c0 == c1 {
-                    print_board(board, "UH OH");
-                }
-                assert_ne!(c0, c1, "({},{}) -> ({},{})", r0, c0, r1, c1); // should never move within column
-
-                // Distance is from r0 to hallway + c0 to c1 + hallway to r1
                 let dist = (r0 - 1) + (c1 as isize - c0 as isize).abs() as usize + (r1 - 1);
 
                 // Store board state
