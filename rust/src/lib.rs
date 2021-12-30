@@ -3247,9 +3247,7 @@ pub mod day22 {
 }
 
 pub mod day23 {
-    use priority_queue::PriorityQueue;
-    use std::cmp::Reverse;
-    use std::collections::HashSet;
+    use std::collections::{BinaryHeap, HashSet};
     use std::fmt::Write;
 
     #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
@@ -3291,14 +3289,14 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let board = parse_input(crate::data::DAY23);
+        //let board = parse_input(crate::data::DAY23);
         //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
-        let answer_part1 = solve(&board, true);
-        writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
+        //let answer_part1 = solve(&board, true);
+        //writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
 
-        //let board = parse_input(crate::data::_DAY23_EXAMPLE2);
-        //let answer_part2 = solve(&board, false);
-        //writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
+        let board = parse_input(crate::data::_DAY23_EXAMPLE2);
+        let answer_part2 = solve(&board, false);
+        writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
         result
     }
 
@@ -3353,12 +3351,10 @@ pub mod day23 {
     }
 
     fn solve(initial_board: &[Tile], part_one: bool) -> usize {
-        //let mut open_list = PriorityQueue::<Board, Reverse<usize>>::new();
-        let mut open_list : std::collections::BinaryHeap<Entry> = Default::default();
+        let mut open_list : BinaryHeap<Entry> = Default::default();
         let mut closed_list: HashSet<Board> = Default::default();
 
         open_list.push(Entry { state: initial_board.to_vec(), cost: 0 });
-        //closed_list.insert(initial_board.to_vec());
 
         let step_costs = [1, 10, 100, 1000];
 
