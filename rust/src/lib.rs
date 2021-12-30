@@ -3261,7 +3261,8 @@ pub mod day23 {
 
     struct Entry {
         state: Board,
-        cost: usize
+        cost: usize,
+        path: Vec<(Board, usize)>,
     }
 
     impl PartialEq for Entry {
@@ -3270,7 +3271,7 @@ pub mod day23 {
         }
     }
 
-    impl Eq for Entry { }
+    impl Eq for Entry {}
 
     impl PartialOrd for Entry {
         fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
@@ -3289,14 +3290,18 @@ pub mod day23 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        //let board = parse_input(crate::data::DAY23);
-        //let board = parse_input(crate::data::_DAY23_EXAMPLE1);
-        //let answer_part1 = solve(&board, true);
-        //writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
+        if false {
+            //let board = parse_input(crate::data::DAY23);
+            let board = parse_input(crate::data::_DAY23_EXAMPLE1);
+            let answer_part1 = solve(&board, true);
+            writeln!(&mut result, "Day 23, Problem 1 - [{}]", answer_part1).unwrap();
+        }
 
-        let board = parse_input(crate::data::_DAY23_EXAMPLE2);
-        let answer_part2 = solve(&board, false);
-        writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
+        if true {
+            let board = parse_input(crate::data::_DAY23_EXAMPLE2);
+            let answer_part2 = solve(&board, false);
+            writeln!(&mut result, "Day 23, Problem 2 - [{}]", answer_part2).unwrap();
+        }
         result
     }
 
@@ -3351,15 +3356,22 @@ pub mod day23 {
     }
 
     fn solve(initial_board: &[Tile], part_one: bool) -> usize {
-        let mut open_list : BinaryHeap<Entry> = Default::default();
+        let mut open_list: BinaryHeap<Entry> = Default::default();
         let mut closed_list: HashSet<Board> = Default::default();
 
-        open_list.push(Entry { state: initial_board.to_vec(), cost: 0 });
+        open_list.push(Entry {
+            state: initial_board.to_vec(),
+            cost: 0,
+            path: Default::default(),
+        });
 
         let step_costs = [1, 10, 100, 1000];
 
         let debug_state_data = crate::data::_DAY23_EXAMPLE2_STATES;
-        let debug_states : HashSet<_> = debug_state_data.split("\r\n\r\n").map(|chunk| parse_input(chunk)).collect();
+        let debug_states: HashSet<_> = debug_state_data
+            .split("\r\n\r\n")
+            .map(|chunk| parse_input(chunk))
+            .collect();
 
         let mut count = 0;
         let mut state = 0;
@@ -3382,7 +3394,7 @@ pub mod day23 {
 
             if debug_states.contains(board) {
                 print_board(&board, &format!("State: {}  Cost: [{}]", state, cur_cost));
-                
+
                 if state == 20 {
                     let mut x = 5;
                     x += 3;
@@ -3394,7 +3406,11 @@ pub mod day23 {
 
             // Check for solution
             if is_solved(&board, part_one) {
-                print_board(&board, "Solution");
+                for (step, state) in entry.path.iter().enumerate() {
+                    print_board(&state.0, &format!("\nStep {}  Cost {}", step, state.1));
+                }
+
+                print_board(&board, "\nSolution");
 
                 return cur_cost;
             }
@@ -3415,7 +3431,14 @@ pub mod day23 {
                             for (new_board, num_steps) in moves {
                                 let new_cost = num_steps * step_costs[a as usize];
                                 if !closed_list.contains(&new_board) {
-                                    open_list.push(Entry { state: new_board, cost: cur_cost + new_cost });
+                                    let mut path = entry.path.clone();
+                                    path.push((entry.state.clone(), cur_cost));
+
+                                    open_list.push(Entry {
+                                        state: new_board,
+                                        cost: cur_cost + new_cost,
+                                        path,
+                                    });
                                 }
                             }
                         }
@@ -3511,13 +3534,10 @@ pub mod day23 {
         let start = get_room_front(critter);
         let back = get_room_back(critter, part_one);
 
-        (start..=back)
-            .step_by(WIDTH)
-            .map(|idx| board[idx])
-            .all(|tile| match tile {
-                Tile::Amphipod(c) => c != critter,
-                _ => false,
-            })
+        (start..=back).step_by(WIDTH).any(|idx| match board[idx] {
+            Tile::Amphipod(c) => c != critter,
+            _ => false,
+        })
     }
 
     fn blocks_empty_space(critter: u8, dst: usize, board: &[Tile], part_one: bool) -> bool {
@@ -3576,6 +3596,23 @@ pub mod day23 {
             }
         }
 
+        /*
+        if src == 17
+            && dst == 31
+            && board[src] == Tile::Amphipod(1)
+            && !part_one
+            && board[70] == Tile::Amphipod(3)
+        {
+            println!("\n\nWeird scenario");
+            print_board(board, "\n\nWeird scenario");
+            println!(
+                "\nEnemy in room: {}",
+                room_has_enemy(critter, board, part_one)
+            );
+            println!("End weird scenario\n\n");
+        }
+        */
+
         true
     }
 
@@ -3615,7 +3652,7 @@ pub mod day23 {
                 // Compute distance distance
                 let (r0, c0) = (starting_idx / WIDTH, starting_idx % WIDTH);
                 let (r1, c1) = (dst_idx / WIDTH, dst_idx % WIDTH);
-                
+
                 if c0 == c1 {
                     print_board(board, "UH OH");
                 }
