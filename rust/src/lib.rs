@@ -3262,7 +3262,6 @@ pub mod day23 {
     struct Entry {
         state: Board,
         cost: usize,
-        path: Vec<(Board, usize)>,
     }
 
     impl PartialEq for Entry {
@@ -3356,7 +3355,6 @@ pub mod day23 {
         open_list.push(Entry {
             state: initial_board.to_vec(),
             cost: 0,
-            path: Default::default(),
         });
 
         let step_costs = [1, 10, 100, 1000];
@@ -3394,13 +3392,9 @@ pub mod day23 {
                             for (new_board, num_steps) in moves {
                                 let new_cost = num_steps * step_costs[a as usize];
                                 if !closed_list.contains(&new_board) {
-                                    let mut path = entry.path.clone();
-                                    path.push((entry.state.clone(), cur_cost));
-
                                     open_list.push(Entry {
                                         state: new_board,
                                         cost: cur_cost + new_cost,
-                                        path,
                                     });
                                 }
                             }
@@ -3619,6 +3613,53 @@ pub mod day23 {
         fn verify() {
             assert_eq!(solve(&parse_input(crate::data::DAY23), true), 14627);
             assert_eq!(solve(&parse_input(crate::data::DAY23_PART2), false), 41591);
+        }
+    }
+}
+
+pub mod day24 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let answer_part1 = part1("");
+        writeln!(&mut result, "Day 24, Problem 1 - [{}]", answer_part1).unwrap();
+
+        /*
+        let answer_part2 = part2("");
+        writeln!(&mut result, "Day 24, Problem 2 - [{}]", answer_part2).unwrap();
+        */
+        result
+    }
+
+    // inp a => a = input
+    // add a b => a += b
+    // mul a b => a *= b
+    // div a b => a /= b
+    // mod a b => a %= b
+    // eql a b => a = a == b
+
+    fn part1(_input: &str) -> usize {
+        0
+    }
+
+    /*
+    fn part2(_input: &str) -> usize {
+        0
+    }
+    */
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+        }
+
+        #[test]
+        fn verify() {
         }
     }
 }
