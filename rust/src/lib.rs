@@ -3261,6 +3261,31 @@ pub mod day23 {
 
     type Board = Vec<Tile>;
 
+    struct Entry {
+        state: Board,
+        cost: usize
+    }
+
+    impl PartialEq for Entry {
+        fn eq(&self, other: &Self) -> bool {
+            self.state == other.state && self.cost == other.cost
+        }
+    }
+
+    impl Eq for Entry { }
+
+    impl PartialOrd for Entry {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for Entry {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.cost.cmp(&other.cost).reverse()
+        }
+    }
+
     const WIDTH: usize = 13; // hardcoded for now
 
     pub fn run() -> String {
