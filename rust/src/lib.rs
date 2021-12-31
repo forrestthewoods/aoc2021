@@ -3709,7 +3709,7 @@ pub mod day24 {
     const B: [isize; 14] = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
     const C: [isize; 14] = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
 
-    fn run_one(w: isize, mut z: isize, idx: usize) -> isize {
+    fn run_one_slower(w: isize, mut z: isize, idx: usize) -> isize {
         let a = A[idx];
         let b = B[idx];
         let c = C[idx];
@@ -3725,7 +3725,7 @@ pub mod day24 {
         z
     }
 
-    fn run_one_b(w: isize, mut z: isize, idx: usize) -> isize {
+    fn run_one(w: isize, mut z: isize, idx: usize) -> isize {
         let a = A[idx];
         let b = B[idx];
         let c = C[idx];
@@ -3740,6 +3740,8 @@ pub mod day24 {
         }
     }
 
+    // so when is 
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -3748,7 +3750,7 @@ pub mod day24 {
         fn scratch() {
             for w in 1..=9 {
                 for z in 0..100 {
-                    assert_eq!(run_one(w, z, 13), run_one_b(w, z, 13), "w:{} z:{}", w, z);
+                    assert_eq!(run_one(w, z, 13), run_one_slower(w, z, 13), "w:{} z:{}", w, z);
                 }
             }
         }
@@ -3757,7 +3759,7 @@ pub mod day24 {
         fn debugger() {
             let w = 1;
             let z = 0;
-            assert_eq!(run_one(w, z, 13), run_one_b(w, z, 13), "w:{} z:{}", w, z);
+            assert_eq!(run_one(w, z, 13), run_one_slower(w, z, 13), "w:{} z:{}", w, z);
         }
     }
 
