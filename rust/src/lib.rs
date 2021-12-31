@@ -3618,12 +3618,12 @@ pub mod day23 {
 }
 
 pub mod day24 {
-    use std::fmt::Write;
+    use std::{fmt::Write, collections::VecDeque};
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let answer_part1 = part1("");
+        let answer_part1 = part1();
         writeln!(&mut result, "Day 24, Problem 1 - [{}]", answer_part1).unwrap();
 
         /*
@@ -3633,19 +3633,57 @@ pub mod day24 {
         result
     }
 
-    fn part1(_input: &str) -> usize {
+    fn part1() -> usize {
         // constants
-        let a = [1, 1, 1, 1, 26, 1, 26, 1, 1, 26, 26, 26, 26, 26];
-        let b = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
-        let c = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
+        let a: [isize; 14] = [1, 1, 1, 1, 26, 1, 26, 1, 1, 26, 26, 26, 26, 26];
+        let b: [isize; 14] = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
+        let c: [isize; 14] = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
 
-        let mut result: usize = 0;
+        for num in (0..=99_999_999_999_999_usize).rev() {
+            // Convert to digits
+            let mut digits : [usize; 14] = Default::default();
+            let mut n = num;
+            for i in 0..14 {
+                let digit = n % 10;
+                digits[14 - i - 1] = digit;
+                n /= 10;
+            }
 
+            if digits.iter().any(|digit| *digit == 0) {
+                continue;
+            }
+
+            let mut z = 0;
+            for idx in 0..14 {
+                let w = digits[idx] as isize;
+                z = run_one(w, z, a[idx], b[idx], c[idx]);
+            }
+
+            if z == 0 {
+                return num;
+            }
+        }
+
+        unreachable!("Failed to find solution");
+
+
+
+        /*
         let mut z = 0;
         for idx in 0..14 {
             z = run_one(9, z, a[idx], b[idx], c[idx]);
             println!("{} => {}", idx, z);
         }
+        */
+
+        /*
+        let mut z = 0;
+        for w in 1..=9 {
+            z = run_one(w, z, a[0], b[0], c[0]);
+            println!("w:{} => z={}", w, z);
+        }
+        */
+
         /*
                 let mut z = 0;
                 for idx in 0..14 {
@@ -3659,8 +3697,6 @@ pub mod day24 {
                     }
                 }
         */
-
-        result
     }
 
     /*
