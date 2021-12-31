@@ -3633,15 +3633,34 @@ pub mod day24 {
         result
     }
 
-    // inp a => a = input
-    // add a b => a += b
-    // mul a b => a *= b
-    // div a b => a /= b
-    // mod a b => a %= b
-    // eql a b => a = a == b
-
     fn part1(_input: &str) -> usize {
-        0
+        // constants
+        let a = [1, 1, 1, 1, 26, 1, 26, 1, 1, 26, 26, 26, 26, 26];
+        let b = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
+        let c = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
+
+        let mut result : usize = 0;
+
+        let mut z = 0;
+        for idx in 0..14 {
+            z = run_one(9, z, a[idx], b[idx], c[idx]);
+            println!("{} => {}", idx, z);
+        }
+/*
+        let mut z = 0;
+        for idx in 0..14 {
+            for w in (1..=9).rev() {
+                let next_z = run_one(w, z, a[idx], b[idx], c[idx]);
+                if next_z != 0 {
+                    result <<= 1;
+                    result += w as usize;
+                    break;
+                }
+            }
+        }
+*/
+
+        result
     }
 
     /*
@@ -3650,16 +3669,28 @@ pub mod day24 {
     }
     */
 
+    fn run_one(w: isize, mut z: isize, a: isize, b: isize, c: isize) -> isize {
+        let mut x = z % 26;
+        z /= a;
+        x += b;
+        x = (x != w) as isize;
+        let mut y = 25*x + 1;
+        z *= y;
+        y = w+c * x;
+        z += y;
+        z
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
 
         #[test]
-        fn examples() {
-        }
-
-        #[test]
-        fn verify() {
+        fn scratch() {
+            let z = run_one(9, 0, 1, 11, 14);
+            println!("{}", z);
         }
     }
+
+    // 99999999999999 - too high
 }
