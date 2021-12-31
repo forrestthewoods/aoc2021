@@ -3633,11 +3633,11 @@ pub mod day24 {
         result
     }
 
+
+
     fn part1() -> usize {
         // constants
-        let a: [isize; 14] = [1, 1, 1, 1, 26, 1, 26, 1, 1, 26, 26, 26, 26, 26];
-        let b: [isize; 14] = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
-        let c: [isize; 14] = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
+
 
         for num in (0..=999_999_999_usize).rev() {
             // Convert to digits
@@ -3656,7 +3656,7 @@ pub mod day24 {
             let mut z = 0;
             for idx in 0..14 {
                 let w = digits[idx] as isize;
-                z = run_one(w, z, a[idx], b[idx], c[idx]);
+                z = run_one(w, z, idx);
             }
 
             if z == 0 {
@@ -3705,7 +3705,15 @@ pub mod day24 {
     }
     */
 
-    fn run_one(w: isize, mut z: isize, a: isize, b: isize, c: isize) -> isize {
+    const A: [isize; 14] = [1, 1, 1, 1, 26, 1, 26, 1, 1, 26, 26, 26, 26, 26];
+    const B: [isize; 14] = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
+    const C: [isize; 14] = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
+
+    fn run_one(w: isize, mut z: isize, idx: usize) -> isize {
+        let a = A[idx];
+        let b = B[idx];
+        let c = C[idx];
+
         let mut x = z % 26;
         z /= a;
         x += b;
@@ -3717,14 +3725,39 @@ pub mod day24 {
         z
     }
 
+    fn run_one_b(w: isize, mut z: isize, idx: usize) -> isize {
+        let a = A[idx];
+        let b = B[idx];
+        let c = C[idx];
+
+        let x = z % 26;
+        z /= a;
+    
+        if x+b != w {
+            z*26 + w + c
+        } else {
+            z + w
+        }
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
 
         #[test]
         fn scratch() {
-            let z = run_one(9, 0, 1, 11, 14);
-            println!("{}", z);
+            for w in 1..=9 {
+                for z in 0..100 {
+                    assert_eq!(run_one(w, z, 13), run_one_b(w, z, 13), "w:{} z:{}", w, z);
+                }
+            }
+        }
+
+        #[test]
+        fn debugger() {
+            let w = 1;
+            let z = 0;
+            assert_eq!(run_one(w, z, 13), run_one_b(w, z, 13), "w:{} z:{}", w, z);
         }
     }
 
