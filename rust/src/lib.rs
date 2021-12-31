@@ -3639,26 +3639,26 @@ pub mod day24 {
         let b = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
         let c = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
 
-        let mut result : usize = 0;
+        let mut result: usize = 0;
 
         let mut z = 0;
         for idx in 0..14 {
             z = run_one(9, z, a[idx], b[idx], c[idx]);
             println!("{} => {}", idx, z);
         }
-/*
-        let mut z = 0;
-        for idx in 0..14 {
-            for w in (1..=9).rev() {
-                let next_z = run_one(w, z, a[idx], b[idx], c[idx]);
-                if next_z != 0 {
-                    result <<= 1;
-                    result += w as usize;
-                    break;
+        /*
+                let mut z = 0;
+                for idx in 0..14 {
+                    for w in (1..=9).rev() {
+                        let next_z = run_one(w, z, a[idx], b[idx], c[idx]);
+                        if next_z != 0 {
+                            result <<= 1;
+                            result += w as usize;
+                            break;
+                        }
+                    }
                 }
-            }
-        }
-*/
+        */
 
         result
     }
@@ -3674,9 +3674,9 @@ pub mod day24 {
         z /= a;
         x += b;
         x = (x != w) as isize;
-        let mut y = 25*x + 1;
+        let mut y = 25 * x + 1;
         z *= y;
-        y = w+c * x;
+        y = w + c * x;
         z += y;
         z
     }
