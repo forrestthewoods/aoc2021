@@ -3618,7 +3618,7 @@ pub mod day23 {
 }
 
 pub mod day24 {
-    use std::{fmt::Write, collections::VecDeque};
+    use std::fmt::Write;
 
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
@@ -3639,7 +3639,7 @@ pub mod day24 {
         let b: [isize; 14] = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
         let c: [isize; 14] = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
 
-        for num in (0..=99_999_999_999_999_usize).rev() {
+        for num in (0..=999_999_999_usize).rev() {
             // Convert to digits
             let mut digits : [usize; 14] = Default::default();
             let mut n = num;
