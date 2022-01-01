@@ -42,8 +42,8 @@ fn main() {
         // aoc2021::day21::run as DayFn,
         // aoc2021::day22::run as DayFn,
         // aoc2021::day23::run as DayFn,
-        aoc2021::day24::run as DayFn,
-        // aoc2021::day25::run as DayFn,
+        // aoc2021::day24::run as DayFn,
+        aoc2021::day25::run as DayFn,
     ];
 
     let start = std::time::Instant::now();

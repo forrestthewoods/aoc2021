@@ -3372,7 +3372,7 @@ pub mod day23 {
             }
 
             // Check for solution
-            if is_solved(&board, part_one) {
+            if is_solved(board, part_one) {
                 return cur_cost;
             }
 
@@ -3388,7 +3388,7 @@ pub mod day23 {
                     match tile {
                         Tile::Wall | Tile::Empty => continue,
                         Tile::Amphipod(a) => {
-                            let moves = explore_moves(&board, idx, part_one);
+                            let moves = explore_moves(board, idx, part_one);
                             for (new_board, num_steps) in moves {
                                 let new_cost = num_steps * step_costs[a as usize];
                                 if !closed_list.contains(&new_board) {
@@ -3654,7 +3654,8 @@ pub mod day24 {
 
             let mut z = 0;
             for idx in 0..14 {
-                let w = digits[idx] as isize;
+                let clippy_idx = idx;
+                let w = digits[clippy_idx] as isize;
                 z = run_one(w, z, idx);
                 num_runs += 1;
                 if z != 0 {
@@ -3829,5 +3830,106 @@ pub mod day24 {
             z = run_one(4, z, 9);
             println!("z = {}", z);
         }
+    }
+}
+
+pub mod day25 {
+    use std::fmt::Write;
+
+    pub fn run() -> String {
+        let mut result = String::with_capacity(128);
+
+        let (board, width) = parse_input(crate::data::DAY25);
+        let answer_part1 = part1(&board, width);
+        writeln!(&mut result, "Day 25, Problem 1 - [{}]", answer_part1).unwrap();
+
+        result
+    }
+
+    fn parse_input(input: &str) -> (Vec<u8>, usize) {
+        let width = input.lines().next().unwrap().len();
+
+        let tiles = input
+            .lines()
+            .flat_map(|line| line.chars().map(|c| c as u8))
+            .collect();
+        (tiles, width)
+    }
+
+    fn part1(init_board: &[u8], width: usize) -> usize {
+
+        let mut board = init_board.to_vec();
+        let height = board.len() / width;
+
+        let mut step = 0;
+        loop {
+            let mut any_moved = false;
+
+            // Move all east facing
+            let mut to_move : Vec<(usize, usize)> = Default::default();
+            for src in 0..board.len() {
+                if board[src] != b'>' {
+                    continue;
+                }
+
+                let (r0, c0) = (src / width, src % width);
+                let c1 = (c0 + 1) % width;
+                let dst = r0*width + c1;
+                if board[dst] == b'.' {
+                    any_moved = true;
+                    to_move.push((src, dst));
+                }
+            }
+
+            for (src, dst) in &to_move {
+                board[*src] = b'.';
+                board[*dst] = b'>';
+            }
+
+            // Move all south facing
+            to_move.clear();
+            for src in 0..board.len() {
+                if board[src] != b'v' {
+                    continue;
+                }
+
+                let (r0, c0) = (src / width, src % width);
+                let r1 = (r0 + 1) % height;
+                let dst = r1*width + c0;
+                if board[dst] == b'.' {
+                    any_moved = true;
+                    to_move.push((src, dst));
+                }
+            }
+
+            for (src, dst) in to_move {
+                board[src] = b'.';
+                board[dst] = b'v';
+            }
+
+            step += 1;
+
+            // Check for solution
+            if !any_moved {
+                return step;
+            }
+
+        }
+        // unreachable
+    }
+
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn examples() {
+            let (board, width) = parse_input(crate::data::_DAY25_EXAMPLE1);
+            assert_eq!(part1(&board, width), 58);
+        }
+
+        #[test]
+        fn verify() {}
     }
 }

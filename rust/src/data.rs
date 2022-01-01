@@ -62,3 +62,6 @@ pub const DAY23_PART2: &str = include_str!("../../data/day23_part2.txt");
 pub const _DAY23_EXAMPLE1: &str = include_str!("../../data/day23_example1.txt");
 pub const _DAY23_EXAMPLE2: &str = include_str!("../../data/day23_example2.txt");
 pub const _DAY23_EXAMPLE2_STATES: &str = include_str!("../../data/day23_example2_states.txt");
+
+pub const DAY25: &str = include_str!("../../data/day25.txt");
+pub const _DAY25_EXAMPLE1: &str = include_str!("../../data/day25_example1.txt");
