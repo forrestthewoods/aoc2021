@@ -3623,18 +3623,14 @@ pub mod day24 {
     pub fn run() -> String {
         let mut result = String::with_capacity(128);
 
-        let answer_part1 = part1();
-        writeln!(&mut result, "Day 24, Problem 1 - [{}]", answer_part1).unwrap();
+        // solved by hand on paper
+        writeln!(&mut result, "Day 24, Problem 1 - [45989929946199]").unwrap();
+        writeln!(&mut result, "Day 24, Problem 1 - [11912814611156]").unwrap();
 
-        /*
-        let answer_part2 = part2("");
-        writeln!(&mut result, "Day 24, Problem 2 - [{}]", answer_part2).unwrap();
-        */
         result
     }
 
-
-
+    #[allow(dead_code)]
     fn part1() -> usize {
         // constants
 
@@ -3644,7 +3640,7 @@ pub mod day24 {
             num_nums += 1;
 
             // Convert to digits
-            let mut digits : [usize; 14] = Default::default();
+            let mut digits: [usize; 14] = Default::default();
             let mut n = num;
             for i in 0..14 {
                 let digit = n % 10;
@@ -3671,9 +3667,10 @@ pub mod day24 {
             }
         }
 
-        unreachable!("Failed to find solution after [{}] runs over [{}] nums", num_runs, num_nums);
-
-
+        unreachable!(
+            "Failed to find solution after [{}] runs over [{}] nums",
+            num_runs, num_nums
+        );
 
         /*
         let mut z = 0;
@@ -3734,32 +3731,15 @@ pub mod day24 {
         y += 25;
         y *= x;
         y += 1;
-        
-        z *= y;
+
+        z *= y; // z*= (26 or 1)
         y *= 0;
         y += w;
-        y += c;
-        y *= x;
+        y += c; // y = w+c
+        y *= x; // y = w+c or 0
 
         z += y;
 
-        z
-    }
-
-    #[allow(dead_code)]
-    fn run_one_slower(w: isize, mut z: isize, idx: usize) -> isize {
-        let a = A[idx];
-        let b = B[idx];
-        let c = C[idx];
-
-        let mut x = z % 26;
-        z /= a;
-        x += b;
-        x = (x != w) as isize;
-        let mut y = 25 * x + 1;
-        z *= y;
-        y = w + c * x;
-        z += y;
         z
     }
 
@@ -3770,16 +3750,14 @@ pub mod day24 {
 
         let x = z % 26;
         z /= a;
-    
-        if x+b != w {
-            // if (z%26)+b
-            z*26 + w + c
+
+        if x + b != w {
+            // if (z%26)+b != w
+            z * 26 + w + c
         } else {
-            // if (z%26)+b == w then z += w
-            z + w
+            z
         }
     }
-
 
     #[cfg(test)]
     mod tests {
@@ -3790,8 +3768,14 @@ pub mod day24 {
             for w in 1..=9 {
                 for idx in 0..14 {
                     for z in 0..100 {
-                        assert_eq!(run_one(w, z, idx), run_one_slower(w, z, idx), "w:{} z:{}", w, z);
-                        assert_eq!(run_one(w, z, idx), run_one_slowest(w, z, idx), "w:{} z:{}", w, z);
+                        //assert_eq!(run_one(w, z, idx), run_one_slower(w, z, idx), "w:{} z:{}", w, z);
+                        assert_eq!(
+                            run_one(w, z, idx),
+                            run_one_slowest(w, z, idx),
+                            "w:{} z:{}",
+                            w,
+                            z
+                        );
                     }
                 }
             }
@@ -3801,14 +3785,20 @@ pub mod day24 {
         fn debugger() {
             let w = 1;
             let z = 0;
-            assert_eq!(run_one(w, z, 13), run_one_slower(w, z, 13), "w:{} z:{}", w, z);
+            assert_eq!(
+                run_one(w, z, 13),
+                run_one_slowest(w, z, 13),
+                "w:{} z:{}",
+                w,
+                z
+            );
 
             part1();
         }
 
         #[test]
         fn simulate() {
-            let digits : [isize; 14] = [1,3,5,7,9,2,4,6,8,9,9,9,9,9];
+            let digits: [isize; 14] = [1, 3, 5, 7, 9, 2, 4, 6, 8, 9, 9, 9, 9, 9];
             let mut z = 0;
             for idx in 0..14 {
                 let w = digits[idx];
@@ -3821,15 +3811,23 @@ pub mod day24 {
         fn solve_one() {
             println!("test");
             for w in 1..=9 {
-                for z in -26*26..=26*26 {
-                    let new_z = run_one_slowest(w, z, 13);
+                for z in -26 * 26..=26 * 26 {
+                    let new_z = run_one(w, z, 13);
                     if new_z == 0 {
                         println!("Solved digit. w: {}  init_z: {}", w, z);
                     }
                 }
             }
         }
-    }
 
-    // 99999999999999 - too high
+        #[test]
+        fn test_inner() {
+            let mut z = 0;
+            println!("z = {}", z);
+            z = run_one(9, z, 8);
+            println!("z = {}", z);
+            z = run_one(4, z, 9);
+            println!("z = {}", z);
+        }
+    }
 }
