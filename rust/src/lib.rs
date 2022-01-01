@@ -3717,6 +3717,36 @@ pub mod day24 {
     const C: [isize; 14] = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
 
     #[allow(dead_code)]
+    fn run_one_slowest(w: isize, mut z: isize, idx: usize) -> isize {
+        let a = A[idx];
+        let b = B[idx];
+        let c = C[idx];
+
+        let mut x = 0;
+        x += z;
+        x %= 26;
+
+        z /= a;
+        x += b;
+        x = (x == w) as isize;
+        x = (x == 0) as isize;
+        let mut y = 0;
+        y += 25;
+        y *= x;
+        y += 1;
+        
+        z *= y;
+        y *= 0;
+        y += w;
+        y += c;
+        y *= x;
+
+        z += y;
+
+        z
+    }
+
+    #[allow(dead_code)]
     fn run_one_slower(w: isize, mut z: isize, idx: usize) -> isize {
         let a = A[idx];
         let b = B[idx];
@@ -3739,7 +3769,7 @@ pub mod day24 {
         let c = C[idx];
 
         let x = z % 26;
-        z /= a; // this results in: z, 0, 1
+        z /= a;
     
         if x+b != w {
             // if (z%26)+b
@@ -3761,6 +3791,7 @@ pub mod day24 {
                 for idx in 0..14 {
                     for z in 0..100 {
                         assert_eq!(run_one(w, z, idx), run_one_slower(w, z, idx), "w:{} z:{}", w, z);
+                        assert_eq!(run_one(w, z, idx), run_one_slowest(w, z, idx), "w:{} z:{}", w, z);
                     }
                 }
             }
@@ -3777,9 +3808,25 @@ pub mod day24 {
 
         #[test]
         fn simulate() {
-            for w in (1..=9).rev() {
-                let z = run_one(w, 0, 13);
-                println!("w: [{}] => z [{}]", w, z);
+            let digits : [isize; 14] = [1,3,5,7,9,2,4,6,8,9,9,9,9,9];
+            let mut z = 0;
+            for idx in 0..14 {
+                let w = digits[idx];
+                z = run_one(w, z, idx);
+                println!("After digit [{}] z = {}", idx, z);
+            }
+        }
+
+        #[test]
+        fn solve_one() {
+            println!("test");
+            for w in 1..=9 {
+                for z in -26*26..=26*26 {
+                    let new_z = run_one_slowest(w, z, 13);
+                    if new_z == 0 {
+                        println!("Solved digit. w: {}  init_z: {}", w, z);
+                    }
+                }
             }
         }
     }
