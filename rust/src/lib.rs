@@ -3638,8 +3638,11 @@ pub mod day24 {
     fn part1() -> usize {
         // constants
 
+        let mut num_runs = 0;
+        let mut num_nums = 0;
+        for num in (0..=99_999_999_999_999_usize).rev() {
+            num_nums += 1;
 
-        for num in (0..=999_999_999_usize).rev() {
             // Convert to digits
             let mut digits : [usize; 14] = Default::default();
             let mut n = num;
@@ -3657,6 +3660,10 @@ pub mod day24 {
             for idx in 0..14 {
                 let w = digits[idx] as isize;
                 z = run_one(w, z, idx);
+                num_runs += 1;
+                if z != 0 {
+                    break;
+                }
             }
 
             if z == 0 {
@@ -3664,7 +3671,7 @@ pub mod day24 {
             }
         }
 
-        unreachable!("Failed to find solution");
+        unreachable!("Failed to find solution after [{}] runs over [{}] nums", num_runs, num_nums);
 
 
 
@@ -3709,6 +3716,7 @@ pub mod day24 {
     const B: [isize; 14] = [11, 14, 15, 13, -12, 10, -15, 13, 10, -13, -13, -14, -2, -9];
     const C: [isize; 14] = [14, 6, 6, 13, 8, 8, 7, 10, 8, 12, 10, 8, 8, 7];
 
+    #[allow(dead_code)]
     fn run_one_slower(w: isize, mut z: isize, idx: usize) -> isize {
         let a = A[idx];
         let b = B[idx];
@@ -3731,16 +3739,17 @@ pub mod day24 {
         let c = C[idx];
 
         let x = z % 26;
-        z /= a;
+        z /= a; // this results in: z, 0, 1
     
         if x+b != w {
+            // if (z%26)+b
             z*26 + w + c
         } else {
+            // if (z%26)+b == w then z += w
             z + w
         }
     }
 
-    // so when is 
 
     #[cfg(test)]
     mod tests {
@@ -3749,8 +3758,10 @@ pub mod day24 {
         #[test]
         fn scratch() {
             for w in 1..=9 {
-                for z in 0..100 {
-                    assert_eq!(run_one(w, z, 13), run_one_slower(w, z, 13), "w:{} z:{}", w, z);
+                for idx in 0..14 {
+                    for z in 0..100 {
+                        assert_eq!(run_one(w, z, idx), run_one_slower(w, z, idx), "w:{} z:{}", w, z);
+                    }
                 }
             }
         }
@@ -3760,6 +3771,16 @@ pub mod day24 {
             let w = 1;
             let z = 0;
             assert_eq!(run_one(w, z, 13), run_one_slower(w, z, 13), "w:{} z:{}", w, z);
+
+            part1();
+        }
+
+        #[test]
+        fn simulate() {
+            for w in (1..=9).rev() {
+                let z = run_one(w, 0, 13);
+                println!("w: [{}] => z [{}]", w, z);
+            }
         }
     }
 
