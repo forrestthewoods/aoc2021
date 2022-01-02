@@ -11,7 +11,7 @@ pub fn main() anyerror!void {
     //try day03(&alloc.allocator);
     //try day04(&alloc.allocator);
     //try day05(&alloc.allocator);
-    try day06(&alloc.allocator);
+    try day06(alloc.allocator());
 }
 
 pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
@@ -291,6 +291,7 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
     // Helper function to check if a board has a solution or not
     const check_board = (struct {
         fn call(self: @This(), last_number: u8, tiles: []Tile) ?usize {
+            _ = self;
             const rowcols = [_][5]u16{
                 // rows
                 [_]u16{ 0, 1, 2, 3, 4 },
@@ -489,7 +490,7 @@ const Segment2 = struct {
     }
 };
 
-pub fn day06(alloc: *std.mem.Allocator) anyerror!void {
+pub fn day06(alloc: std.mem.Allocator) anyerror!void {
     // Open file
     var cwd = std.fs.cwd();
     const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day06.txt", std.math.maxInt(usize));
@@ -499,7 +500,7 @@ pub fn day06(alloc: *std.mem.Allocator) anyerror!void {
     var fishies = std.ArrayList(u8).init(alloc);
     defer fishies.deinit();
 
-    var values = std.mem.split(file_string, ",");
+    var values = std.mem.split(u8, file_string, ",");
     while (values.next()) |value| {
         const fish = try std.fmt.parseInt(u8, value, 10);
         try fishies.append(fish);
