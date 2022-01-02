@@ -6,15 +6,15 @@ pub fn main() anyerror!void {
     var alloc = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(!alloc.deinit());
 
-    //try day01(&alloc.allocator);
-    //try day02(&alloc.allocator);
-    //try day03(&alloc.allocator);
-    //try day04(&alloc.allocator);
-    //try day05(&alloc.allocator);
+    try day01(alloc.allocator());
+    try day02(alloc.allocator());
+    try day03(alloc.allocator());
+    try day04(alloc.allocator());
+    try day05(alloc.allocator());
     try day06(alloc.allocator());
 }
 
-pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
+pub fn day01(alloc: std.mem.Allocator) anyerror!void {
     // Read file
     var cwd = std.fs.cwd();
     const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day01.txt", std.math.maxInt(usize));
@@ -24,7 +24,7 @@ pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
     var nums = std.ArrayList(u32).init(alloc);
     defer nums.deinit();
 
-    var lines = std.mem.tokenize(file_string, "\r\n");
+    var lines = std.mem.tokenize(u8, file_string, "\r\n");
     while (lines.next()) |line| {
         const num = try std.fmt.parseInt(u32, line, 10);
         try nums.append(num);
@@ -62,7 +62,7 @@ pub fn day01(alloc: *std.mem.Allocator) anyerror!void {
     }
 }
 
-pub fn day02(alloc: *std.mem.Allocator) anyerror!void {
+pub fn day02(alloc: std.mem.Allocator) anyerror!void {
     // Data types
     const Dir = enum { Forward, Up, Down };
 
@@ -77,9 +77,9 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void {
     var commands = std.ArrayList(Entry).init(alloc);
     defer commands.deinit();
 
-    var lines = std.mem.tokenize(file_string, "\r\n");
+    var lines = std.mem.tokenize(u8, file_string, "\r\n");
     while (lines.next()) |line| {
-        var parts = std.mem.tokenize(line, " ");
+        var parts = std.mem.tokenize(u8, line, " ");
         const dir_str = parts.next().?;
         const amount_str = parts.next().?;
 
@@ -136,7 +136,7 @@ pub fn day02(alloc: *std.mem.Allocator) anyerror!void {
     }
 }
 
-pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
+pub fn day03(alloc: std.mem.Allocator) anyerror!void {
 
     // Read file
     var cwd = std.fs.cwd();
@@ -147,7 +147,7 @@ pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
     var nums = std.ArrayList(u16).init(alloc);
     defer nums.deinit();
 
-    var lines = std.mem.tokenize(file_string, "\r\n");
+    var lines = std.mem.tokenize(u8, file_string, "\r\n");
     var num_bits: usize = 0;
     while (lines.next()) |line| {
         const num = try std.fmt.parseInt(u16, line, 2);
@@ -197,7 +197,7 @@ pub fn day03(alloc: *std.mem.Allocator) anyerror!void {
     }
 }
 
-pub fn d3p2_calc(alloc: *std.mem.Allocator, numsInput: []u16, num_bits: usize, invert: bool) anyerror!usize {
+pub fn d3p2_calc(alloc: std.mem.Allocator, numsInput: []u16, num_bits: usize, invert: bool) anyerror!usize {
     // Make a copy of nums
     var nums = std.ArrayList(u16).init(alloc);
     defer nums.deinit();
@@ -241,7 +241,7 @@ pub fn d3p2_count_bits(nums: []u16, mask: u16) usize {
     return count;
 }
 
-pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
+pub fn day04(alloc: std.mem.Allocator) anyerror!void {
     const Tile = struct { number: u8, marked: bool };
     const Tiles = std.ArrayList(Tile);
     const Board = struct { tiles: Tiles, solved: bool };
@@ -256,11 +256,11 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
     defer numbers.deinit();
 
     // Split into chunks
-    var chunks = std.mem.split(file_string, "\r\n\r\n");
+    var chunks = std.mem.split(u8, file_string, "\r\n\r\n");
 
     // First chunk is numbers
     const numbers_chunk = chunks.next().?;
-    var numbers_iter = std.mem.tokenize(numbers_chunk, ",");
+    var numbers_iter = std.mem.tokenize(u8, numbers_chunk, ",");
     while (numbers_iter.next()) |number_str| {
         const num: u8 = try std.fmt.parseInt(u8, number_str, 10);
         try numbers.append(num);
@@ -276,10 +276,10 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
 
     // All remainder chunks are boards
     while (chunks.next()) |board_chunk| {
-        var lines = std.mem.split(board_chunk, "\r\n");
+        var lines = std.mem.split(u8, board_chunk, "\r\n");
         var new_board = Board{ .tiles = Tiles.init(alloc), .solved = false };
         while (lines.next()) |line| {
-            var board_numbers = std.mem.tokenize(line, " ");
+            var board_numbers = std.mem.tokenize(u8, line, " ");
             while (board_numbers.next()) |board_number_str| {
                 const num = try std.fmt.parseInt(u8, board_number_str, 10);
                 try new_board.tiles.append(Tile{ .number = num, .marked = false });
@@ -387,7 +387,7 @@ pub fn day04(alloc: *std.mem.Allocator) anyerror!void {
     std.log.info("Day 4, Problem 2 - [{}]", .{solution2});
 }
 
-pub fn day05(alloc: *std.mem.Allocator) anyerror!void {
+pub fn day05(alloc: std.mem.Allocator) anyerror!void {
     // Open file
     var cwd = std.fs.cwd();
     const file_string: []u8 = try cwd.readFileAlloc(alloc, "../data/day05.txt", std.math.maxInt(usize));
@@ -397,7 +397,7 @@ pub fn day05(alloc: *std.mem.Allocator) anyerror!void {
     var segments = std.ArrayList(Segment2).init(alloc);
     defer segments.deinit();
 
-    var lines = std.mem.split(file_string, "\r\n");
+    var lines = std.mem.split(u8, file_string, "\r\n");
     while (lines.next()) |line| {
         const segment = try Segment2.from_str(line);
         try segments.append(segment);
@@ -411,7 +411,7 @@ pub fn day05(alloc: *std.mem.Allocator) anyerror!void {
     std.log.info("Day 5, Problem 2 - [{}]", .{solution2});
 }
 
-pub fn d5_solve(alloc: *std.mem.Allocator, segments: []Segment2, include_diagonals: bool) anyerror!usize {
+pub fn d5_solve(alloc: std.mem.Allocator, segments: []Segment2, include_diagonals: bool) anyerror!usize {
     // Compute width/height
     var width : i32 = 0;
     var height : i32 = 0;
@@ -469,7 +469,7 @@ const Vector2 = struct {
         return Vector2{ .x = x, .y = y };
     }
     pub fn from_str(str: []const u8) !Vector2 {
-        var iter = std.mem.tokenize(str, " ,");
+        var iter = std.mem.tokenize(u8, str, " ,");
         return Vector2.init(
             try parseInt(i32, iter.next().?, 10),
             try parseInt(i32, iter.next().?, 10),
@@ -482,7 +482,7 @@ const Segment2 = struct {
     p1: Vector2,
 
     pub fn from_str(str: []const u8) !Segment2 {
-        var iter = std.mem.split(str, " -> ");
+        var iter = std.mem.split(u8, str, " -> ");
         return Segment2{
             .p0 = try Vector2.from_str(iter.next().?),
             .p1 = try Vector2.from_str(iter.next().?),
