@@ -413,8 +413,8 @@ pub fn day05(alloc: std.mem.Allocator) anyerror!void {
 
 pub fn d5_solve(alloc: std.mem.Allocator, segments: []Segment2, include_diagonals: bool) anyerror!usize {
     // Compute width/height
-    var width : i32 = 0;
-    var height : i32 = 0;
+    var width: i32 = 0;
+    var height: i32 = 0;
     for (segments) |segment| {
         width = std.math.max(width, std.math.max(segment.p0.x + 1, segment.p1.x + 1));
         height = std.math.max(height, std.math.max(segment.p0.y + 1, segment.p1.y + 1));
@@ -442,7 +442,7 @@ pub fn d5_solve(alloc: std.mem.Allocator, segments: []Segment2, include_diagonal
         const end_x = segment.p1.x + dx;
         const end_y = segment.p1.y + dy;
         while (!(px == end_x and py == end_y)) {
-            const idx = py*width + px;
+            const idx = py * width + px;
             overlaps.items[@intCast(usize, idx)] += 1;
 
             px += dx;
@@ -452,7 +452,7 @@ pub fn d5_solve(alloc: std.mem.Allocator, segments: []Segment2, include_diagonal
 
     // Count points with more than 1 overlap
     var count: usize = 0;
-    for (overlaps.items)|overlap| {
+    for (overlaps.items) |overlap| {
         if (overlap >= 2) {
             count += 1;
         }
@@ -517,10 +517,10 @@ pub fn day06(alloc: std.mem.Allocator) anyerror!void {
 
 pub fn d6_solve(fishies: []u8, num_days: usize) anyerror!usize {
     // Create buckets
-    var buckets = [_]usize{0, 0, 0, 0, 0, 0, 0, 0, 0};
+    var buckets = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     // Initialize buckets
-    for (fishies)|fish| {
+    for (fishies) |fish| {
         buckets[fish] += 1;
     }
 
@@ -537,10 +537,10 @@ pub fn d6_solve(fishies: []u8, num_days: usize) anyerror!usize {
         buckets[6] = buckets[7] + initial_zero;
         buckets[7] = buckets[8];
         buckets[8] = initial_zero;
-    }   
+    }
 
     // Sum
-    var result : usize = 0;
+    var result: usize = 0;
     for (buckets) |num_fishies| {
         result += num_fishies;
     }
